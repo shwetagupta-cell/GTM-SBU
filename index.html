@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Workbook-Based Incentive Distributor</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Workbook-Based Incentive Distributor</p>
+          <h1>Calculate monthly incentives using the same logic as your Excel MIS.</h1>
+          <p class="hero-copy">
+            This version follows the workbook pattern: project cashflow x 1.2% creates the incentive pool, bucket shares
+            are applied from the first sheet, sourcing uses project-level VT/DM/KAM contribution mix, and each incentive
+            role is split equally across the assigned employees on that project.
+          </p>
+        </div>
+        <div class="hero-panel">
+          <div class="stat-card">
+            <span>Total monthly cashflow</span>
+            <strong id="heroCashflow">₹0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Total incentive pool</span>
+            <strong id="heroPool">₹0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Total employee payout</span>
+            <strong id="heroPayout">₹0</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">1. Settings</p>
+              <h2>Month and incentive rule</h2>
+            </div>
+            <button id="loadSampleBtn" class="ghost-btn" type="button">Load sample data</button>
+          </div>
+
+          <div class="form-grid form-grid--compact">
+            <label>
+              Currency symbol
+              <input id="currencySymbol" type="text" value="₹" maxlength="3" />
+            </label>
+            <label>
+              Month label
+              <input id="monthLabel" type="text" value="March 2026" />
+            </label>
+            <label>
+              Incentive %
+              <input id="incentivePercent" type="number" min="0" step="0.01" value="1.2" />
+            </label>
+          </div>
+
+          <div class="notice" id="rulesNotice"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">2. Employee Master</p>
+              <h2>Employees and incentive roles</h2>
+            </div>
+            <button id="addEmployeeBtn" class="solid-btn" type="button">Add employee</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Actual designation</th>
+                  <th>Incentive role</th>
+                  <th>Department</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="employeeTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">3. Workbook Template</p>
+              <h2>Role split logic from sheet 1</h2>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bucket</th>
+                  <th>Incentive role</th>
+                  <th>Formula basis</th>
+                </tr>
+              </thead>
+              <tbody id="ruleTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">4. Monthly Projects</p>
+              <h2>Cashflow, sourcing mix, and assigned employees</h2>
+            </div>
+            <button id="addProjectBtn" class="solid-btn" type="button">Add project</button>
+          </div>
+
+          <div id="projectsContainer" class="project-stack"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">5. Results</p>
+              <h2>Employee-wise monthly incentive</h2>
+            </div>
+            <button id="exportCsvBtn" class="ghost-btn" type="button">Export results CSV</button>
+          </div>
+
+          <div class="summary-grid" id="summaryGrid"></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Role</th>
+                  <th>Projects</th>
+                  <th>Total incentive</th>
+                  <th>Breakdown</th>
+                </tr>
+              </thead>
+              <tbody id="resultsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="employeeRowTemplate">
+      <tr>
+        <td><input data-field="name" type="text" placeholder="Employee name" /></td>
+        <td><input data-field="actualDesignation" type="text" placeholder="Senior 3D Artist" /></td>
+        <td><select data-field="incentiveRole"></select></td>
+        <td><input data-field="department" type="text" placeholder="Design" /></td>
+        <td><button class="icon-btn" data-action="remove" type="button">Remove</button></td>
+      </tr>
+    </template>
+
+    <template id="projectCardTemplate">
+      <article class="project-card">
+        <div class="project-card__header">
+          <div class="project-grid">
+            <label>
+              Project name
+              <input data-field="name" type="text" placeholder="Project Lotus" />
+            </label>
+            <label>
+              Client
+              <input data-field="client" type="text" placeholder="ABC Developers" />
+            </label>
+            <label>
+              Monthly cashflow
+              <input data-field="cashflow" type="number" min="0" step="1000" placeholder="2500000" />
+            </label>
+            <label>
+              VT contribution %
+              <input data-field="vtPercent" type="number" min="0" max="100" step="1" placeholder="50" />
+            </label>
+            <label>
+              DM contribution %
+              <input data-field="dmPercent" type="number" min="0" max="100" step="1" placeholder="25" />
+            </label>
+            <label>
+              KAM contribution %
+              <input data-field="kamPercent" type="number" min="0" max="100" step="1" placeholder="25" />
+            </label>
+          </div>
+          <button class="icon-btn" data-action="remove-project" type="button">Remove project</button>
+        </div>
+        <div class="assignment-panel">
+          <div class="assignment-panel__top">
+            <div>
+              <p class="section-label">Assigned team</p>
+              <h3>Employees working on this project</h3>
+            </div>
+            <div class="project-meta" data-role="meta"></div>
+          </div>
+          <div class="checkbox-grid" data-role="employee-checkboxes"></div>
+        </div>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
