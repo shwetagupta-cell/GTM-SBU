@@ -1,0 +1,1688 @@
+[
+  {
+    "employeeId": "10",
+    "name": "Amruta Maruti Kamble",
+    "designation": "Manager - Marketing",
+    "email": "amruta.k@flipspaces.com"
+  },
+  {
+    "employeeId": "59",
+    "name": "Sanket Milind Patne",
+    "designation": "Assistant General Manager- Operations",
+    "email": "sanket.patne@flipspaces.com"
+  },
+  {
+    "employeeId": "102",
+    "name": "Ankit Singh",
+    "designation": "Senior Executive - Purchase",
+    "email": "ankit.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "121",
+    "name": "Syed Humayun",
+    "designation": "Project Manager",
+    "email": "syed.humayun@flipspaces.com"
+  },
+  {
+    "employeeId": "136",
+    "name": "Mohammed Lateef",
+    "designation": "Assistant Project Manager",
+    "email": "lateef@flipspaces.com"
+  },
+  {
+    "employeeId": "151",
+    "name": "Vazihul Hasan Shaikh",
+    "designation": "Project Manager",
+    "email": "hasan.shaikh@flipspaces.com"
+  },
+  {
+    "employeeId": "170",
+    "name": "Ritesh Dayanand Sawal",
+    "designation": "Senior Lead Graphic Designer",
+    "email": "ritesh.sawal@flipspaces.com"
+  },
+  {
+    "employeeId": "233",
+    "name": "Mohammed Arbaz Khasim",
+    "designation": "Assistant Manager - Snags",
+    "email": "md.arbaz@flipspaces.com"
+  },
+  {
+    "employeeId": "254",
+    "name": "Mohammed Sufiyan Shaikh",
+    "designation": "Senior 3D Artist",
+    "email": "sufiyan.shaikh@flipspaces.com"
+  },
+  {
+    "employeeId": "304",
+    "name": "Jayesh Patidar",
+    "designation": "3D Design Lead",
+    "email": "jayesh.patel@flipspaces.com"
+  },
+  {
+    "employeeId": "331",
+    "name": "Aravind Murugesan",
+    "designation": "Project Manager",
+    "email": "aravind.m@flipspaces.com"
+  },
+  {
+    "employeeId": "342",
+    "name": "Jeetendra Gupta",
+    "designation": "Senior Project Manager",
+    "email": "jeetendra.gupta@flipspaces.com"
+  },
+  {
+    "employeeId": "348",
+    "name": "Amir Khan",
+    "designation": "Assistant Project Manager",
+    "email": "aamir.khan@flipspaces.com"
+  },
+  {
+    "employeeId": "448",
+    "name": "Neha Singh",
+    "designation": "Senior Vice President - Marketing & PR",
+    "email": "neha.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "526",
+    "name": "Santhosh Rayudu",
+    "designation": "MIS Analyst",
+    "email": "santhosh.rayudu@flipspaces.com"
+  },
+  {
+    "employeeId": "607",
+    "name": "Amrit Singh",
+    "designation": "Vice President - Marketing and PR",
+    "email": "amrit.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "608",
+    "name": "Utsav Nitin Rathod",
+    "designation": "Assistant General Manager- Design",
+    "email": "utsav.rathod@flipspaces.com"
+  },
+  {
+    "employeeId": "631",
+    "name": "Sachin Chandrakant Gurav",
+    "designation": "3D Artist",
+    "email": "sachin.gurav@flipspaces.com"
+  },
+  {
+    "employeeId": "645",
+    "name": "Chandrakanth Gupta K",
+    "designation": "Deputy General Manager- Business Development",
+    "email": "chandrakanth.gupta@flipspaces.com"
+  },
+  {
+    "employeeId": "666",
+    "name": "Nagarajan. C",
+    "designation": "Senior Manager - Operations",
+    "email": "nagarajan.c@flipspaces.com"
+  },
+  {
+    "employeeId": "672",
+    "name": "Ravi Kumar Sharma",
+    "designation": "Site Supervisor",
+    "email": "ravi.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "674",
+    "name": "Amey Sankhe",
+    "designation": "General Manager- Operations",
+    "email": "amey.sankhe@flipspaces.com"
+  },
+  {
+    "employeeId": "680",
+    "name": "Rohit Yadav",
+    "designation": "Deputy General Manager- Marketing",
+    "email": "rohit.yadav@flipspaces.com"
+  },
+  {
+    "employeeId": "727",
+    "name": "Sumit Gautam",
+    "designation": "Senior Manager - Operations",
+    "email": ""
+  },
+  {
+    "employeeId": "749",
+    "name": "Kumar Kunal",
+    "designation": "Senior Manager - Snag",
+    "email": "kumar.kunal@flipspaces.com"
+  },
+  {
+    "employeeId": "752",
+    "name": "Kamlesh Kumar Sharma",
+    "designation": "General Manager- Operations",
+    "email": "kamlesh.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "801",
+    "name": "Saroj Kanta Mohanty",
+    "designation": "Multi Skill Technician",
+    "email": "saroj.mohanty@flipspaces.com"
+  },
+  {
+    "employeeId": "802",
+    "name": "Kalidhas R",
+    "designation": "Assistant Project Manager",
+    "email": "kalidhas.ravi@flipspaces.com"
+  },
+  {
+    "employeeId": "823",
+    "name": "Thakkallapally Rajeshwar Rao",
+    "designation": "Senior Executive- Procurement",
+    "email": "rajeshwar.rao@flipspaces.com"
+  },
+  {
+    "employeeId": "824",
+    "name": "Atul Katiyar",
+    "designation": "General Manager - Operations",
+    "email": "atul.katiyar@flipspaces.com"
+  },
+  {
+    "employeeId": "846",
+    "name": "S Meer Ali Raza",
+    "designation": "Assistant Project Manager",
+    "email": "raza.ali@flipspaces.com"
+  },
+  {
+    "employeeId": "850",
+    "name": "Sanjeev Ramjee Suryavanshi",
+    "designation": "Assistant Project Manager",
+    "email": "sanjeev.suryavanshi@flipspaces.com"
+  },
+  {
+    "employeeId": "866",
+    "name": "Maru Vrushabh Anilbhai",
+    "designation": "Project Manager",
+    "email": "vrushabh.maru@flipspaces.com"
+  },
+  {
+    "employeeId": "870",
+    "name": "Yadla Sarvesh",
+    "designation": "Assistant Project Manager",
+    "email": "sarvesh.yadla@flipspaces.com"
+  },
+  {
+    "employeeId": "873",
+    "name": "Shadab Jiya Kazi",
+    "designation": "Senior Manager - Service Delivery & Integration",
+    "email": "shadab.kazi@flipspaces.com"
+  },
+  {
+    "employeeId": "875",
+    "name": "Supriya Tukaram Waghmare",
+    "designation": "Senior Executive - Operations Fulfilment",
+    "email": "supriya.waghmare@flipspaces.com"
+  },
+  {
+    "employeeId": "877",
+    "name": "Mohsin Rahmat Sayed",
+    "designation": "Deputy General Manager - Operations",
+    "email": "mohsin.sayed@flipspaces.com"
+  },
+  {
+    "employeeId": "911",
+    "name": "Akash Behra",
+    "designation": "Senior Category Manager",
+    "email": "akash.behra@flipspaces.com"
+  },
+  {
+    "employeeId": "921",
+    "name": "Tarachand Jangir",
+    "designation": "Assistant Manager- Procurement",
+    "email": ""
+  },
+  {
+    "employeeId": "924",
+    "name": "Tangudu Srikar",
+    "designation": "General Manager- Operations",
+    "email": "srikar.tangudu@flipspaces.com"
+  },
+  {
+    "employeeId": "968",
+    "name": "Qamar Alam Siddique",
+    "designation": "Multi Skill Technician",
+    "email": "qamar.siddique@flipspaces.com"
+  },
+  {
+    "employeeId": "1020",
+    "name": "Karan Sharma",
+    "designation": "Team Leader - Service Delivery & Operations",
+    "email": "karan.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "1057",
+    "name": "Varun M Shetty",
+    "designation": "Deputy General Manager- Business Development",
+    "email": "varun.shetty@flipspaces.com"
+  },
+  {
+    "employeeId": "1078",
+    "name": "Govind Prasad",
+    "designation": "Assistant Project Manager",
+    "email": "govind.prasad@flipspaces.com"
+  },
+  {
+    "employeeId": "1085",
+    "name": "Shyam Kummari",
+    "designation": "Site Supervisor",
+    "email": "shyam.kummari@flipspaces.com"
+  },
+  {
+    "employeeId": "1090",
+    "name": "Harshda Shashikant Zalte",
+    "designation": "Senior 3D Artist",
+    "email": "harshda.zalte@flipspaces.com"
+  },
+  {
+    "employeeId": "1100",
+    "name": "Ashish Sharma",
+    "designation": "Assistant Vice President - Operations",
+    "email": "ashish.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "1110",
+    "name": "Govinda Ranganathan Acharya",
+    "designation": "Assistant Project Manager",
+    "email": "govinda.acharya@flipspaces.com"
+  },
+  {
+    "employeeId": "1119",
+    "name": "Richa Bharat Trivedi",
+    "designation": "Senior Interior Designer",
+    "email": "richa.trivedi@flipspaces.com"
+  },
+  {
+    "employeeId": "1122",
+    "name": "Ashok Kumar",
+    "designation": "Project Manager",
+    "email": "ashok.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1127",
+    "name": "Mayuresh Sahdeo Narvekar",
+    "designation": "Site Supervisor",
+    "email": "mayuresh.narvekar@flipspaces.com"
+  },
+  {
+    "employeeId": "1130",
+    "name": "Alok Kumar Verma",
+    "designation": "Deputy General Manager - Operations",
+    "email": "alok.verma@flipspaces.com"
+  },
+  {
+    "employeeId": "1131",
+    "name": "Swaroop Siddhart Pawar",
+    "designation": "Assistant Manager - Purchase",
+    "email": "swaroop.pawar@flipspaces.com"
+  },
+  {
+    "employeeId": "1135",
+    "name": "Samruddhi Santosh Jadhav",
+    "designation": "Senior Interior Designer",
+    "email": ""
+  },
+  {
+    "employeeId": "1139",
+    "name": "Sunil Dubey",
+    "designation": "Senior Executive - Order Fulfillment",
+    "email": "sunil.dubey@flipspaces.com"
+  },
+  {
+    "employeeId": "1142",
+    "name": "Aakash Manoj Rawal",
+    "designation": "Senior Manager - Operations",
+    "email": "aakash.rawal@flipspaces.com"
+  },
+  {
+    "employeeId": "1148",
+    "name": "Sahil Dilip Panchal",
+    "designation": "3D Artist",
+    "email": "sahil.panchal@flipspaces.com"
+  },
+  {
+    "employeeId": "1150",
+    "name": "Mangesh Shantaram Pise",
+    "designation": "Senior Project Manager",
+    "email": "mangesh.pise@flipspaces.com"
+  },
+  {
+    "employeeId": "1152",
+    "name": "Abu Sufiyan Irfan Ansari",
+    "designation": "3D Artist",
+    "email": "abu.ansari@flipspaces.com"
+  },
+  {
+    "employeeId": "1160",
+    "name": "Ajaj Siraj Patel",
+    "designation": "Assistant Project Manager",
+    "email": "ajaj.patel@flipspaces.com"
+  },
+  {
+    "employeeId": "1166",
+    "name": "Budda Sudarshan",
+    "designation": "Site Supervisor",
+    "email": "sudarshan.budda@flipspaces.com"
+  },
+  {
+    "employeeId": "1170",
+    "name": "Arvind Kumar",
+    "designation": "Assistant Project Manager",
+    "email": "arvind.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1189",
+    "name": "Bharadwaaj Manchala",
+    "designation": "General Manager - Business Development",
+    "email": "manchala.bharadwaaj@flipspaces.com"
+  },
+  {
+    "employeeId": "1194",
+    "name": "Pawan Kumar Sinha",
+    "designation": "Senior Project Manager",
+    "email": "pawan.sinha@flipspaces.com"
+  },
+  {
+    "employeeId": "1196",
+    "name": "Anas Qasim Ansari",
+    "designation": "Multi Skill Technician",
+    "email": "anas.ansari@flipspaces.com"
+  },
+  {
+    "employeeId": "1197",
+    "name": "Ankita Ankush Shedge",
+    "designation": "Senior Graphic Designer",
+    "email": "ankita.shedge@flipspaces.com"
+  },
+  {
+    "employeeId": "1201",
+    "name": "Mohd Waseem Mohd Saleem Khan",
+    "designation": "Site Supervisor",
+    "email": "waseem.khan@flipspaces.com"
+  },
+  {
+    "employeeId": "1202",
+    "name": "Nallamala Hemanth",
+    "designation": "General Manager - Business Development",
+    "email": "hemanth.nallamala@flipspaces.com"
+  },
+  {
+    "employeeId": "1204",
+    "name": "Pratik Gururaj Parvatikar",
+    "designation": "3D Artist",
+    "email": ""
+  },
+  {
+    "employeeId": "1209",
+    "name": "Ashrafunnisa Begum",
+    "designation": "Interior Designer",
+    "email": "ashrafunnisa.begum@flipspaces.com"
+  },
+  {
+    "employeeId": "1215",
+    "name": "Shamim Tufel Ahamad",
+    "designation": "Multi Skill Technician",
+    "email": "shamim.ahamad@flipspaces.com"
+  },
+  {
+    "employeeId": "1219",
+    "name": "Panchal Jaydipkumar",
+    "designation": "Site Supervisor",
+    "email": "jaydipkumar.panchal@flipspaces.com"
+  },
+  {
+    "employeeId": "1224",
+    "name": "Mujeeb Bin Hassan",
+    "designation": "Multi Skill Technician",
+    "email": "mujeeb.hassan@flipspaces.com"
+  },
+  {
+    "employeeId": "1225",
+    "name": "Atish Mhatre",
+    "designation": "Senior Executive - Snag",
+    "email": "atish.mhatre@flipspaces.com"
+  },
+  {
+    "employeeId": "1230",
+    "name": "Mohd Arif Uddin",
+    "designation": "MEP Engineer",
+    "email": "mohd.arifuddin@flipspaces.com"
+  },
+  {
+    "employeeId": "1231",
+    "name": "Anwar Ashraf Quraish Ahmed Ansari",
+    "designation": "Site Supervisor",
+    "email": "anwar.ansari@flipspaces.com"
+  },
+  {
+    "employeeId": "1233",
+    "name": "Kareem Mohiuddin",
+    "designation": "Site Supervisor",
+    "email": "kareem.mohiuddin@flipspaces.com"
+  },
+  {
+    "employeeId": "1236",
+    "name": "Zeba Baksh",
+    "designation": "Deputy General Manager - Design",
+    "email": "zeba.baksh@flipspaces.com"
+  },
+  {
+    "employeeId": "1237",
+    "name": "Bhavesh Lalchand Mewada",
+    "designation": "Assistant Project Manager",
+    "email": "bhavesh.mewada@flipspaces.com"
+  },
+  {
+    "employeeId": "1238",
+    "name": "Mukanaram Suthar",
+    "designation": "Assistant Project Manager",
+    "email": "mukanaram.suthar@flipspaces.com"
+  },
+  {
+    "employeeId": "1242",
+    "name": "Iftekhar Ahmed",
+    "designation": "Site Supervisor",
+    "email": "iftekhar.ahmed@flipspaces.com"
+  },
+  {
+    "employeeId": "1250",
+    "name": "Mustaq Ahmed Mukhtar Siddique",
+    "designation": "Multi Skill Technician",
+    "email": "mustaq.siddique@flipspaces.com"
+  },
+  {
+    "employeeId": "1267",
+    "name": "Pawan Sharma",
+    "designation": "Senior Project Manager",
+    "email": "pawan.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "1282",
+    "name": "Gourav Maheshwar Naik",
+    "designation": "Site Supervisor",
+    "email": "gourav.naik@flipspaces.com"
+  },
+  {
+    "employeeId": "1290",
+    "name": "Dhananjay Kumar",
+    "designation": "Senior Manager - Snag",
+    "email": "dhananjay.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1297",
+    "name": "Naveen Raj A",
+    "designation": "3D Artist",
+    "email": "naveen.raj@flipspaces.com"
+  },
+  {
+    "employeeId": "1303",
+    "name": "Shakti Kumar Yadav",
+    "designation": "Senior Project Manager",
+    "email": ""
+  },
+  {
+    "employeeId": "1311",
+    "name": "Ashok Mahto",
+    "designation": "Site Supervisor",
+    "email": "ashok.mahto@flipspaces.com"
+  },
+  {
+    "employeeId": "1314",
+    "name": "Surabhi Kale",
+    "designation": "Senior Interior Designer",
+    "email": ""
+  },
+  {
+    "employeeId": "1322",
+    "name": "Rashmi Pradeep Bhosle",
+    "designation": "Senior 3D Artist",
+    "email": "rashmi.bhosle@flipspaces.com"
+  },
+  {
+    "employeeId": "1336",
+    "name": "Babith Francis",
+    "designation": "Graphic Designer",
+    "email": "babith.francis@flipspaces.com"
+  },
+  {
+    "employeeId": "1337",
+    "name": "Bantu Vinay Kumar",
+    "designation": "3D Artist",
+    "email": "bantu.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1342",
+    "name": "Darshan Subhash Desai",
+    "designation": "Senior Interior Designer",
+    "email": "darshan.desai@flipspaces.com"
+  },
+  {
+    "employeeId": "1344",
+    "name": "Harsh Jagdish Mewada",
+    "designation": "Assistant Manager - Supply Chain",
+    "email": "harsh.mewada@flipspaces.com"
+  },
+  {
+    "employeeId": "1363",
+    "name": "Oshim Akram Islam Ansari",
+    "designation": "Senior Project Manager",
+    "email": "akram.ansari@flipspaces.com"
+  },
+  {
+    "employeeId": "1369",
+    "name": "Akshit Kumar",
+    "designation": "Manager- Design",
+    "email": "akshit.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1375",
+    "name": "Manoj Kumar M.V.L",
+    "designation": "Senior Manager - Operations",
+    "email": "manoj.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1376",
+    "name": "Kritish Gaur",
+    "designation": "Assistant General Manager - Operations",
+    "email": "kritish.gaur@flipspaces.com"
+  },
+  {
+    "employeeId": "1380",
+    "name": "Pratik Prakash Panchal",
+    "designation": "Site Supervisor",
+    "email": ""
+  },
+  {
+    "employeeId": "1387",
+    "name": "Saeem Akhtar",
+    "designation": "Assistant Project Manager",
+    "email": "saeem.akhtar@flipspaces.com"
+  },
+  {
+    "employeeId": "1388",
+    "name": "Priya Khushal Deotale",
+    "designation": "Manager- Design",
+    "email": "priya.deotale@flipspaces.com"
+  },
+  {
+    "employeeId": "1390",
+    "name": "Sharad Chandrakant Kalmate",
+    "designation": "Interior Designer",
+    "email": "sharad.kalmate@flipspaces.com"
+  },
+  {
+    "employeeId": "1391",
+    "name": "Shital Jawlekar",
+    "designation": "Senior Interior Designer",
+    "email": ""
+  },
+  {
+    "employeeId": "1393",
+    "name": "Vinod Singh Rana",
+    "designation": "Site Supervisor",
+    "email": "vinod.rana@flipspaces.com"
+  },
+  {
+    "employeeId": "1401",
+    "name": "Krishna Kumar Gupta",
+    "designation": "General Manager - Supply Chain",
+    "email": "krishnakumar.gupta@flipspaces.com"
+  },
+  {
+    "employeeId": "1408",
+    "name": "Vikash Kumar",
+    "designation": "Senior Executive - Quality Control",
+    "email": "vikash.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1412",
+    "name": "Vikrant Vishawanath Dudhwadkar",
+    "designation": "Senior 3D Artist",
+    "email": "vikrant.dudhwadkar@flipspaces.com"
+  },
+  {
+    "employeeId": "1413",
+    "name": "Abhay Sethi",
+    "designation": "Multi Skill Technician",
+    "email": "abhay.sethi@flipspaces.com"
+  },
+  {
+    "employeeId": "1414",
+    "name": "Vinay Kumar Rammilan Yadav",
+    "designation": "Project Manager",
+    "email": "vinay.yadav@flipspaces.com"
+  },
+  {
+    "employeeId": "1421",
+    "name": "Pradipkumar Rajaram Hasure",
+    "designation": "AM- Procurement",
+    "email": "pradipkumar.hasure@flipspaces.com"
+  },
+  {
+    "employeeId": "1426",
+    "name": "Deepak Kumar Pradhan",
+    "designation": "Multi Skill Technician",
+    "email": "deepak.pradhan@flipspaces.com"
+  },
+  {
+    "employeeId": "1430",
+    "name": "Nikita Rahul Bangar",
+    "designation": "Senior Interior Designer",
+    "email": "nikita.bangar@flipspaces.com"
+  },
+  {
+    "employeeId": "1433",
+    "name": "Krashna Ramchandra Chavan",
+    "designation": "Manager - Execution",
+    "email": ""
+  },
+  {
+    "employeeId": "1436",
+    "name": "Mayank Shekhar Brahmaji Singh",
+    "designation": "Assistant General Manager- Business Development",
+    "email": "mayank.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "1437",
+    "name": "Jyoti Mavi",
+    "designation": "Executive - Client Servicing",
+    "email": "jyoti.mavi@flipspaces.com"
+  },
+  {
+    "employeeId": "1439",
+    "name": "Shivani Patidar",
+    "designation": "3D Artist",
+    "email": "shivani.patidar@flipspaces.com"
+  },
+  {
+    "employeeId": "1440",
+    "name": "Rahul Chandrakant Shirke",
+    "designation": "Interior Designer",
+    "email": "rahul.shirke@flipspaces.com"
+  },
+  {
+    "employeeId": "1441",
+    "name": "Deepika Sharma",
+    "designation": "Executive - Client Servicing",
+    "email": "deepika.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "1442",
+    "name": "Garladinne Meghanath",
+    "designation": "Site Supervisor",
+    "email": "garladinne.meghanath@flipspaces.com"
+  },
+  {
+    "employeeId": "1444",
+    "name": "Sunil Kumar",
+    "designation": "Senior 3D Artist",
+    "email": "sunil.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1448",
+    "name": "Ankit Arora",
+    "designation": "Assistant Vice President - Business Development",
+    "email": "ankit.arora@flipspaces.com"
+  },
+  {
+    "employeeId": "1450",
+    "name": "Sanjay Narayan Salvi",
+    "designation": "Site Supervisor",
+    "email": "sanjay.salvi@flipspaces.com"
+  },
+  {
+    "employeeId": "1456",
+    "name": "Chandrasekhar G",
+    "designation": "Senior Project Manager",
+    "email": "chandrasekhar.g@flipspaces.com"
+  },
+  {
+    "employeeId": "1458",
+    "name": "Shibin M",
+    "designation": "Senior - 3D Artist",
+    "email": ""
+  },
+  {
+    "employeeId": "1459",
+    "name": "Aditya Rai",
+    "designation": "Executive - Procurement",
+    "email": "aditya.rai@flipspaces.com"
+  },
+  {
+    "employeeId": "1460",
+    "name": "Abhinandan Giri",
+    "designation": "Multi Skill Technician",
+    "email": "abhinandan.giri@flipspaces.com"
+  },
+  {
+    "employeeId": "1462",
+    "name": "Mohammad Ali Hussain Shaikh",
+    "designation": "Senior - 3D Artist",
+    "email": "mohammad.shaikh@flipspaces.com"
+  },
+  {
+    "employeeId": "1464",
+    "name": "Jagamohan Maharana",
+    "designation": "Senior - Interior Designer",
+    "email": "jagamohan.maharana@flipspaces.com"
+  },
+  {
+    "employeeId": "1465",
+    "name": "Sajan Surendra Gupta",
+    "designation": "Deputy General Manager- Marketing and PR",
+    "email": ""
+  },
+  {
+    "employeeId": "1468",
+    "name": "Pratyush Agrahari",
+    "designation": "Manager - Category Management",
+    "email": "pratyush.agrahari@flipspaces.com"
+  },
+  {
+    "employeeId": "1471",
+    "name": "Ankit Sharma",
+    "designation": "Interior Designer",
+    "email": "ankit.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "1472",
+    "name": "Shailesh Kumar Singh",
+    "designation": "Senior Project Manager",
+    "email": "shailesh.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "1474",
+    "name": "Shruti Nargolkar",
+    "designation": "General Manager - Key Accounts",
+    "email": "shruti.nargolkar@flipspaces.com"
+  },
+  {
+    "employeeId": "1476",
+    "name": "Shweta Ranee Maurya",
+    "designation": "Manager- Business Development",
+    "email": "shweta.maurya@flipspaces.com"
+  },
+  {
+    "employeeId": "1480",
+    "name": "Jagruti Santosh Shirke",
+    "designation": "Interior Designer",
+    "email": "jagruti.shirke@flipspaces.com"
+  },
+  {
+    "employeeId": "1482",
+    "name": "Megha Madhu",
+    "designation": "Interior Designer",
+    "email": "megha.madhu@flipspaces.com"
+  },
+  {
+    "employeeId": "1491",
+    "name": "Ankush Kumar",
+    "designation": "Intern - Client Servicing",
+    "email": "ankush.kumar@flipspaces.in"
+  },
+  {
+    "employeeId": "1492",
+    "name": "Manigonda Shiva",
+    "designation": "Site Supervisor",
+    "email": "manigonda.shiva@flipspaces.com"
+  },
+  {
+    "employeeId": "1493",
+    "name": "Manender Singh",
+    "designation": "Site Supervisor",
+    "email": "manender.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "1498",
+    "name": "Ravi Kumar H",
+    "designation": "Site Supervisor",
+    "email": "ravi.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1499",
+    "name": "Gitika Saini",
+    "designation": "Interior Designer",
+    "email": "gitika.saini@flipspaces.com"
+  },
+  {
+    "employeeId": "1501",
+    "name": "Sushanta Roy",
+    "designation": "Senior Manager- Business Development",
+    "email": "roy.sushanta@flipspaces.com"
+  },
+  {
+    "employeeId": "1505",
+    "name": "Sakib Iqbal",
+    "designation": "Senior Project Manager",
+    "email": "sakib.iqbal@flipspaces.com"
+  },
+  {
+    "employeeId": "1509",
+    "name": "Charanjeet Singh",
+    "designation": "Assistant General Manager - Business Development",
+    "email": "charanjeet.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "1513",
+    "name": "Sanjay Kumar",
+    "designation": "Multi Skill Technician",
+    "email": "sanjay.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1517",
+    "name": "Peddamallu Sainath Reddy",
+    "designation": "Manager- Business Development",
+    "email": ""
+  },
+  {
+    "employeeId": "1519",
+    "name": "Jitendra Singh",
+    "designation": "3D Artist",
+    "email": "jitendra.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "1520",
+    "name": "Sunil Kumar Gupta",
+    "designation": "Site Supervisor",
+    "email": "sunil.gupta@flipspaces.com"
+  },
+  {
+    "employeeId": "1521",
+    "name": "Mandla Ramu",
+    "designation": "Senior Project Manager",
+    "email": "mandla.ramu@flipspaces.com"
+  },
+  {
+    "employeeId": "1524",
+    "name": "Mazharali Barodawala",
+    "designation": "Manager - MEP Sales",
+    "email": "mazharali.barodawala@flipspaces.com"
+  },
+  {
+    "employeeId": "1526",
+    "name": "Nikita Rachayya Hiremath",
+    "designation": "Interior Designer",
+    "email": "nikita.hiremath@flipspaces.com"
+  },
+  {
+    "employeeId": "1527",
+    "name": "Aishwarya Dubey",
+    "designation": "Manager- Key Accounts",
+    "email": ""
+  },
+  {
+    "employeeId": "1528",
+    "name": "Geethika A",
+    "designation": "Senior- Interior Designer",
+    "email": "geethika.a@flipspaces.com"
+  },
+  {
+    "employeeId": "1533",
+    "name": "Saurabh Shukla",
+    "designation": "Senior Manager- Business Development",
+    "email": "saurabh.shukla@flipspaces.com"
+  },
+  {
+    "employeeId": "1534",
+    "name": "Pavan Gupta",
+    "designation": "Site Supervisor",
+    "email": "pavan.gupta@flipspaces.com"
+  },
+  {
+    "employeeId": "1537",
+    "name": "Joe Tom",
+    "designation": "Senior Project Manager",
+    "email": "joe.tom@flipspaces.com"
+  },
+  {
+    "employeeId": "1539",
+    "name": "Vikas Balhara",
+    "designation": "Assistant Vice President - Operations",
+    "email": "vikas.balhara@flipspaces.com"
+  },
+  {
+    "employeeId": "1541",
+    "name": "Munish Dutt",
+    "designation": "Senior Vice President - Business Development",
+    "email": "munish.dutt@flipspaces.com"
+  },
+  {
+    "employeeId": "1543",
+    "name": "Shiva Prasad Goud Danthuri",
+    "designation": "Manager- Key Accounts",
+    "email": ""
+  },
+  {
+    "employeeId": "1545",
+    "name": "Sundara Mary Mounika",
+    "designation": "Interior Designer",
+    "email": "sundara.mounika@flipspaces.com"
+  },
+  {
+    "employeeId": "1547",
+    "name": "Kuldeep Chaudhary",
+    "designation": "Manager- Category Management",
+    "email": "kuldeep.chaudhary@flipspaces.com"
+  },
+  {
+    "employeeId": "1549",
+    "name": "Ankit Tilokta",
+    "designation": "Manager- Business Development",
+    "email": "ankit.tilokta@flipspaces.com"
+  },
+  {
+    "employeeId": "1550",
+    "name": "MD Shahid",
+    "designation": "Senior Project Manager",
+    "email": "md.shahid@flipspaces.com"
+  },
+  {
+    "employeeId": "1552",
+    "name": "Rehan Rizwan Shaikh",
+    "designation": "Project Manager",
+    "email": ""
+  },
+  {
+    "employeeId": "1553",
+    "name": "Virendra Jagdish Sharma",
+    "designation": "Manager - Category Management",
+    "email": "virendra.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "1554",
+    "name": "Priyanka",
+    "designation": "Interior Designer",
+    "email": "priyanka@flipspaces.com"
+  },
+  {
+    "employeeId": "1563",
+    "name": "Agam Rohit Sharma",
+    "designation": "Interior Designer",
+    "email": "agam.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "1564",
+    "name": "Kajal Shekhawat",
+    "designation": "Senior Executive- Procurement",
+    "email": "kajal.shekhawat@flipspaces.com"
+  },
+  {
+    "employeeId": "1565",
+    "name": "Ashish Kumar B",
+    "designation": "3D Artist",
+    "email": ""
+  },
+  {
+    "employeeId": "1566",
+    "name": "Geeta Kumar Budhrani",
+    "designation": "Manager- Key Accounts",
+    "email": "geeta.budhrani@flipspaces.com"
+  },
+  {
+    "employeeId": "1569",
+    "name": "Akshay Verma",
+    "designation": "3D Artist",
+    "email": "akshay.verma@flipspaces.com"
+  },
+  {
+    "employeeId": "1573",
+    "name": "Shibin P S",
+    "designation": "3D Artist",
+    "email": "shibin.ps@flipspaces.com"
+  },
+  {
+    "employeeId": "1576",
+    "name": "Thanigainathan Manimaran",
+    "designation": "3D Artist",
+    "email": ""
+  },
+  {
+    "employeeId": "1577",
+    "name": "Vandana Sharma",
+    "designation": "Regional Head- Key Accounts",
+    "email": "vandana@flipspaces.com"
+  },
+  {
+    "employeeId": "1578",
+    "name": "Md Reyaz Alam",
+    "designation": "Manager - MEP Design",
+    "email": "reyaz.alam@flipspaces.com"
+  },
+  {
+    "employeeId": "1579",
+    "name": "Hardik Panchal",
+    "designation": "3D Artist",
+    "email": "hardik.panchal@flipspaces.com"
+  },
+  {
+    "employeeId": "1580",
+    "name": "Rehan Adil",
+    "designation": "Interior Designer",
+    "email": "rehan.adil@flipspaces.com"
+  },
+  {
+    "employeeId": "1585",
+    "name": "Sher khan",
+    "designation": "Site Supervisor",
+    "email": "sherkhan@flipspaces.com"
+  },
+  {
+    "employeeId": "1587",
+    "name": "Abinaiya Nepoliyan",
+    "designation": "Interior Designer",
+    "email": "abinaya.neppolian@flipspaces.com"
+  },
+  {
+    "employeeId": "1593",
+    "name": "Vinayak Panchakshari Kamoji",
+    "designation": "3D Artist",
+    "email": "vinayak.kamoji@flipspaces.com"
+  },
+  {
+    "employeeId": "1594",
+    "name": "Brijesh Kumar Yadav",
+    "designation": "Site Supervisor",
+    "email": ""
+  },
+  {
+    "employeeId": "1596",
+    "name": "Venkata Sahith Muddangula",
+    "designation": "Assistant General Manager - Business Development",
+    "email": ""
+  },
+  {
+    "employeeId": "1598",
+    "name": "Raju",
+    "designation": "Multi Skill Technician",
+    "email": "raju@flipspaces.com"
+  },
+  {
+    "employeeId": "1604",
+    "name": "Ankit Hooda",
+    "designation": "Manager - Customer Delight",
+    "email": "ankit.hooda@flipspaces.com"
+  },
+  {
+    "employeeId": "1605",
+    "name": "Swapnil Vijay Rasal",
+    "designation": "Deputy General Manager- Business Development",
+    "email": "swapnil.rasal@flipspaces.com"
+  },
+  {
+    "employeeId": "1606",
+    "name": "Rahul Bajaj",
+    "designation": "Regional Head- Key Accounts",
+    "email": "rahul.bajaj@flipspaces.com"
+  },
+  {
+    "employeeId": "1617",
+    "name": "Athira R S",
+    "designation": "Interior Designer",
+    "email": "athira.rs@flipspaces.com"
+  },
+  {
+    "employeeId": "1618",
+    "name": "Kaushik V",
+    "designation": "Manager- Key Accounts",
+    "email": "kaushik.v@flipspaces.com"
+  },
+  {
+    "employeeId": "1620",
+    "name": "Ram Suresh",
+    "designation": "Multi Skill Technician",
+    "email": ""
+  },
+  {
+    "employeeId": "1621",
+    "name": "Sanjay",
+    "designation": "Multi Skill Technician",
+    "email": "sanjay@flipspaces.com"
+  },
+  {
+    "employeeId": "1626",
+    "name": "Jitendra Mahendra Rawal",
+    "designation": "Senior Manager - Key Accounts",
+    "email": ""
+  },
+  {
+    "employeeId": "1627",
+    "name": "Shardulika Agrahari",
+    "designation": "Executive - Supply Chain",
+    "email": "shardulika.agrahari@flipspaces.com"
+  },
+  {
+    "employeeId": "1640",
+    "name": "Vaibhav Suresh Tambe",
+    "designation": "MEP - Draftsman",
+    "email": "vaibhav.tambe@flipspaces.com"
+  },
+  {
+    "employeeId": "1643",
+    "name": "Kabir Sa",
+    "designation": "Assistant General Manager - Marketing & PR",
+    "email": ""
+  },
+  {
+    "employeeId": "1645",
+    "name": "Rahul Sikandar Chavan",
+    "designation": "Video Specialist",
+    "email": ""
+  },
+  {
+    "employeeId": "1646",
+    "name": "Dinesh Suthar",
+    "designation": "Carpenter",
+    "email": "dinesh.suthar@flipspaces.com"
+  },
+  {
+    "employeeId": "1647",
+    "name": "Roshni Uday Rangate",
+    "designation": "Manager - Design",
+    "email": "roshni.rangate@flipspaces.com"
+  },
+  {
+    "employeeId": "1649",
+    "name": "Sudhir Pandey",
+    "designation": "Senior Executive - Billing",
+    "email": "sudhir.pandey@flipspaces.com"
+  },
+  {
+    "employeeId": "1651",
+    "name": "Radhika Pranav Deshpande",
+    "designation": "Senior Interior Designer",
+    "email": "radhika.deshpande@flipspaces.com"
+  },
+  {
+    "employeeId": "1652",
+    "name": "Mayura Varma R V",
+    "designation": "Assistant General Manager - Operations",
+    "email": "mayura.varma@flipspaces.com"
+  },
+  {
+    "employeeId": "1657",
+    "name": "Sakshi Ravi Kalwar",
+    "designation": "Senior - Interior Designer",
+    "email": "sakshi.kalwar@flipspaces.com"
+  },
+  {
+    "employeeId": "1658",
+    "name": "Sujith Kumar S",
+    "designation": "Senior Project Manager",
+    "email": "sujith.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1659",
+    "name": "Utsav Jayesh Doshi",
+    "designation": "Assistant General Manager - Design",
+    "email": "utsav.doshi@flipspaces.com"
+  },
+  {
+    "employeeId": "1660",
+    "name": "Samiksha Sudhir Navalkar",
+    "designation": "Manager - Design",
+    "email": "samiksha.navalkar@flipspaces.com"
+  },
+  {
+    "employeeId": "1662",
+    "name": "Vijay Kumar",
+    "designation": "Multi Skill Technician",
+    "email": "vijay.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1665",
+    "name": "Arnab Raha",
+    "designation": "Assistant Vice President - Business Excellence",
+    "email": "arnab.raha@flipspaces.com"
+  },
+  {
+    "employeeId": "1666",
+    "name": "Yamini Rajput",
+    "designation": "Interior Designer",
+    "email": "yamini.rajput@flipspaces.com"
+  },
+  {
+    "employeeId": "1668",
+    "name": "Tanvi Chowdhary",
+    "designation": "Manager - Design",
+    "email": "tanvi.chowdhary@flipspaces.com"
+  },
+  {
+    "employeeId": "1669",
+    "name": "Sahil Pravin Pujari",
+    "designation": "3D Artist",
+    "email": ""
+  },
+  {
+    "employeeId": "1673",
+    "name": "Leena Raju Pillai",
+    "designation": "Assistant General Manager - Design",
+    "email": "leena.pillai@flipspaces.com"
+  },
+  {
+    "employeeId": "1674",
+    "name": "Akashdeep",
+    "designation": "Senior Manager - Business Development",
+    "email": "akashdeep@flipspaces.com"
+  },
+  {
+    "employeeId": "1675",
+    "name": "Mohit Shukla",
+    "designation": "Executive - Procurement",
+    "email": "mohit.shukla@flipspaces.com"
+  },
+  {
+    "employeeId": "1677",
+    "name": "Sachin N",
+    "designation": "Manager - Business Development",
+    "email": "sachin.nathella@flipspaces.com"
+  },
+  {
+    "employeeId": "1678",
+    "name": "Narendra Singh",
+    "designation": "3D Artist",
+    "email": "narendra.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "1680",
+    "name": "Anurag Shyambihari Gautam",
+    "designation": "Senior Manager - Business Development",
+    "email": ""
+  },
+  {
+    "employeeId": "1683",
+    "name": "Yashwanth D",
+    "designation": "Executive - Quality Control",
+    "email": "yashwanth.devaraju@flipspaces.com"
+  },
+  {
+    "employeeId": "1690",
+    "name": "Kuldip Ganesh Keluskar",
+    "designation": "Senior Executive - Billing",
+    "email": "kuldip.keluskar@flipspaces.com"
+  },
+  {
+    "employeeId": "1694",
+    "name": "Ravina Rajani",
+    "designation": "Interior Designer",
+    "email": ""
+  },
+  {
+    "employeeId": "1695",
+    "name": "Annabattula Shrutika",
+    "designation": "Interior Designer",
+    "email": "shrutika.annabattula@flipspaces.com"
+  },
+  {
+    "employeeId": "1696",
+    "name": "Paarth Chandrakant Joshi",
+    "designation": "Intern - SEO",
+    "email": ""
+  },
+  {
+    "employeeId": "1697",
+    "name": "Simi Kumari",
+    "designation": "Senior - Interior Designer",
+    "email": "simi.kumari@flipspaces.com"
+  },
+  {
+    "employeeId": "1698",
+    "name": "Siragam Ram Sai Pavan",
+    "designation": "Manager - Business Development",
+    "email": "siragam.ramsaipavan@flipspaces.com"
+  },
+  {
+    "employeeId": "1702",
+    "name": "Prithviraj Devraj Shetty",
+    "designation": "Senior Manager - Operations",
+    "email": "prithviraj.shetty@flipspaces.com"
+  },
+  {
+    "employeeId": "1703",
+    "name": "Mohanbabu P",
+    "designation": "Assistant Project Manager",
+    "email": "mohanbabu.parthasarathy@flipspaces.com"
+  },
+  {
+    "employeeId": "1707",
+    "name": "Neha Titoria",
+    "designation": "Assistant General Manager - Design",
+    "email": "neha.titoria@flipspaces.com"
+  },
+  {
+    "employeeId": "1709",
+    "name": "Shweta Surendra Gupta",
+    "designation": "Execuitve Assistant",
+    "email": "shweta.gupta@flipspaces.com"
+  },
+  {
+    "employeeId": "1713",
+    "name": "H Vishesh Manae",
+    "designation": "Manager - Business Development",
+    "email": "vishesh.manae@flipspaces.com"
+  },
+  {
+    "employeeId": "1720",
+    "name": "Kumar Abhinav",
+    "designation": "Interior Designer",
+    "email": "abhinav.kumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1722",
+    "name": "Neeru Rajpal",
+    "designation": "Assistant Vice President \u2013 MARCOM",
+    "email": ""
+  },
+  {
+    "employeeId": "1724",
+    "name": "Srushti Shailesh Gangan",
+    "designation": "Intern- Concept Design",
+    "email": ""
+  },
+  {
+    "employeeId": "1730",
+    "name": "Swathi H Nayak",
+    "designation": "Manager- Design",
+    "email": "swathi.nayak@flipspaces.com"
+  },
+  {
+    "employeeId": "1733",
+    "name": "Sheryl Jaya Rebello",
+    "designation": "Deputy General Manager - Events Strategy",
+    "email": "jaya.rebello@flipspaces.com"
+  },
+  {
+    "employeeId": "1736",
+    "name": "Insiya Tikiwala",
+    "designation": "Interior Designer",
+    "email": "insiya.tikiwala@flipspaces.com"
+  },
+  {
+    "employeeId": "1739",
+    "name": "Charan J",
+    "designation": "Site Supervisor",
+    "email": "charan.j@flipspaces.com"
+  },
+  {
+    "employeeId": "1743",
+    "name": "Hitesh Shalikram Thakre",
+    "designation": "Assistant General Manager- Business Development",
+    "email": "hitesh.thakre@flipspaces.com"
+  },
+  {
+    "employeeId": "1746",
+    "name": "Mayur Anil Rane",
+    "designation": "Interior Designer",
+    "email": "mayur.rane@flipspaces.com"
+  },
+  {
+    "employeeId": "1747",
+    "name": "Rahul Rajendra Naik",
+    "designation": "Assistant General Manager- Business Development",
+    "email": "rahul.naik@flipspaces.com"
+  },
+  {
+    "employeeId": "1748",
+    "name": "Gangireddy Pooja",
+    "designation": "Interior Designer",
+    "email": "pooja.gangireddy@flipspaces.com"
+  },
+  {
+    "employeeId": "1752",
+    "name": "Misha Nimish Sagar",
+    "designation": "Assistant General Manager- Business Development",
+    "email": "misha.sagar@flipspaces.com"
+  },
+  {
+    "employeeId": "1756",
+    "name": "Savita Mahur",
+    "designation": "3D Artist",
+    "email": "savita.mahur@flipspaces.com"
+  },
+  {
+    "employeeId": "1760",
+    "name": "Saloni H Patel",
+    "designation": "Manager - Design",
+    "email": "saloni.patel@flipspaces.com"
+  },
+  {
+    "employeeId": "1763",
+    "name": "Vishnu Prasath R",
+    "designation": "3D Artist",
+    "email": "vishnuprasath.r@flipspaces.com"
+  },
+  {
+    "employeeId": "1769",
+    "name": "Insha Sharma",
+    "designation": "Deputy General Manager - Design",
+    "email": "insha.sharma@flipspaces.com"
+  },
+  {
+    "employeeId": "1770",
+    "name": "Sumit Suresh Nikam",
+    "designation": "Manager - Procurement",
+    "email": "sumit.nikam@flipspaces.com"
+  },
+  {
+    "employeeId": "1774",
+    "name": "Azher Ahmed",
+    "designation": "3D Artist",
+    "email": "azher.ahmed@flipspaces.com"
+  },
+  {
+    "employeeId": "1777",
+    "name": "Gopal Mishra",
+    "designation": "Site Supervisor",
+    "email": "gopal.mishra@flipspaces.com"
+  },
+  {
+    "employeeId": "1779",
+    "name": "Alok Verma",
+    "designation": "Site Supervisor",
+    "email": "alok@flipspaces.com"
+  },
+  {
+    "employeeId": "1780",
+    "name": "Abhishek Mavi",
+    "designation": "Intern- Property Mapping",
+    "email": "abhishek.mavi@flipspaces.in"
+  },
+  {
+    "employeeId": "1781",
+    "name": "Mohd Arif",
+    "designation": "Site Supervisor",
+    "email": "mohd.arif@flipspaces.com"
+  },
+  {
+    "employeeId": "1791",
+    "name": "Farheed",
+    "designation": "Site Supervisor",
+    "email": "farheed@flipspaces.com"
+  },
+  {
+    "employeeId": "1796",
+    "name": "Anwesha Dutta",
+    "designation": "Assistant Vice President - Business Development and Strategic Partnership",
+    "email": "anwesha.dutta@flipspaces.com"
+  },
+  {
+    "employeeId": "1799",
+    "name": "Mohammad Rizwan",
+    "designation": "Assistant Site Supervisor",
+    "email": "rizwan.mohammad@flipspaces.com"
+  },
+  {
+    "employeeId": "1802",
+    "name": "Sakhi Shinde",
+    "designation": "Senior Interior Designer",
+    "email": "sakhi.shinde@flipspaces.com"
+  },
+  {
+    "employeeId": "1805",
+    "name": "Gollapally Anil",
+    "designation": "Multi Skill Technician",
+    "email": "gollapally.anil@flipspaces.com"
+  },
+  {
+    "employeeId": "1807",
+    "name": "Dimpi Praveer Barot",
+    "designation": "Assistant General Manager - Key Accounts",
+    "email": "dimpi.barot@flipspaces.com"
+  },
+  {
+    "employeeId": "1812",
+    "name": "Tapala Irfan",
+    "designation": "Manager Procurement",
+    "email": "tapala.irfan@flipspaces.com"
+  },
+  {
+    "employeeId": "1821",
+    "name": "Shivakumar IT",
+    "designation": "Billing Engineer",
+    "email": "shivakumar@flipspaces.com"
+  },
+  {
+    "employeeId": "1828",
+    "name": "Pankaj Gupta",
+    "designation": "Manager - MEP",
+    "email": "pankaj.gupta@flipspaces.com"
+  },
+  {
+    "employeeId": "1830",
+    "name": "Kaushal Yadav",
+    "designation": "Intern - Data Analyst",
+    "email": "kaushal.yadav@flipspaces.in"
+  },
+  {
+    "employeeId": "1835",
+    "name": "Sandeep Kumar Singh",
+    "designation": "Assistant Project Manager",
+    "email": "sandeep.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "1840",
+    "name": "Romil Kulshrestha",
+    "designation": "Vice President - Offline Growth",
+    "email": "romil.kulshrestha@flipspaces.com"
+  },
+  {
+    "employeeId": "1841",
+    "name": "Chetana Sunil Patil",
+    "designation": "Intern - Client Acquisition",
+    "email": "chetana.patil@flipspaces.in"
+  },
+  {
+    "employeeId": "1844",
+    "name": "Karthik Raj P",
+    "designation": "Assistant General Manager - Design",
+    "email": "karthik.raj@flipspaces.com"
+  },
+  {
+    "employeeId": "1849",
+    "name": "Issac F",
+    "designation": "Senior Project Manager",
+    "email": "issac.f@flipspaces.com"
+  },
+  {
+    "employeeId": "1850",
+    "name": "Akilan Gunasekar",
+    "designation": "Assitant Project Manager",
+    "email": "akilan.gunasekar@flipspaces.com"
+  },
+  {
+    "employeeId": "1859",
+    "name": "Amrit Sunil Chopra",
+    "designation": "Business Development Head- Events",
+    "email": "amrit.chopra@flipspaces.com"
+  },
+  {
+    "employeeId": "1863",
+    "name": "Pavithra Nagaraj",
+    "designation": "Manager- Key Accounts",
+    "email": "pavithra.nagaraj@flipspaces.com"
+  },
+  {
+    "employeeId": "1864",
+    "name": "Arun Kumar",
+    "designation": "Project Manager",
+    "email": "arunkumar.s@flipspaces.com"
+  },
+  {
+    "employeeId": "1865",
+    "name": "Akansha Kulshreshtha",
+    "designation": "Manager - Design",
+    "email": "akansha.kulshreshtha@flipspaces.com"
+  },
+  {
+    "employeeId": "1869",
+    "name": "Shivam Yadav",
+    "designation": "3D Artist",
+    "email": "shivam.yadav@flipspaces.com"
+  },
+  {
+    "employeeId": "1871",
+    "name": "Sagar Khattar",
+    "designation": "General Manager - Growth",
+    "email": "sagar.khattar@flipspaces.com"
+  },
+  {
+    "employeeId": "1873",
+    "name": "Talha Rukhsar",
+    "designation": "Senior Project Manager",
+    "email": "talha.rukhsar@flipspaces.com"
+  },
+  {
+    "employeeId": "1874",
+    "name": "Sivaraman Karthik Rajan",
+    "designation": "Assistant General Manager - Business Development",
+    "email": "karthik.rajan@flipspaces.com"
+  },
+  {
+    "employeeId": "1880",
+    "name": "Abhishek Kumar Singh",
+    "designation": "Senior Project Manager",
+    "email": "abhishek.singh@flipspaces.com"
+  },
+  {
+    "employeeId": "1882",
+    "name": "Ravi Raj",
+    "designation": "Manager - Procurement",
+    "email": "ravi.raj@flipspaces.com"
+  },
+  {
+    "employeeId": "1883",
+    "name": "Janvi Amit Upadhyay",
+    "designation": "Intern - Client Acquisition",
+    "email": "janvi.upadhyay@flipspaces.in"
+  },
+  {
+    "employeeId": "1885",
+    "name": "Mohd Mozammil Hashmi",
+    "designation": "Executive- Safety",
+    "email": "savant.vishwakarma@flipspaces.com"
+  },
+  {
+    "employeeId": "1892",
+    "name": "Garima Rani",
+    "designation": "Assistant General Manager - Business Development",
+    "email": "garima.rani@flipspaces.com"
+  },
+  {
+    "employeeId": "1894",
+    "name": "Ashutosh Kumar Gupta",
+    "designation": "Deputy General Manager - Digital Marketing",
+    "email": "ashutosh.gupta@flipspaces.com"
+  },
+  {
+    "employeeId": "Current",
+    "name": "Drish Jain",
+    "designation": "Intern- Property Mapping",
+    "email": ""
+  },
+  {
+    "employeeId": "Consultant 15",
+    "name": "Abhay Kumar Priyadarshi",
+    "designation": "General Manager- Operations",
+    "email": "abhay.priyadarshi@flipspaces.com"
+  }
+]

@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.env
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
+
+# Node (package-lock only, keep it out since there's no Node app)
+node_modules/
+package-lock.json
+
+# Generated outputs
+outputs/
