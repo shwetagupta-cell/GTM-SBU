@@ -1,0 +1,44 @@
+[
+  {
+    "username": "demo",
+    "password": "demo",
+    "name": "Demo User",
+    "roleId": "head-marketing",
+    "designation": "Head - Marketing"
+  },
+  {
+    "username": "marketing.head",
+    "password": "demo123",
+    "name": "Head Marketing User",
+    "roleId": "head-marketing",
+    "designation": "Head - Marketing"
+  },
+  {
+    "username": "kam.nh",
+    "password": "demo123",
+    "name": "KAM National Head",
+    "roleId": "kam-nh",
+    "designation": "National Head - Key Accounts"
+  },
+  {
+    "username": "design.manager",
+    "password": "demo123",
+    "name": "Design Manager User",
+    "roleId": "design-manager",
+    "designation": "Design Manager"
+  },
+  {
+    "username": "bdm.sales",
+    "password": "demo123",
+    "name": "BDM Sales User",
+    "roleId": "bdm-sales",
+    "designation": "BDM Sales"
+  },
+  {
+    "username": "sales.support",
+    "password": "demo123",
+    "name": "Sales Support User",
+    "roleId": "sales-support",
+    "designation": "Sales Support Mgr"
+  }
+]

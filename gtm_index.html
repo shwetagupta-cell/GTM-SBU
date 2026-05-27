@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SME Performance Management 2026 - 27</title>
+    <link rel="stylesheet" href="./gtm_styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <section id="authShell" class="auth-shell">
+        <div class="auth-card">
+          <img src="./assets/flipspaces-logo.png" alt="Flipspaces" class="auth-logo" />
+          <h1 class="auth-title">SME Performance Management 2026 - 27</h1>
+          <form id="loginForm" class="form-stack">
+            <label>User Login<select id="loginType" class="field-control"><option value="employee">Employee Login</option><option value="admin">Admin Login</option></select></label>
+            <label>Employee ID<input id="loginEmployeeId" class="field-control" type="text" required /></label>
+            <label>Password
+              <span class="password-wrap">
+                <input id="loginPassword" class="field-control with-icon" type="password" required />
+                <button id="toggleLoginPassword" class="icon-btn" type="button" aria-label="Show password"></button>
+              </span>
+            </label>
+            <button type="submit" class="solid-btn full-btn">Sign In</button>
+          </form>
+          <div id="loginNotice" class="notice">Use your employee ID and password to continue.</div>
+        </div>
+      </section>
+
+      <section id="appShell" class="app-shell hidden">
+        <aside class="sidebar">
+          <div class="sidebar-brand">
+            <img src="./assets/flipspaces-logo.png" alt="Flipspaces" class="sidebar-logo" />
+            <div>
+              <h2>SME Performance</h2>
+              <p class="sidebar-subtitle">2026 - 27 Dashboard</p>
+            </div>
+          </div>
+          <div class="sidebar-card">
+            <span>Signed in as</span>
+            <strong id="sessionUser">-</strong>
+            <p id="sessionMeta">-</p>
+            <button id="logoutBtn" class="ghost-btn" type="button">Logout</button>
+          </div>
+          <nav class="nav">
+            <a href="#overviewPanel">Overview</a>
+            <a href="#kpiPanel">KPI Scorecard</a>
+            <a href="#projectPanel">Project Incentive</a>
+            <a href="#adminPanel" id="adminNav">Admin</a>
+            <a href="#accountPanel">Account</a>
+          </nav>
+        </aside>
+
+        <main class="main">
+          <section id="overviewPanel" class="panel hero-panel">
+            <div class="hero-copy">
+              <p id="greetingText" class="greeting-line">Good Morning</p>
+              <h1 id="dashboardTitle">Employee Dashboard</h1>
+              <p id="dashboardSubtitle" class="copy">Grade | Designation | Department | Location</p>
+            </div>
+
+            <div class="filter-grid filter-grid--wide">
+              <label class="filter-card">
+                <span>Employee Dropdown List</span>
+                <input id="employeePickerInput" class="field-control" list="employeeOptions" type="text" placeholder="Select employee" />
+                <datalist id="employeeOptions"></datalist>
+              </label>
+              <label class="filter-card">
+                <span>Start Date</span>
+                <input id="startDateInput" class="field-control" type="date" />
+              </label>
+              <label class="filter-card">
+                <span>End Date</span>
+                <input id="endDateInput" class="field-control" type="date" />
+              </label>
+              <label class="filter-card">
+                <span>Search Bar</span>
+                <input id="searchInput" class="field-control" type="text" placeholder="Search employee, department, email" />
+              </label>
+              <div class="filter-card filter-card--button">
+                <span>Search</span>
+                <button id="applyFiltersBtn" class="solid-btn full-btn" type="button">Search</button>
+              </div>
+              <div class="filter-card filter-card--button small-button-card">
+                <span>Download Report</span>
+                <a id="downloadReportLink" class="ghost-btn full-btn" href="/api/report.csv">Employee Report</a>
+              </div>
+              <div class="filter-card filter-card--button small-button-card">
+                <span>Reset</span>
+                <button id="resetFiltersBtn" class="ghost-btn full-btn" type="button">Reset</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="score-grid">
+            <article class="metric-card">
+              <span>NPS Score</span>
+              <strong id="npsScoreValue">0</strong>
+              <p id="npsScoreLabel">Average score for selected month</p>
+            </article>
+            <article class="metric-card">
+              <span>NPS Disbursal %</span>
+              <strong id="npsDisbursalValue">0%</strong>
+              <p id="npsDisbursalLabel">Based on incentive calculation rules</p>
+            </article>
+            <article class="metric-card accent-card">
+              <span>Accrued ₹</span>
+              <strong id="accruedValue">Rs 0</strong>
+              <p id="accruedLabel">Final value after project formula</p>
+            </article>
+          </section>
+
+          <section class="status-bar">
+            <div>
+              <span class="status-bar__label">Disbursal Status</span>
+              <strong id="disbursalStatusValue">Pending</strong>
+            </div>
+            <div class="status-bar__actions">
+              <select id="disbursalStatusInput" class="field-control hidden">
+                <option value="Pending">Pending</option>
+                <option value="In Process">In Process</option>
+                <option value="Disbursed">Disbursed</option>
+              </select>
+              <button id="saveStatusBtn" class="ghost-btn hidden" type="button">Update Status</button>
+            </div>
+          </section>
+
+          <section class="overview-stack">
+            <section class="panel full-width-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Hierarchy</p>
+                  <h3>Reporting Structure</h3>
+                </div>
+              </div>
+              <div id="hierarchyGrid" class="summary-grid summary-grid--wide"></div>
+            </section>
+
+            <section class="panel full-width-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Performance Trend</p>
+                  <h3>Quarter-wise Trend</h3>
+                </div>
+              </div>
+              <div id="quarterTabs" class="quarter-tabs"></div>
+              <div id="trendList" class="trend-list trend-list--quarter"></div>
+            </section>
+          </section>
+
+          <section id="kpiPanel" class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">KPI Score Card</p>
+                <h3>KRA to KPI to Achievement to Score to Incentive</h3>
+              </div>
+              <div class="month-filter">
+                <label>Month
+                  <select id="periodSelect" class="field-control"></select>
+                </label>
+              </div>
+            </div>
+            <div id="kpiNotice" class="notice">KPI scorecard will appear here.</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>KRA</th>
+                    <th>KPI</th>
+                    <th>Target</th>
+                    <th>Achieved</th>
+                    <th>Achievement %</th>
+                    <th>Score</th>
+                    <th>Weightage</th>
+                    <th>Weighted Score</th>
+                    <th>NPS</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="kpiTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="projectPanel" class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Project Incentive Disbursal</p>
+                <h3>Project Incentive Disbursal</h3>
+              </div>
+              <div class="project-head-actions">
+                <label>Month
+                  <select id="projectMonthSelect" class="field-control"></select>
+                </label>
+              </div>
+            </div>
+
+            <div class="project-stats">
+              <article class="project-pill"><span>Project Value</span><strong id="projectValueTotal">Rs 0</strong></article>
+              <article class="project-pill"><span>Department %</span><strong id="projectDepartmentPercent">0%</strong></article>
+              <article class="project-pill"><span>Team Share %</span><strong id="projectTeamSharePercent">0%</strong></article>
+              <article class="project-pill project-pill--input">
+                <span>My Share</span>
+                <input id="projectMyShareInput" class="field-control project-stat-input" type="number" min="0" step="0.01" />
+              </article>
+              <article class="project-pill"><span>NPS Score</span><strong id="projectDisbursalPercent">0%</strong></article>
+              <article class="project-pill"><span>Value</span><strong id="projectFinalDisbursal">Rs 0</strong></article>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Project Name</th>
+                    <th>Project ID</th>
+                    <th>Project Value</th>
+                    <th>Share %</th>
+                    <th>Department %</th>
+                    <th>Team Share %</th>
+                    <th>My Share %</th>
+                    <th>Accrued Value</th>
+                    <th>NPS Disbursal %</th>
+                    <th>Final Disbursal Value</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="projectTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="adminPanel" class="panel hidden">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Admin Console</p>
+                <h3>Latest monthly data, uploads, and control actions</h3>
+              </div>
+            </div>
+
+            <div class="score-grid admin-score-grid">
+              <article class="metric-card"><span>Total Employees</span><strong id="totalEmployeesValue">0</strong></article>
+              <article class="metric-card"><span>Total Accrued</span><strong id="totalPayoutValue">Rs 0</strong></article>
+              <article class="metric-card"><span>Total Disbursal</span><strong id="quarterlyPayoutValue">Rs 0</strong></article>
+              <article class="metric-card"><span>Data Updated</span><strong id="annualPayoutValue">-</strong><p id="dataUpdatedMeta">-</p></article>
+              <article class="metric-card"><span>Disbursal Status</span><strong id="disbursalStatusSummary">-</strong></article>
+            </div>
+
+            <div class="grid-two">
+              <section class="panel inset">
+                <h3>Add / Update Employee</h3>
+                <form id="employeeForm" class="form-grid">
+                  <label>Employee ID<input id="employeeIdInput" class="field-control" type="text" required /></label>
+                  <label>Name<input id="employeeNameInput" class="field-control" type="text" required /></label>
+                  <label>Email<input id="employeeEmailInput" class="field-control" type="email" /></label>
+                  <label>Grade<input id="employeeGradeInput" class="field-control" type="text" /></label>
+                  <label>Location<input id="employeeLocationInput" class="field-control" type="text" /></label>
+                  <label>Department<select id="employeeDepartmentInput" class="field-control"></select></label>
+                  <label>Business Unit<select id="employeeBusinessUnitInput" class="field-control"><option value="GTM">GTM</option><option value="SBU">SBU</option></select></label>
+                  <label>Logic Team<select id="employeeLogicKeyInput" class="field-control"><option value="Marketing">GTM Marketing</option><option value="Viztown">GTM Viztown</option><option value="Events">GTM Events</option><option value="Digital Marketing">GTM Digital Marketing</option><option value="Founder Connect">GTM Founder Connect</option><option value="sbu_sales">SBU Sales</option><option value="sbu_ops">SBU Ops</option><option value="sbu_design_post">SBU Design</option><option value="sbu_design_pre">SBU Design Pre-Sales</option></select></label>
+                  <label>Designation<input id="employeeDesignationInput" class="field-control" type="text" /></label>
+                  <label>Reporting To ID<input id="employeeReportingToInput" class="field-control" type="text" /></label>
+                  <label>Manager Name<input id="employeeReportingNameInput" class="field-control" type="text" /></label>
+                  <label>Manager Designation<input id="employeeManagerDesignationInput" class="field-control" type="text" /></label>
+                  <label>Hierarchy Role<select id="employeeHierarchyRoleInput" class="field-control"><option value="india_head">India Head</option><option value="national_vertical_head">National Vertical Head</option><option value="regional_head">Regional Head</option><option value="manager">Manager</option></select></label>
+                  <label>Disbursal Type<select id="employeeDisbursalInput" class="field-control"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annually">Annually</option></select></label>
+                  <label>My Share %<input id="employeeProjectIncentiveInput" class="field-control" type="number" min="0" step="0.01" /></label>
+                  <label>Department %<input id="employeeDepartmentPercentInput" class="field-control" type="number" min="0" step="0.01" /></label>
+                  <label>Team Share %<input id="employeeTeamSharePercentInput" class="field-control" type="number" min="0" step="0.01" /></label>
+                  <label>NPS Score<input id="employeeNpsInput" class="field-control" type="number" min="0" max="5" step="0.1" /></label>
+                </form>
+                <div class="formula-strip">
+                  <div class="formula-box">
+                    <span>Project Value</span>
+                    <strong id="formulaProjectValue">Rs 0</strong>
+                  </div>
+                  <div class="formula-box">
+                    <span>Department %</span>
+                    <strong id="formulaDepartmentPercent">0%</strong>
+                  </div>
+                  <div class="formula-box">
+                    <span>Team Share %</span>
+                    <strong id="formulaTeamSharePercent">0%</strong>
+                  </div>
+                  <div class="formula-box">
+                    <span>My Share %</span>
+                    <strong id="formulaMySharePercent">0%</strong>
+                  </div>
+                  <div class="formula-box">
+                    <span>NPS Score</span>
+                    <strong id="formulaNpsPercent">0%</strong>
+                  </div>
+                  <div class="formula-box formula-box--result">
+                    <span>Final Value</span>
+                    <strong id="formulaFinalValue">Rs 0</strong>
+                  </div>
+                </div>
+                <div class="inline-actions">
+                  <button id="saveEmployeeBtn" class="solid-btn" type="button">Save Employee</button>
+                  <button id="deleteEmployeeBtn" class="ghost-btn" type="button">Delete Employee</button>
+                  <button id="undoEmployeeBtn" class="ghost-btn" type="button">Undo</button>
+                </div>
+                <div id="employeeNotice" class="notice">Admin changes are saved month-wise and kept in history.</div>
+              </section>
+
+              <section class="panel inset">
+                <h3>Excel Upload Center</h3>
+                <div class="upload-grid">
+                  <article class="upload-card">
+                    <p class="upload-title">Download All Employees Data</p>
+                    <a id="downloadCompleteReportLink" class="solid-btn full-btn" href="/api/report.csv">Download Complete Report</a>
+                  </article>
+                  <article class="upload-card">
+                    <p class="upload-title">Download Individual Employee Data</p>
+                    <input id="downloadEmployeePickerInput" class="field-control" list="employeeOptions" type="text" placeholder="Select employee" />
+                    <a id="downloadEmployeeReportLink" class="ghost-btn full-btn" href="/api/report.csv">Download Employee Report</a>
+                  </article>
+                  <article class="upload-card">
+                    <p class="upload-title">Team Sheet</p>
+                    <input id="teamWorkbookInput" class="field-control" type="file" accept=".xlsx" />
+                    <button class="solid-btn upload-trigger" data-upload-type="team_master" data-input-id="teamWorkbookInput" type="button">Upload Team Sheet</button>
+                  </article>
+                  <article class="upload-card">
+                    <p class="upload-title">GTM KPI Logic</p>
+                    <input id="logicWorkbookInput" class="field-control" type="file" accept=".xlsx" />
+                    <button class="solid-btn upload-trigger" data-upload-type="gtm_logic" data-input-id="logicWorkbookInput" type="button">Upload GTM Logic</button>
+                  </article>
+                  <article class="upload-card">
+                    <p class="upload-title">SBU KPI Logic</p>
+                    <input id="sbuWorkbookInput" class="field-control" type="file" accept=".xlsx" />
+                    <button class="solid-btn upload-trigger" data-upload-type="sbu_logic" data-input-id="sbuWorkbookInput" type="button">Upload SBU Logic</button>
+                  </article>
+                  <article class="upload-card">
+                    <p class="upload-title">Project Sheet</p>
+                    <input id="projectWorkbookInput" class="field-control" type="file" accept=".xlsx" />
+                    <button class="solid-btn upload-trigger" data-upload-type="project_cf" data-input-id="projectWorkbookInput" type="button">Upload Project Sheet</button>
+                  </article>
+                </div>
+                <div id="uploadNotice" class="notice">Upload GTM and SBU logic separately so both verticals stay mapped correctly.</div>
+              </section>
+            </div>
+
+            <div class="grid-two">
+              <section class="panel inset">
+                <h3>Department Performance</h3>
+                <div id="departmentList" class="trend-list"></div>
+              </section>
+              <section class="panel inset">
+                <h3>Upload History</h3>
+                <div id="uploadHistory" class="upload-list"></div>
+              </section>
+            </div>
+          </section>
+
+          <section id="accountPanel" class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Account</p>
+                <h3>Change Password</h3>
+              </div>
+            </div>
+            <form id="passwordForm" class="form-grid">
+              <label>Current Password
+                <span class="password-wrap">
+                  <input id="currentPassword" class="field-control with-icon" type="password" />
+                  <button class="icon-btn toggle-password" data-target="currentPassword" type="button" aria-label="Show password"></button>
+                </span>
+              </label>
+              <label>New Password
+                <span class="password-wrap">
+                  <input id="newPassword" class="field-control with-icon" type="password" />
+                  <button class="icon-btn toggle-password" data-target="newPassword" type="button" aria-label="Show password"></button>
+                </span>
+              </label>
+              <label>Confirm Password
+                <span class="password-wrap">
+                  <input id="confirmPassword" class="field-control with-icon" type="password" />
+                  <button class="icon-btn toggle-password" data-target="confirmPassword" type="button" aria-label="Show password"></button>
+                </span>
+              </label>
+            </form>
+            <div class="inline-actions">
+              <button id="changePasswordBtn" class="solid-btn" type="button">Update Password</button>
+            </div>
+            <div id="passwordNotice" class="notice">Passwords are stored securely and can be updated anytime.</div>
+          </section>
+        </main>
+      </section>
+    </div>
+
+    <script src="./gtm_app.js"></script>
+  </body>
+</html>

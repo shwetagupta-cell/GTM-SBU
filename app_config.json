@@ -1,0 +1,20 @@
+{
+  "datasets": {
+    "misWorkbook": "/Users/shwetagupta/Documents/New project/data/uploads/misWorkbook/current.xlsx",
+    "ytdWorkbook": "/Users/shwetagupta/Documents/New project/data/uploads/ytdWorkbook/current.xlsx",
+    "closureWorkbook": "/Users/shwetagupta/Documents/New project/data/uploads/closureWorkbook/current.xlsx",
+    "employeeSheet": "/Users/shwetagupta/Documents/New project/data/uploads/employeeSheet/current.xlsx",
+    "teamSheet": "/Users/shwetagupta/Documents/New project/data/uploads/teamSheet/current.xlsx"
+  },
+  "smtp": {
+    "host": "",
+    "port": 587,
+    "username": "",
+    "password": "",
+    "fromEmail": "",
+    "useTls": false
+  },
+  "adminEmployeeIds": [
+    "1448"
+  ]
+}

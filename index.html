@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flipspaces Incentive Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <section class="auth-shell" id="authShell">
+        <div class="auth-card">
+          <div class="brand-row">
+            <img src="./assets/flipspaces-logo.png" alt="Flipspaces" class="brand-logo" />
+            <span class="brand-name">Flipspaces Incentives</span>
+          </div>
+
+          <div class="auth-copy">
+            <p class="eyebrow">Dynamic Incentive Management</p>
+            <h1>Track monthly cash flow, employee share, and team performance.</h1>
+            <p class="section-copy">
+              Upload the latest employee incentive sheet and team sheet once, then explore employee dashboards and
+              team-level rankings without restarting the server.
+            </p>
+          </div>
+
+          <div class="welcome-banner">
+            <strong id="authGreetingTitle">Welcome Back</strong>
+            <p id="authGreetingCopy">Stay on top of current payouts, past trends, future projections, and mapped projects in one place.</p>
+          </div>
+
+          <form id="loginForm" class="auth-form">
+            <label>
+              Login type
+              <select id="loginType">
+                <option value="employee">Employee Login</option>
+                <option value="admin">Admin Login</option>
+              </select>
+            </label>
+            <label>
+              Employee ID
+              <input id="loginEmployeeId" type="text" inputmode="numeric" autocomplete="username" required />
+            </label>
+            <label class="password-field">
+              Password
+              <span class="password-input-shell">
+                <input id="loginPassword" type="password" autocomplete="current-password" required />
+                <button id="toggleLoginPasswordBtn" class="password-toggle" type="button" aria-label="Show password">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M12 5C6.5 5 2.1 8.4 1 12c1.1 3.6 5.5 7 11 7s9.9-3.4 11-7c-1.1-3.6-5.5-7-11-7Zm0 11.2A4.2 4.2 0 1 1 12 7.8a4.2 4.2 0 0 1 0 8.4Zm0-6.6A2.4 2.4 0 1 0 12 14a2.4 2.4 0 0 0 0-4.8Z"></path>
+                  </svg>
+                </button>
+              </span>
+            </label>
+            <button class="solid-btn" type="submit">Sign In</button>
+          </form>
+
+          <div class="notice" id="loginNotice">
+            Use your employee ID and password. Default first-time password is <strong>SME + employee ID</strong>.
+          </div>
+
+          <button id="openResetModalBtn" class="forgot-link" type="button">Forgot Password?</button>
+        </div>
+      </section>
+
+      <section class="workspace hidden" id="appShell">
+        <aside class="sidebar">
+          <div class="brand-row">
+            <img src="./assets/flipspaces-logo.png" alt="Flipspaces" class="brand-logo" />
+            <div>
+              <p class="brand-name">Flipspaces</p>
+              <strong>Incentive Dashboard</strong>
+            </div>
+          </div>
+
+          <nav class="sidebar-nav">
+            <a href="#overviewPanel" class="nav-link">Overview</a>
+            <a href="#projectsPanel" class="nav-link">Projects</a>
+            <a href="#teamPanel" class="nav-link">Team</a>
+            <a href="#adminPanel" class="nav-link" id="adminNavLink">Admin</a>
+            <a href="#accountPanel" class="nav-link">Account</a>
+          </nav>
+
+          <div class="sidebar-card">
+            <p class="section-label">Signed In</p>
+            <strong id="sessionUser">Employee</strong>
+            <p id="sessionMeta">Employee details</p>
+            <button id="logoutBtn" class="ghost-btn ghost-btn--full" type="button">Logout</button>
+          </div>
+        </aside>
+
+        <main class="dashboard-main">
+          <section class="topbar" id="overviewPanel">
+            <div>
+              <p class="eyebrow">Monthly Dashboard</p>
+              <h2 id="dashboardTitle">Employee view</h2>
+              <p class="section-copy" id="dashboardSubtitle">Dynamic data from the latest uploaded sheets.</p>
+              <div class="welcome-inline">
+                <strong id="welcomeHeadline">Welcome Back</strong>
+                <p id="welcomeSubline">Hope you have a productive day!</p>
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <label>
+                Month
+                <select id="monthSelect"></select>
+              </label>
+              <label>
+                View employee
+                <select id="employeeSwitch"></select>
+              </label>
+              <label>
+                Search project
+                <input id="searchInput" type="text" placeholder="Search by project name..." />
+              </label>
+              <div class="admin-employee-search-shell hidden" id="adminEmployeeSearchShell">
+                <label>
+                  Find employee
+                  <input id="adminEmployeeSearch" type="text" placeholder="Name, ID, department, email" />
+                </label>
+                <div class="inline-actions inline-actions--search">
+                  <button id="adminEmployeeSearchBtn" class="ghost-btn" type="button">Search</button>
+                  <button id="adminEmployeeClearBtn" class="ghost-btn" type="button">Clear</button>
+                </div>
+              </div>
+              <button id="refreshDashboardBtn" class="ghost-btn" type="button">Reload Latest Data</button>
+            </div>
+          </section>
+
+          <section class="hero-grid">
+            <article class="hero-card hero-card--accent">
+              <span>Selected Month</span>
+              <strong id="selectedMonthLabel">-</strong>
+              <p id="selectedMonthNote">Latest sheet period</p>
+            </article>
+            <article class="hero-card">
+              <span>This Month CF</span>
+              <strong id="monthCfValue">₹0</strong>
+              <p>Cash flow from mapped projects</p>
+            </article>
+            <article class="hero-card">
+              <span>Your Share</span>
+              <strong id="monthShareValue">₹0</strong>
+              <p>Monthly incentive earned</p>
+            </article>
+            <article class="hero-card">
+              <span>Future Value Secured</span>
+              <strong id="futureValueValue">₹0</strong>
+              <p>Based on current uploaded sheet</p>
+            </article>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-label">Employee</p>
+                <h3>Profile Snapshot</h3>
+              </div>
+            </div>
+            <div class="summary-grid" id="profileGrid"></div>
+          </section>
+
+          <section class="panel" id="incentivePanel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-label">Incentive Tracker</p>
+                <h3>Current, Past, and Future Incentive View</h3>
+              </div>
+              <div class="topbar-actions topbar-actions--compact">
+                <label>
+                  View
+                  <select id="incentiveStatusFilter">
+                    <option value="all">All</option>
+                    <option value="Current">Current Incentive</option>
+                    <option value="Past">Past Incentive</option>
+                    <option value="Future">Future Projection</option>
+                  </select>
+                </label>
+                <label>
+                  Quarter
+                  <select id="quarterFilter">
+                    <option value="all">All</option>
+                  </select>
+                </label>
+                <label>
+                  Year
+                  <select id="yearFilter">
+                    <option value="all">All</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div class="table-shell">
+              <table class="incentive-table">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Incentive Earned</th>
+                    <th>Incentive Status</th>
+                    <th>Future Projection</th>
+                    <th>Remarks</th>
+                  </tr>
+                </thead>
+                <tbody id="incentiveTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="layout-grid">
+            <section class="panel" id="projectsPanel">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-label">Mapped Projects</p>
+                  <h3>Click any project to open monthly details</h3>
+                </div>
+              </div>
+              <div class="project-list" id="projectCards"></div>
+              <div class="notice" id="projectNotice">Projects from the selected employee and month will appear here.</div>
+            </section>
+
+            <section class="panel" id="teamPanel">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-label">Team Ranking</p>
+                  <h3>Visible only to heads and admins</h3>
+                </div>
+              </div>
+              <div class="ranking-list" id="rankingList"></div>
+              <div class="notice" id="rankingNotice">Only team heads and admins can switch between team member dashboards.</div>
+            </section>
+          </section>
+
+          <section class="panel hidden" id="adminPanel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-label">Admin Dashboard</p>
+                <h3>Upload, replace, and reset dashboard datasets</h3>
+              </div>
+              <span id="searchPageMeta" class="search-meta"></span>
+            </div>
+
+            <div class="admin-grid">
+              <div class="admin-card">
+                <h4>Current Data Sources</h4>
+                <div id="datasetStatusList" class="dataset-list"></div>
+              </div>
+
+              <div class="admin-card">
+                <h4>Upload / Replace Sheets</h4>
+                <form id="datasetUploadForm" class="form-grid">
+                  <label>
+                    MIS Incentive Monthly Employee Data
+                    <input id="misWorkbook" name="misWorkbook" type="file" accept=".xlsx" />
+                  </label>
+                  <label>
+                    YTD Cash Flow
+                    <input id="ytdWorkbook" name="ytdWorkbook" type="file" accept=".xlsx" />
+                  </label>
+                  <label>
+                    Closure Deal Mapping
+                    <input id="closureWorkbook" name="closureWorkbook" type="file" accept=".xlsx" />
+                  </label>
+                  <label>
+                    Employee YTD Incentive Sheet
+                    <input id="employeeSheet" name="employeeSheet" type="file" accept=".xlsx" />
+                  </label>
+                  <label>
+                    Team Structure Sheet
+                    <input id="teamSheet" name="teamSheet" type="file" accept=".xlsx" />
+                  </label>
+                </form>
+                <div class="inline-actions">
+                  <button id="uploadDatasetsBtn" class="solid-btn" type="button">Upload and Refresh</button>
+                  <button id="deleteDatasetsBtn" class="ghost-btn" type="button">Delete Existing Data</button>
+                  <button id="reloadDatasetsBtn" class="ghost-btn" type="button">Reload From Latest Files</button>
+                </div>
+                <div class="notice" id="uploadNotice">
+                  Upload any of the workbook files you updated. The dashboard refreshes immediately after a successful upload.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" id="accountPanel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-label">Account</p>
+                <h3>Change Password</h3>
+              </div>
+            </div>
+            <form id="passwordForm" class="form-grid">
+              <label>
+                Current password
+                <input id="currentPassword" type="password" autocomplete="current-password" />
+              </label>
+              <label>
+                New password
+                <input id="newPassword" type="password" autocomplete="new-password" />
+              </label>
+              <label>
+                Confirm password
+                <input id="confirmPassword" type="password" autocomplete="new-password" />
+              </label>
+            </form>
+            <div class="inline-actions">
+              <button id="changePasswordBtn" class="solid-btn" type="button">Save Password</button>
+            </div>
+            <div class="notice" id="passwordNotice"></div>
+          </section>
+        </main>
+      </section>
+    </div>
+
+    <dialog class="detail-modal" id="projectDetailModal">
+      <div class="detail-modal__card">
+        <div class="panel-heading">
+          <div>
+            <p class="section-label">Project Detail</p>
+            <h3 id="detailProjectName">Project</h3>
+            <p class="detail-copy">Mapped project details are shown below with improved contrast and spacing.</p>
+          </div>
+          <button id="closeDetailModalBtn" class="ghost-btn" type="button">Close</button>
+        </div>
+        <div class="summary-grid" id="projectDetailGrid"></div>
+      </div>
+    </dialog>
+
+    <dialog class="confirm-modal" id="confirmModal">
+      <div class="detail-modal__card confirm-card">
+        <h3>Confirm Delete</h3>
+        <p id="confirmMessage">Are you sure you want to delete this file?</p>
+        <div class="inline-actions">
+          <button id="confirmDeleteBtn" class="solid-btn" type="button">Yes, Delete</button>
+          <button id="cancelDeleteBtn" class="ghost-btn" type="button">Cancel</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="reset-modal" id="resetModal">
+      <div class="detail-modal__card reset-card">
+        <div class="panel-heading">
+          <div>
+            <p class="section-label">Forgot Password</p>
+            <h3>Reset Your Password Securely</h3>
+            <p class="detail-copy">Enter your registered email and verify the OTP within 15 minutes.</p>
+          </div>
+          <button id="closeResetModalBtn" class="ghost-btn" type="button">Close</button>
+        </div>
+        <form id="resetPasswordForm" class="auth-form auth-form--reset">
+          <label>
+            Employee ID
+            <input id="resetEmployeeId" type="text" inputmode="numeric" />
+          </label>
+          <label>
+            Email
+            <input id="resetEmail" type="email" placeholder="name@flipspaces.com" />
+          </label>
+          <label>
+            OTP
+            <input id="resetOtp" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit OTP" />
+          </label>
+          <label class="password-field">
+            New password
+            <span class="password-input-shell">
+              <input id="resetNewPassword" type="password" />
+              <button id="toggleResetPasswordBtn" class="password-toggle" type="button" aria-label="Show reset password">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 5C6.5 5 2.1 8.4 1 12c1.1 3.6 5.5 7 11 7s9.9-3.4 11-7c-1.1-3.6-5.5-7-11-7Zm0 11.2A4.2 4.2 0 1 1 12 7.8a4.2 4.2 0 0 1 0 8.4Zm0-6.6A2.4 2.4 0 1 0 12 14a2.4 2.4 0 0 0 0-4.8Z"></path>
+                </svg>
+              </button>
+            </span>
+          </label>
+          <label class="password-field">
+            Confirm password
+            <span class="password-input-shell">
+              <input id="resetConfirmPassword" type="password" />
+              <button id="toggleResetConfirmPasswordBtn" class="password-toggle" type="button" aria-label="Show confirm password">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 5C6.5 5 2.1 8.4 1 12c1.1 3.6 5.5 7 11 7s9.9-3.4 11-7c-1.1-3.6-5.5-7-11-7Zm0 11.2A4.2 4.2 0 1 1 12 7.8a4.2 4.2 0 0 1 0 8.4Zm0-6.6A2.4 2.4 0 1 0 12 14a2.4 2.4 0 0 0 0-4.8Z"></path>
+                </svg>
+              </button>
+            </span>
+          </label>
+          <div class="inline-actions">
+            <button id="requestOtpBtn" class="ghost-btn" type="button">Send OTP</button>
+            <button id="resendOtpBtn" class="ghost-btn" type="button">Resend OTP</button>
+            <button id="verifyOtpBtn" class="ghost-btn" type="button">Verify OTP</button>
+            <button class="solid-btn" type="submit">Reset Password</button>
+          </div>
+        </form>
+        <div class="notice" id="resetNotice">
+          OTP verification is required before the password can be changed.
+        </div>
+      </div>
+    </dialog>
+
+    <div class="loading-overlay hidden" id="loadingOverlay">
+      <div class="spinner-card">
+        <div class="spinner"></div>
+        <p id="loadingLabel">Loading...</p>
+      </div>
+    </div>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

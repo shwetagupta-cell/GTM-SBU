@@ -1,0 +1,210 @@
+[
+  {
+    "employeeId": "ADM001",
+    "name": "Aditi Rao",
+    "designation": "Vice President - Growth",
+    "salt": "3da3ffec496c167558ca0bc52102c698",
+    "passwordHash": "358b9b1eb9112725429f003ed26bfd0b73840ae19d4be0f561c3f626b9950c86",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "EMP001",
+    "name": "Rahul Sharma",
+    "designation": "Associate",
+    "salt": "9fe1656d620c35753e015b26021d64f5",
+    "passwordHash": "b0ac97dc797f1b3b714b46ac22cdd0113ffc6812fbf03469d8615b818ba7e0ac",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "EMP002",
+    "name": "Priya Mehta",
+    "designation": "Executive",
+    "salt": "5317a44f1ae5a173cee483f1277951cc",
+    "passwordHash": "53d70ba109ec6b780e83184faee31001dfdf7ba019e2f8230bca803cec94825d",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "EMP003",
+    "name": "Arjun Verma",
+    "designation": "Assistant Manager",
+    "salt": "396ef5a4d1a92c2abafa8ed535e66da6",
+    "passwordHash": "d066f840d3bead57e662f1e20e38fae4bce4b316bdf8c18fd983901cfc7e2f24",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "EMP004",
+    "name": "Sneha Kapoor",
+    "designation": "Manager",
+    "salt": "6b534d33a0bcdf27450cc18f97f57425",
+    "passwordHash": "0607fe59c16cd75ef30645263c89080a3db34d267871a5d6bfe1cc1fb9f75cb5",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "EMP005",
+    "name": "Amit Verma",
+    "designation": "Regional Head",
+    "salt": "04fbd1122f58fc41d7e14fb580b57acb",
+    "passwordHash": "24045856536e7a1b9fd5e319bb40d3708fc601176607b056983c8dc68ef30e5b",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1709",
+    "name": "Shweta",
+    "designation": "Admin",
+    "salt": "2d2b649445e1670ed3828b250de1edc5",
+    "passwordHash": "a4dcd4f1a17072ad7cc7dfb5ea95a71967fd028a1ab8e6f75c9a8a030f49d712",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1840",
+    "name": "Romil Kulshrestha",
+    "designation": "Vice President - Offline Growth",
+    "salt": "463e1fe19d8baa7e6b459b06f005ad36",
+    "passwordHash": "ebba014f50ce213b8b4d9b0405115d60279af018653b54ac9a62eed6694ced59",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1474",
+    "name": "Shruti Nargolkar",
+    "designation": "General Manager - Key Accounts",
+    "salt": "320996122fa08c1111a78bfba980b9fa",
+    "passwordHash": "b541f02122ea9f7a176576d6e0414de0d4b80a3e3fa55b3f8e42a3fd0a870600",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1577",
+    "name": "Vandana Sharma",
+    "designation": "Regional Head- Key Accounts",
+    "salt": "07234186fa63ddcbc26053f8e0379369",
+    "passwordHash": "fa0c4b672fe4f3d0c0461fb852fb0be18d1c72632a398cfcd2746517f05b34af",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1606",
+    "name": "Rahul Bajaj",
+    "designation": "Regional Head- Key Accounts",
+    "salt": "57c96e0732a6000b37355d39c1d90c75",
+    "passwordHash": "cac3bdb449f78ef2ff4b2bf8e2f6756bc1a9150075b4f92fee9f99f6e9c03260",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1807",
+    "name": "Dimpi Praveer Barot",
+    "designation": "Assistant General Manager - Key Accounts",
+    "salt": "a691096e6f4ce348c1706061272d1af6",
+    "passwordHash": "62d619b1cb1c664967079a8ea41606e829dd540b114062f6dcac1dec5fc4355c",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1566",
+    "name": "Geeta Kumar Budhrani",
+    "designation": "Manager- Key Accounts",
+    "salt": "ade604f85760b592f8e3e89df439e057",
+    "passwordHash": "7cced628092b4ab80a622c7366b1eee303ded29cd90841280b1ca1d08384b4e1",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1618",
+    "name": "Kaushik V",
+    "designation": "Manager- Key Accounts",
+    "salt": "a8625214d17d19e0c999d5a880eb7a27",
+    "passwordHash": "358b8cf44bc254c1f04ac65052f67fbb3b4ecb8f9d12c6ff12c26603ae3f1d22",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1733",
+    "name": "Sheryl Jaya Rebello",
+    "designation": "Deputy General Manager - Events Strategy",
+    "salt": "5a7a1e6ca299236fa3ce11e2a0984be9",
+    "passwordHash": "3bbe525dee85502c02f8cf829e538b0e9dc059d65a0928a09d8277666eafea4e",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "607",
+    "name": "Amrit Singh",
+    "designation": "Vice President - Marketing and PR",
+    "salt": "7e803303c7d5228717082b5b7d8fa38d",
+    "passwordHash": "d2ec576b7f5275da5fae468bd127070c51e39cf2efe314d0ce8a7673c8466dea",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "752",
+    "name": "Kamlesh Kumar Sharma",
+    "designation": "General Manager- Operations",
+    "salt": "7b778923c06f212ccce364afd4770ce2",
+    "passwordHash": "26b4cc5bdc96b43f887be4fff97de04a4fb403584283dbd3ba57ca8b9c64b36c",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1448",
+    "name": "Ankit Arora",
+    "designation": "Assistant Vice President - Business Development",
+    "salt": "de10a26f95e1ddde49937302bf6d9a34",
+    "passwordHash": "9713675c76adce8194979e79c6d6b75934db04746d7c9b606956ebb6e95f9769",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1605",
+    "name": "Swapnil Vijay Rasal",
+    "designation": "Deputy General Manager- Business Development",
+    "salt": "a5fd72ea697ee0bcc3f52a76181a6b41",
+    "passwordHash": "1c79e79a1b018cd64aeaf25c6bca0091ec1cae50d8a2669a06dc4700d03a65b2",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "59",
+    "name": "Sanket Milind Patne",
+    "designation": "Assistant General Manager- Operations",
+    "salt": "d40756bd56f1c630eeae7ed3a3e13b26",
+    "passwordHash": "fd46654a9474e96be100cf98c418b45330742ca89a3cae3be157477559d73849",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1436",
+    "name": "Mayank Shekhar Brahmaji Singh",
+    "designation": "Assistant General Manager- Business Development",
+    "salt": "1cf1c23a0e58f54cf54b31be5d889b0e",
+    "passwordHash": "7e0ffabaddc8355c69d323b6d4853742911d1d22d23d6e9e6fff5d754b7896f8",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1651",
+    "name": "Radhika Pranav Deshpande",
+    "designation": "Senior Interior Designer",
+    "salt": "ea7b8d191405f1deaf5025ff41107b08",
+    "passwordHash": "38ad9c8e6f48544492314f843793f3ea6ee6fa19cb0488fc51495d2ec872ec25",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1659",
+    "name": "Utsav Jayesh Doshi",
+    "designation": "Assistant General Manager - Design",
+    "salt": "6cef61abe86f31bea416ca8c26131372",
+    "passwordHash": "0502d9c720ce2b3891d71940708162a1638952b4bfb86844ab9909a54faef799",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1760",
+    "name": "Saloni H Patel",
+    "designation": "Manager - Design",
+    "salt": "2ee6d6a6b7afc1b255302e57bb291438",
+    "passwordHash": "8cbc04692524330273ed1e83a863e1aa622b3c33ba4b83058e7610cc789a80cf",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "1747",
+    "name": "Rahul Rajendra Naik",
+    "designation": "Assistant General Manager- Business Development",
+    "salt": "426fa1e03abd48eb0450a88dc1ae8254",
+    "passwordHash": "8100c57e2e720ecd2e21e29c48a61533b888a038288f1ec13d707e593535b0fe",
+    "mustChangePassword": true
+  },
+  {
+    "employeeId": "877",
+    "name": "Mohsin Rahmat Sayed",
+    "designation": "Deputy General Manager - Operations",
+    "salt": "6bb40cade672380535cb2308a393bfe1",
+    "passwordHash": "75babf1a3fca2682bb6c0927702336da171f99295b41fd2af7bec4de3ca9f62d",
+    "mustChangePassword": true
+  }
+]
