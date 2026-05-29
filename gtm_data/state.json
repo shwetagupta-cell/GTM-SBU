@@ -48,7 +48,7 @@
       "uploadedAt": "2026-05-27T09:30:09",
       "uploadType": "project_cf",
       "recordCount": 13,
-      "deleted": false,
+      "deleted": true,
       "seeded": false
     },
     {
@@ -28049,5 +28049,5 @@
       }
     ]
   },
-  "loadedAt": "2026-05-27T14:22:45"
+  "loadedAt": "2026-05-27T15:42:00"
 }
