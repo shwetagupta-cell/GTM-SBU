@@ -128,15 +128,38 @@ const EYE_ICON = `
 
 const QUARTER_SEQUENCE = ["Q1", "Q2", "Q3", "Q4"];
 
-function api(path, options = {}) {
-  return fetch(path, { credentials: "same-origin", ...options }).then(async (response) => {
-    const contentType = response.headers.get("Content-Type") || "";
-    const data = contentType.includes("application/json") ? await response.json().catch(() => ({})) : {};
-    if (!response.ok) {
-      throw new Error(data.error || "Request failed");
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isNetworkError(error) {
+  return error instanceof TypeError || /load failed|failed to fetch|network/i.test(error?.message || "");
+}
+
+async function api(path, options = {}) {
+  const fetchOptions = { credentials: "same-origin", ...options };
+  const retries = Number(options.retries ?? 1);
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const response = await fetch(path, fetchOptions);
+      const contentType = response.headers.get("Content-Type") || "";
+      const data = contentType.includes("application/json") ? await response.json().catch(() => ({})) : {};
+      if (!response.ok) {
+        throw new Error(data.error || "Request failed");
+      }
+      return data;
+    } catch (error) {
+      if (attempt < retries && isNetworkError(error)) {
+        await sleep(800);
+        continue;
+      }
+      if (isNetworkError(error)) {
+        throw new Error("Unable to reach the server. Please refresh the page and try again.");
+      }
+      throw error;
     }
-    return data;
-  });
+  }
+  throw new Error("Request failed");
 }
 
 function escapeHtml(value) {
@@ -625,8 +648,9 @@ async function refreshDashboard() {
 async function login(event) {
   event.preventDefault();
   els.loginNotice.textContent = "Signing you in...";
+  let dashboard;
   try {
-    state.dashboard = await api("/api/login", {
+    dashboard = await api("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -635,6 +659,13 @@ async function login(event) {
         password: els.loginPassword.value,
       }),
     });
+  } catch (error) {
+    els.loginNotice.textContent = error.message;
+    return;
+  }
+
+  try {
+    state.dashboard = dashboard;
     state.selectedEmployeeId = state.dashboard?.viewedEmployee?.employeeId || "";
     state.selectedPeriod = state.dashboard?.viewedEmployee?.selectedPeriod || state.dashboard?.currentPeriod || "";
     state.selectedQuarter = quarterForPeriod(state.selectedPeriod);
@@ -642,7 +673,8 @@ async function login(event) {
     renderAll();
     els.loginNotice.textContent = "Use your employee ID and password to continue.";
   } catch (error) {
-    els.loginNotice.textContent = error.message;
+    console.error(error);
+    els.loginNotice.textContent = "Signed in, but the dashboard could not load. Please refresh once.";
   }
 }
 
