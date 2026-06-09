@@ -312,6 +312,25 @@ select:focus {
   background: var(--accent-soft);
 }
 
+.forgot-panel {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.forgot-panel summary {
+  cursor: pointer;
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
+.forgot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
 .app-shell {
   min-height: 100vh;
   display: grid;
@@ -432,11 +451,12 @@ select:focus {
 
 .admin-score-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-bottom: 22px;
 }
 
 .project-stats {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  margin-bottom: 18px;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  margin-bottom: 24px;
 }
 
 .grid-two {
@@ -457,19 +477,30 @@ select:focus {
 .trend-item,
 .upload-card,
 .upload-item {
-  padding: 15px;
+  padding: 16px;
 }
 
 .metric-card strong,
 .project-pill strong {
   display: block;
   margin-top: 8px;
-  font-size: clamp(22px, 2.3vw, 28px);
-  line-height: 1;
+  font-size: clamp(18px, 1.8vw, 24px);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.project-pill {
+  min-height: 112px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
 }
 
 .admin-score-grid .metric-card {
   min-height: 128px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
 }
 
 .admin-score-grid .metric-card span {
@@ -645,15 +676,15 @@ select:focus {
 }
 
 .formula-strip {
-  margin-top: 16px;
+  margin-top: 22px;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(6, minmax(140px, 1fr));
+  gap: 12px;
 }
 
 .formula-box {
-  min-height: 92px;
-  padding: 14px;
+  min-height: 108px;
+  padding: 16px;
   border-radius: 18px;
   border: 1px solid rgba(24, 33, 47, 0.08);
   background: rgba(255, 255, 255, 0.76);
@@ -671,17 +702,9 @@ select:focus {
 }
 
 .formula-box strong {
-  font-size: 16px;
-}
-
-.project-pill--input {
-  align-content: start;
-}
-
-.project-stat-input {
-  min-height: 40px;
-  padding: 10px 12px;
-  margin-top: 8px;
+  font-size: 18px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .formula-box--result {
@@ -744,6 +767,7 @@ select:focus {
   .form-grid,
   .filter-grid--wide,
   .admin-score-grid,
+  .forgot-grid,
   .formula-strip {
     grid-template-columns: 1fr 1fr;
   }
@@ -783,6 +807,7 @@ select:focus {
   .score-grid,
   .project-stats,
   .grid-two,
+  .forgot-grid,
   .summary-grid,
   .summary-grid--wide,
   .form-grid,

@@ -1,6 +1,7 @@
 import io
 import json
 import secrets
+import time
 from email.parser import BytesParser
 from email.policy import compat32
 from http import HTTPStatus
@@ -56,7 +57,7 @@ class _MultipartForm:
         return field.value if field is not None else default
 # ---------------------------------------------------------------------------
 
-from gtm_tool.auth_service import load_accounts, send_reset_otp_email, update_password, verify_password
+from gtm_tool.auth_service import find_account, load_accounts, send_reset_otp_email, update_password, verify_password
 from gtm_tool.config import ROOT, load_config
 from gtm_tool.data_service import DATA_SERVICE
 from services.utils import clean_string
@@ -65,6 +66,7 @@ from services.utils import clean_string
 SESSION_COOKIE = "gtm_session"
 SESSIONS = {}
 RESET_OTP_STORE = {}
+OTP_TTL_SECONDS = 10 * 60
 
 
 def _account_map():
@@ -87,7 +89,8 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         if set_cookie:
-            self.send_header("Set-Cookie", f"{SESSION_COOKIE}={set_cookie}; Path=/; HttpOnly; SameSite=Lax")
+            secure = "; Secure" if self.headers.get("X-Forwarded-Proto", "").lower() == "https" else ""
+            self.send_header("Set-Cookie", f"{SESSION_COOKIE}={set_cookie}; Path=/; HttpOnly; SameSite=Lax{secure}")
         if clear_cookie:
             self.send_header("Set-Cookie", f"{SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0")
         self.end_headers()
@@ -155,6 +158,8 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
             return self.handle_change_password()
         if parsed.path == "/api/request-reset-otp":
             return self.handle_request_reset_otp()
+        if parsed.path == "/api/verify-reset-otp":
+            return self.handle_verify_reset_otp()
         if parsed.path == "/api/reset-password":
             return self.handle_reset_password()
         if parsed.path == "/api/admin/employees":
@@ -224,9 +229,12 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
         employee_id = clean_string(payload.get("employeeId"))
         password = clean_string(payload.get("password"))
         login_type = clean_string(payload.get("loginType") or "employee").lower()
-        account = _account_map().get(employee_id)
+        account = find_account(employee_id)
         if not account or not verify_password(password, account["salt"], account["passwordHash"]):
             return self.send_json({"error": "Invalid employee ID or password"}, status=HTTPStatus.UNAUTHORIZED)
+        if clean_string(account.get("status", "active")).lower() != "active":
+            return self.send_json({"error": "This user is inactive. Please contact Admin."}, status=HTTPStatus.UNAUTHORIZED)
+        employee_id = clean_string(account.get("employeeId"))
         config = load_config()
         admin_mode = login_type == "admin"
         if admin_mode and employee_id not in config.get("adminEmployeeIds", []):
@@ -269,18 +277,45 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
     def handle_request_reset_otp(self):
         payload = self.read_json()
         employee_id = clean_string(payload.get("employeeId"))
+        employee_name = clean_string(payload.get("employeeName") or payload.get("name"))
         email = clean_string(payload.get("email")).lower()
-        employee = DATA_SERVICE.state["employees"].get(employee_id)
+        employee = DATA_SERVICE.state["employees"].get(employee_id) if employee_id else None
+        if not employee and email:
+            employee = next(
+                (item for item in DATA_SERVICE.state["employees"].values() if clean_string(item.get("email")).lower() == email),
+                None,
+            )
         if not employee:
             return self.send_json({"error": "Employee not found"}, status=HTTPStatus.BAD_REQUEST)
+        employee_id = clean_string(employee.get("employeeId"))
+        if employee_name and clean_string(employee.get("name")).lower() != employee_name.lower():
+            return self.send_json({"error": "Employee name does not match this record"}, status=HTTPStatus.BAD_REQUEST)
         expected = clean_string(employee.get("email", "")).lower()
-        if expected and expected != email:
+        if not email or (expected and expected != email):
             return self.send_json({"error": "The email does not match this employee record"}, status=HTTPStatus.BAD_REQUEST)
         otp = f"{secrets.randbelow(1000000):06d}"
-        RESET_OTP_STORE[employee_id] = {"otp": otp, "email": email}
+        RESET_OTP_STORE[employee_id] = {"otp": otp, "email": email, "expiresAt": time.time() + OTP_TTL_SECONDS, "attempts": 0, "verified": False}
         result = send_reset_otp_email(email, employee.get("name", employee_id), otp)
         print(f"GTM reset OTP for {employee_id} ({email}): {otp}")
-        return self.send_json({"ok": True, "message": "OTP sent successfully." if result.get("ok") else result.get("error")})
+        return self.send_json({"ok": True, "employeeId": employee_id, "message": "OTP sent successfully." if result.get("ok") else result.get("error")})
+
+    def handle_verify_reset_otp(self):
+        payload = self.read_json()
+        employee_id = clean_string(payload.get("employeeId"))
+        record = RESET_OTP_STORE.get(employee_id)
+        if not record or record.get("email") != clean_string(payload.get("email")).lower():
+            return self.send_json({"error": "Request OTP first before verifying."}, status=HTTPStatus.BAD_REQUEST)
+        if time.time() > record.get("expiresAt", 0):
+            RESET_OTP_STORE.pop(employee_id, None)
+            return self.send_json({"error": "OTP expired. Please request a new OTP."}, status=HTTPStatus.BAD_REQUEST)
+        record["attempts"] = int(record.get("attempts", 0)) + 1
+        if record["attempts"] > 5:
+            RESET_OTP_STORE.pop(employee_id, None)
+            return self.send_json({"error": "Too many OTP attempts. Please request a new OTP."}, status=HTTPStatus.BAD_REQUEST)
+        if record.get("otp") != clean_string(payload.get("otp")):
+            return self.send_json({"error": "OTP is incorrect"}, status=HTTPStatus.BAD_REQUEST)
+        record["verified"] = True
+        return self.send_json({"ok": True, "message": "OTP verified. Create your new password."})
 
     def handle_reset_password(self):
         payload = self.read_json()
@@ -288,8 +323,13 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
         record = RESET_OTP_STORE.get(employee_id)
         if not record or record.get("email") != clean_string(payload.get("email")).lower():
             return self.send_json({"error": "Request OTP first before resetting your password"}, status=HTTPStatus.BAD_REQUEST)
+        if time.time() > record.get("expiresAt", 0):
+            RESET_OTP_STORE.pop(employee_id, None)
+            return self.send_json({"error": "OTP expired. Please request a new OTP."}, status=HTTPStatus.BAD_REQUEST)
         if record.get("otp") != clean_string(payload.get("otp")):
             return self.send_json({"error": "OTP is incorrect"}, status=HTTPStatus.BAD_REQUEST)
+        if not record.get("verified"):
+            return self.send_json({"error": "Verify OTP before creating a new password"}, status=HTTPStatus.BAD_REQUEST)
         new_password = clean_string(payload.get("newPassword"))
         confirm_password = clean_string(payload.get("confirmPassword"))
         if len(new_password) < 6:

@@ -1,9 +1,20 @@
 import json
+import os
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = ROOT / "gtm_data"
+
+
+def _path_from_env(name, default):
+    value = os.environ.get(name)
+    if not value:
+        return default
+    path = Path(value)
+    return path if path.is_absolute() else ROOT / path
+
+
+DATA_DIR = _path_from_env("GTM_DATA_DIR", ROOT / "gtm_data")
 UPLOADS_DIR = DATA_DIR / "uploads"
 STATE_FILE = DATA_DIR / "state.json"
 ACCOUNTS_FILE = DATA_DIR / "accounts.json"
@@ -42,6 +53,21 @@ def load_config():
         if loaded.get("adminEmployeeIds"):
             config["adminEmployeeIds"] = loaded["adminEmployeeIds"]
         config["smtp"].update(loaded.get("smtp", {}))
+    admin_ids = os.environ.get("GTM_ADMIN_EMPLOYEE_IDS")
+    if admin_ids:
+        config["adminEmployeeIds"] = [item.strip() for item in admin_ids.split(",") if item.strip()]
+    env_smtp = {
+        "host": os.environ.get("SMTP_HOST"),
+        "port": os.environ.get("SMTP_PORT"),
+        "username": os.environ.get("SMTP_USERNAME"),
+        "password": os.environ.get("SMTP_PASSWORD"),
+        "fromEmail": os.environ.get("SMTP_FROM_EMAIL"),
+    }
+    for key, value in env_smtp.items():
+        if value not in (None, ""):
+            config["smtp"][key] = int(value) if key == "port" else value
+    if os.environ.get("SMTP_USE_TLS") not in (None, ""):
+        config["smtp"]["useTls"] = os.environ.get("SMTP_USE_TLS", "").strip().lower() not in {"0", "false", "no", "off"}
     return config
 
 

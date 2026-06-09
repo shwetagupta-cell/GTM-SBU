@@ -24,6 +24,21 @@
             <button type="submit" class="solid-btn full-btn">Sign In</button>
           </form>
           <div id="loginNotice" class="notice">Use your employee ID and password to continue.</div>
+          <details class="forgot-panel">
+            <summary>Forgot password?</summary>
+            <div class="forgot-grid">
+              <label>Employee ID<input id="resetEmployeeId" class="field-control" type="text" /></label>
+              <label>Employee Name<input id="resetEmployeeName" class="field-control" type="text" /></label>
+              <label>Email ID<input id="resetEmail" class="field-control" type="email" /></label>
+              <button id="requestOtpBtn" class="ghost-btn full-btn" type="button">Send OTP</button>
+              <label>OTP<input id="resetOtp" class="field-control" type="text" inputmode="numeric" maxlength="6" /></label>
+              <button id="verifyOtpBtn" class="ghost-btn full-btn" type="button">Verify OTP</button>
+              <label>New Password<input id="resetNewPassword" class="field-control" type="password" /></label>
+              <label>Confirm Password<input id="resetConfirmPassword" class="field-control" type="password" /></label>
+              <button id="resetPasswordBtn" class="solid-btn full-btn" type="button">Create New Password</button>
+            </div>
+            <div id="resetNotice" class="notice">Enter your email ID to receive an OTP.</div>
+          </details>
         </div>
       </section>
 
@@ -167,13 +182,9 @@
                   <tr>
                     <th>KRA</th>
                     <th>KPI</th>
-                    <th>Target</th>
-                    <th>Achieved</th>
-                    <th>Achievement %</th>
+                    <th>Achievement</th>
                     <th>Score</th>
-                    <th>Weightage</th>
-                    <th>Weighted Score</th>
-                    <th>NPS</th>
+                    <th>Incentive</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -199,9 +210,9 @@
               <article class="project-pill"><span>Project Value</span><strong id="projectValueTotal">Rs 0</strong></article>
               <article class="project-pill"><span>Department %</span><strong id="projectDepartmentPercent">0%</strong></article>
               <article class="project-pill"><span>Team Share %</span><strong id="projectTeamSharePercent">0%</strong></article>
-              <article class="project-pill project-pill--input">
+              <article class="project-pill">
                 <span>My Share</span>
-                <input id="projectMyShareInput" class="field-control project-stat-input" type="number" min="0" step="0.01" />
+                <strong id="projectMyShareValue">0%</strong>
               </article>
               <article class="project-pill"><span>NPS Score</span><strong id="projectDisbursalPercent">0%</strong></article>
               <article class="project-pill"><span>Value</span><strong id="projectFinalDisbursal">Rs 0</strong></article>
@@ -264,6 +275,7 @@
                   <label>Hierarchy Role<select id="employeeHierarchyRoleInput" class="field-control"><option value="india_head">India Head</option><option value="national_vertical_head">National Vertical Head</option><option value="regional_head">Regional Head</option><option value="manager">Manager</option></select></label>
                   <label>Disbursal Type<select id="employeeDisbursalInput" class="field-control"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annually">Annually</option></select></label>
                   <label>My Share %<input id="employeeProjectIncentiveInput" class="field-control" type="number" min="0" step="0.01" /></label>
+                  <label>Temp Password<input id="employeeTempPasswordInput" class="field-control" type="text" placeholder="Defaults to GTM + Employee ID" /></label>
                   <label>Department %<input id="employeeDepartmentPercentInput" class="field-control" type="number" min="0" step="0.01" /></label>
                   <label>Team Share %<input id="employeeTeamSharePercentInput" class="field-control" type="number" min="0" step="0.01" /></label>
                   <label>NPS Score<input id="employeeNpsInput" class="field-control" type="number" min="0" max="5" step="0.1" /></label>

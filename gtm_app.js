@@ -7,6 +7,16 @@ const els = {
   loginPassword: document.getElementById("loginPassword"),
   toggleLoginPassword: document.getElementById("toggleLoginPassword"),
   loginNotice: document.getElementById("loginNotice"),
+  resetEmployeeId: document.getElementById("resetEmployeeId"),
+  resetEmployeeName: document.getElementById("resetEmployeeName"),
+  resetEmail: document.getElementById("resetEmail"),
+  resetOtp: document.getElementById("resetOtp"),
+  resetNewPassword: document.getElementById("resetNewPassword"),
+  resetConfirmPassword: document.getElementById("resetConfirmPassword"),
+  requestOtpBtn: document.getElementById("requestOtpBtn"),
+  verifyOtpBtn: document.getElementById("verifyOtpBtn"),
+  resetPasswordBtn: document.getElementById("resetPasswordBtn"),
+  resetNotice: document.getElementById("resetNotice"),
   sessionUser: document.getElementById("sessionUser"),
   sessionMeta: document.getElementById("sessionMeta"),
   logoutBtn: document.getElementById("logoutBtn"),
@@ -43,7 +53,7 @@ const els = {
   projectValueTotal: document.getElementById("projectValueTotal"),
   projectDepartmentPercent: document.getElementById("projectDepartmentPercent"),
   projectTeamSharePercent: document.getElementById("projectTeamSharePercent"),
-  projectMyShareInput: document.getElementById("projectMyShareInput"),
+  projectMyShareValue: document.getElementById("projectMyShareValue"),
   projectDisbursalPercent: document.getElementById("projectDisbursalPercent"),
   projectFinalDisbursal: document.getElementById("projectFinalDisbursal"),
   projectTableBody: document.getElementById("projectTableBody"),
@@ -74,6 +84,7 @@ const els = {
   employeeHierarchyRoleInput: document.getElementById("employeeHierarchyRoleInput"),
   employeeDisbursalInput: document.getElementById("employeeDisbursalInput"),
   employeeProjectIncentiveInput: document.getElementById("employeeProjectIncentiveInput"),
+  employeeTempPasswordInput: document.getElementById("employeeTempPasswordInput"),
   employeeDepartmentPercentInput: document.getElementById("employeeDepartmentPercentInput"),
   employeeTeamSharePercentInput: document.getElementById("employeeTeamSharePercentInput"),
   employeeNpsInput: document.getElementById("employeeNpsInput"),
@@ -393,7 +404,7 @@ function renderKpis() {
   const rows = summary?.kpis || [];
 
   els.kpiNotice.textContent = summary
-    ? `${rows.length} KPI rows loaded for ${summary.displayPeriod}. Weightage is mapped from the ${employee?.grade || "-"} framework.`
+    ? `${rows.length} project-specific KPI rows loaded for ${summary.displayPeriod}. Incentive is allocated from selected-month project disbursal.`
     : "KPI scorecard will appear here.";
 
   els.kpiTableBody.innerHTML = rows.length
@@ -404,13 +415,9 @@ function renderKpis() {
             <tr data-record-id="${escapeHtml(row.recordId)}">
               <td>${escapeHtml(row.kraCategory || "-")}</td>
               <td>${escapeHtml(row.kpiName || "-")}</td>
-              <td><input class="small-input target-input" type="number" step="0.01" value="${escapeHtml(row.target)}" ${isAdmin() ? "" : "disabled"} /></td>
               <td><input class="small-input achieved-input" type="number" step="0.01" value="${escapeHtml(row.achieved)}" ${isAdmin() ? "" : "disabled"} /></td>
-              <td>${escapeHtml(row.achievementPercent)}%</td>
               <td>${escapeHtml(row.score)}</td>
-              <td>${escapeHtml(row.weightage)}</td>
-              <td>${escapeHtml(row.finalWeightedScore)}</td>
-              <td>${escapeHtml(row.npsScore)}</td>
+              <td>${money(row.incentiveAmount || 0)}</td>
               <td>
                 <div class="action-cell">
                   <span class="status-badge">${escapeHtml(row.action)}</span>
@@ -421,7 +428,7 @@ function renderKpis() {
           `;
         })
         .join("")
-    : `<tr><td colspan="10">No KPI rows are available for this employee yet.</td></tr>`;
+    : `<tr><td colspan="6">No KPI rows are available for this employee yet.</td></tr>`;
 }
 
 function renderProjects() {
@@ -433,7 +440,7 @@ function renderProjects() {
   els.projectValueTotal.textContent = money(summary?.projectValue || 0);
   els.projectDepartmentPercent.textContent = percent(employee?.departmentPercent || 0);
   els.projectTeamSharePercent.textContent = percent(employee?.teamSharePercent || 0);
-  els.projectMyShareInput.value = String(currentMyShare || "");
+  els.projectMyShareValue.textContent = percent(currentMyShare || 0);
   els.projectDisbursalPercent.textContent = Number(summary?.npsScore || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
   els.projectFinalDisbursal.textContent = money(summary?.finalDisbursal || 0);
 
@@ -556,6 +563,7 @@ function fillEmployeeForm(employee) {
   els.employeeHierarchyRoleInput.value = source.hierarchyRole || "manager";
   els.employeeDisbursalInput.value = employee.disbursalType || source.disbursalType || "quarterly";
   els.employeeProjectIncentiveInput.value = employee.mySharePercent ?? source.mySharePercent ?? employee.projectIncentivePercent ?? source.projectIncentivePercent ?? "";
+  els.employeeTempPasswordInput.value = "";
   els.employeeDepartmentPercentInput.value = employee.departmentPercent ?? source.departmentPercent ?? "";
   els.employeeTeamSharePercentInput.value = employee.teamSharePercent ?? source.teamSharePercent ?? "";
   els.employeeNpsInput.value = currentSummary()?.npsScore ?? employee.npsScore ?? source.npsScore ?? "";
@@ -583,9 +591,7 @@ function renderFormulaPreview() {
   els.formulaMySharePercent.textContent = percent(mySharePercent);
   els.formulaNpsPercent.textContent = Number(summary?.npsScore || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
   els.formulaFinalValue.textContent = money(finalValue);
-  if (els.projectMyShareInput && els.projectMyShareInput !== document.activeElement) {
-    els.projectMyShareInput.value = String(mySharePercent || "");
-  }
+  els.projectMyShareValue.textContent = percent(mySharePercent || 0);
 }
 
 function renderAll() {
@@ -680,12 +686,14 @@ async function saveEmployee() {
         sharePercent: currentEmployee()?.sharePercent ?? 100,
         projectIncentivePercent: els.employeeProjectIncentiveInput.value,
         mySharePercent: els.employeeProjectIncentiveInput.value,
+        tempPassword: els.employeeTempPasswordInput.value.trim(),
         departmentPercent: els.employeeDepartmentPercentInput.value,
         teamSharePercent: els.employeeTeamSharePercentInput.value,
         npsScore: els.employeeNpsInput.value,
       }),
     });
     els.employeeNotice.textContent = "Employee record saved successfully.";
+    els.employeeTempPasswordInput.value = "";
     await refreshDashboard();
   } catch (error) {
     els.employeeNotice.textContent = error.message;
@@ -727,7 +735,6 @@ async function saveKpi(event) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         recordId: row.dataset.recordId,
-        target: row.querySelector(".target-input")?.value,
         achieved: row.querySelector(".achieved-input")?.value,
       }),
     });
@@ -833,6 +840,68 @@ async function updatePassword() {
   }
 }
 
+async function requestResetOtp() {
+  els.resetNotice.textContent = "Sending OTP...";
+  try {
+    const result = await api("/api/request-reset-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employeeId: els.resetEmployeeId.value.trim(),
+        employeeName: els.resetEmployeeName.value.trim(),
+        email: els.resetEmail.value.trim(),
+      }),
+    });
+    if (result.employeeId) {
+      els.resetEmployeeId.value = result.employeeId;
+    }
+    els.resetNotice.textContent = result.message || "OTP sent successfully.";
+  } catch (error) {
+    els.resetNotice.textContent = error.message;
+  }
+}
+
+async function verifyResetOtp() {
+  els.resetNotice.textContent = "Verifying OTP...";
+  try {
+    const result = await api("/api/verify-reset-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employeeId: els.resetEmployeeId.value.trim(),
+        email: els.resetEmail.value.trim(),
+        otp: els.resetOtp.value.trim(),
+      }),
+    });
+    els.resetNotice.textContent = result.message || "OTP verified.";
+  } catch (error) {
+    els.resetNotice.textContent = error.message;
+  }
+}
+
+async function resetPassword() {
+  els.resetNotice.textContent = "Saving new password...";
+  try {
+    const result = await api("/api/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employeeId: els.resetEmployeeId.value.trim(),
+        email: els.resetEmail.value.trim(),
+        otp: els.resetOtp.value.trim(),
+        newPassword: els.resetNewPassword.value,
+        confirmPassword: els.resetConfirmPassword.value,
+      }),
+    });
+    els.resetOtp.value = "";
+    els.resetNewPassword.value = "";
+    els.resetConfirmPassword.value = "";
+    els.resetNotice.textContent = result.message || "Password reset successfully. You can log in now.";
+  } catch (error) {
+    els.resetNotice.textContent = error.message;
+  }
+}
+
 function togglePassword(inputId, button) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -875,6 +944,9 @@ function bindEvents() {
   els.loginForm.addEventListener("submit", login);
   els.logoutBtn.addEventListener("click", logout);
   els.toggleLoginPassword.addEventListener("click", () => togglePassword("loginPassword", els.toggleLoginPassword));
+  els.requestOtpBtn.addEventListener("click", requestResetOtp);
+  els.verifyOtpBtn.addEventListener("click", verifyResetOtp);
+  els.resetPasswordBtn.addEventListener("click", resetPassword);
   document.querySelectorAll(".toggle-password").forEach((button) => {
     button.addEventListener("click", () => togglePassword(button.dataset.target, button));
   });
@@ -900,11 +972,6 @@ function bindEvents() {
   ].forEach((input) => {
     input.addEventListener("input", renderFormulaPreview);
   });
-  els.projectMyShareInput.addEventListener("input", () => {
-    els.employeeProjectIncentiveInput.value = els.projectMyShareInput.value;
-    renderFormulaPreview();
-  });
-
   els.applyFiltersBtn.addEventListener("click", applyFilters);
   els.resetFiltersBtn.addEventListener("click", resetFilters);
   els.periodSelect.addEventListener("change", () => {

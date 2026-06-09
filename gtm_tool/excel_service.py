@@ -2,6 +2,31 @@ from services.utils import clean_string, normalize_emp_code, normalize_name, par
 
 
 GRADE_COLUMNS = [16, 17, 18, 19]
+MONTH_NAMES = {
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
+    "jan": 1,
+    "feb": 2,
+    "mar": 3,
+    "apr": 4,
+    "jun": 6,
+    "jul": 7,
+    "aug": 8,
+    "sep": 9,
+    "oct": 10,
+    "nov": 11,
+    "dec": 12,
+}
 
 
 def _load_pandas():
@@ -12,6 +37,22 @@ def _load_pandas():
 
 def _normalize_headers(values):
     return [slugify(value).replace("-", "_") for value in values]
+
+
+def _period_from_value(value, sheet_name=""):
+    text = clean_string(value) or clean_string(sheet_name)
+    parts = text.replace("-", " ").replace("_", " ").split()
+    month = None
+    year = None
+    for part in parts:
+        lowered = part.lower()
+        if lowered in MONTH_NAMES:
+            month = MONTH_NAMES[lowered]
+        elif part.isdigit() and len(part) == 4:
+            year = int(part)
+    if month and year:
+        return f"{year}-{month:02d}"
+    return ""
 
 
 def _best_header_row(dataframe, required_terms):
@@ -364,6 +405,43 @@ def parse_team_workbook(path):
 
 def parse_project_workbook(path):
     pd = _load_pandas()
+    workbook = pd.ExcelFile(path)
+
+    monthly_projects = []
+    month_sheets = [name for name in workbook.sheet_names if clean_string(name).lower() in MONTH_NAMES]
+    for sheet_name in month_sheets:
+        frame = _frame_from_sheet(path, sheet_name, ["month", "project_name", "employee"])
+        for _, row in frame.iterrows():
+            project_id = clean_string(row.get("project_id") or row.get("poject_id"))
+            project_name = clean_string(row.get("project_name"))
+            employee_id = normalize_emp_code(row.get("employee_id"))
+            employee_name = clean_string(row.get("employee_name") or row.get("employee"))
+            if not (project_id or project_name) or not (employee_id or employee_name):
+                continue
+            period_label = _period_from_value(row.get("month"), sheet_name)
+            monthly_projects.append(
+                {
+                    "periodLabel": period_label,
+                    "projectId": project_id or project_name,
+                    "projectName": project_name or project_id,
+                    "projectValue": parse_number(row.get("cashflow") or row.get("project_value") or row.get("project_value_")),
+                    "employeeId": employee_id,
+                    "mappedEmployees": [employee_name] if employee_name else [],
+                    "assignedRole": clean_string(row.get("assigned_role")),
+                    "sourceStatus": clean_string(row.get("approval_status")) or "Pending",
+                    "sourceScore": parse_number(row.get("score")),
+                    "sourceIncentivePercent": parse_number(row.get("incentive")),
+                    "sourceIncentiveAmount": parse_number(row.get("incentive_amount")),
+                    "remarks": clean_string(row.get("remarks")),
+                }
+            )
+    if monthly_projects:
+        return {
+            "uploadType": "project_cf",
+            "projects": monthly_projects,
+            "recordCount": len(monthly_projects),
+        }
+
     pv_frame = _frame_from_sheet(path, "PV", ["project_name", "poject_id", "project_value"])
     map_frame = _frame_from_sheet(path, "Mapping ", ["project_name", "poject_id", "project_value", "employee"])
 
@@ -425,6 +503,8 @@ def parse_workbook(path, upload_type=""):
     pd = _load_pandas()
     workbook = pd.ExcelFile(path)
     sheet_names = {clean_string(name) for name in workbook.sheet_names}
+    if any(name.lower() in MONTH_NAMES for name in sheet_names):
+        return parse_project_workbook(path)
     if "SBU KPIs (Updated)" in sheet_names:
         return parse_sbu_logic_workbook(path)
     if "KPI FRAMEWORK" in sheet_names:

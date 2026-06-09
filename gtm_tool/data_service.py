@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from gtm_tool.auth_service import sync_accounts
+from gtm_tool.auth_service import sync_accounts, upsert_account
 from gtm_tool.config import DEPARTMENTS, DEFAULT_ADMIN_ID, ROOT, STATE_FILE, UPLOADS_DIR, ensure_dirs
 from gtm_tool.excel_service import parse_workbook
 from services.utils import clean_string, month_label, normalize_name, parse_number, slugify
@@ -15,7 +15,7 @@ SEED_DATA_DIR = ROOT / "gtm_seed_data"
 DEFAULT_TEAM_PATH = SEED_DATA_DIR / "Demo GTM AND SBU Sheet 25 May.xlsx"
 DEFAULT_GTM_LOGIC_PATH = SEED_DATA_DIR / "GTM - KPIs & Incentive Structure-2.xlsx"
 DEFAULT_SBU_LOGIC_PATH = SEED_DATA_DIR / "SME SBU INCENTIVES 2026-27 (UPDATED).xlsx"
-DEFAULT_PROJECT_PATH = SEED_DATA_DIR / "Demo YTD AND mapping .xlsx"
+DEFAULT_PROJECT_PATH = SEED_DATA_DIR / "PROJECT_INCENTIVE_DISBURSAL.xlsx"
 
 SEED_UPLOADS = {
     "team_master": ("seed-team-master", DEFAULT_TEAM_PATH),
@@ -464,6 +464,9 @@ class GTMDataService:
             employee["status"] = clean_string(employee.get("status")).lower() or "active"
 
         periods = set(_fy_periods())
+        for project in projects:
+            if clean_string(project.get("periodLabel")):
+                periods.add(clean_string(project.get("periodLabel")))
         for store in (raw_state.get("kpiOverrides", {}), raw_state.get("projectOverrides", {}), raw_state.get("monthlyStatuses", {})):
             for key in store.keys():
                 parts = clean_string(key).split("|")
@@ -676,6 +679,17 @@ class GTMDataService:
         )
         self.state["employeeOverrides"][employee_id] = override
         self.persist()
+        upsert_account(
+            employee_id,
+            override.get("name", employee_id),
+            designation=override.get("designation", ""),
+            department=override.get("department", ""),
+            email=override.get("email", ""),
+            login_id=employee_id,
+            temp_password=clean_string(payload.get("tempPassword")),
+            status=override.get("status", "active"),
+        )
+        self.reload()
         return self.state["employees"].get(employee_id, override)
 
     def delete_employee(self, employee_id):
@@ -728,11 +742,19 @@ class GTMDataService:
 
     def _project_rows_for_employee(self, employee, period_label, disbursal_percent):
         employee_name_key = normalize_name(employee.get("name"))
+        employee_id_key = clean_string(employee.get("employeeId"))
         items = []
-        for project in self.state.get("projects", []):
+        all_projects = self.state.get("projects", [])
+        month_projects = [item for item in all_projects if clean_string(item.get("periodLabel")) == clean_string(period_label)]
+        candidate_projects = month_projects if month_projects else [item for item in all_projects if not clean_string(item.get("periodLabel"))]
+        for project in candidate_projects:
             mapped = [clean_string(name) for name in project.get("mappedEmployees", []) if clean_string(name)]
             normalized = [normalize_name(name) for name in mapped]
-            if employee_name_key not in normalized:
+            project_employee_id = clean_string(project.get("employeeId"))
+            if project_employee_id:
+                if project_employee_id != employee_id_key:
+                    continue
+            elif employee_name_key not in normalized:
                 continue
             override_key = f"{employee['employeeId']}|{period_label}|{project.get('projectId') or project.get('projectName')}"
             override = self.state.get("projectOverrides", {}).get(override_key, {})
@@ -754,6 +776,9 @@ class GTMDataService:
                 {
                     "projectId": clean_string(project.get("projectId")),
                     "projectName": clean_string(project.get("projectName")),
+                    "periodLabel": clean_string(project.get("periodLabel")) or period_label,
+                    "assignedRole": clean_string(project.get("assignedRole")),
+                    "sourceStatus": clean_string(project.get("sourceStatus")),
                     "projectValue": round(parse_number(project.get("projectValue")), 2),
                     "sharePercent": round(share_percent, 2),
                     "departmentPercent": round(department_percent, 2),
@@ -777,6 +802,9 @@ class GTMDataService:
         projects = self._project_rows_for_employee(employee, period_label, disbursal_percent)
         accrued_total = sum(item["accruedValue"] for item in projects)
         disbursal_total = sum(item["finalDisbursalValue"] for item in projects)
+        for row in rows:
+            row_share = (parse_number(row.get("finalWeightedScore")) / total_weighted_score) if total_weighted_score else 0
+            row["incentiveAmount"] = round(disbursal_total * row_share, 2)
         status_key = f"{employee['employeeId']}|{period_label}"
         return {
             "periodLabel": period_label,
@@ -994,6 +1022,7 @@ class GTMDataService:
                 "Reporting To",
                 "Manager Name",
                 "Manager Designation",
+                "Period Label",
                 "Period",
                 "KRA",
                 "KPI",
@@ -1043,6 +1072,7 @@ class GTMDataService:
                             dashboard.get("hierarchy", {}).get("reportingTo", ""),
                             dashboard.get("hierarchy", {}).get("managerName", ""),
                             dashboard.get("hierarchy", {}).get("designation", ""),
+                            label,
                             summary["displayPeriod"],
                             kpi.get("kraCategory", ""),
                             kpi.get("kpiName", ""),
