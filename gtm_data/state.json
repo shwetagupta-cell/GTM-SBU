@@ -1,0 +1,354 @@
+{
+  "schemaVersion": 3,
+  "uploadedFiles": [
+    {
+      "fileId": "seed-team-master",
+      "fileName": "Demo GTM AND SBU Sheet 25 May.xlsx",
+      "storedPath": "/Users/shwetagupta/Downloads/Demo GTM AND SBU Sheet 25 May.xlsx",
+      "uploadedAt": "2026-05-27T09:03:00",
+      "uploadType": "team_master",
+      "recordCount": 19,
+      "deleted": false,
+      "seeded": true
+    },
+    {
+      "fileId": "seed-gtm-logic",
+      "fileName": "GTM - KPIs & Incentive Structure-2.xlsx",
+      "storedPath": "/Users/shwetagupta/Downloads/GTM - KPIs & Incentive Structure-2.xlsx",
+      "uploadedAt": "2026-05-27T09:03:00",
+      "uploadType": "gtm_logic",
+      "recordCount": 28,
+      "deleted": false,
+      "seeded": true
+    },
+    {
+      "fileId": "seed-sbu-logic",
+      "fileName": "SME SBU INCENTIVES 2026-27 (UPDATED).xlsx",
+      "storedPath": "/Users/shwetagupta/Downloads/SME SBU INCENTIVES 2026-27 (UPDATED).xlsx",
+      "uploadedAt": "2026-05-27T09:03:00",
+      "uploadType": "sbu_logic",
+      "recordCount": 22,
+      "deleted": false,
+      "seeded": true
+    },
+    {
+      "fileId": "seed-project-cf",
+      "fileName": "Demo YTD AND mapping .xlsx",
+      "storedPath": "/Users/shwetagupta/Downloads/Demo YTD AND mapping .xlsx",
+      "uploadedAt": "2026-05-27T09:03:00",
+      "uploadType": "project_cf",
+      "recordCount": 13,
+      "deleted": false,
+      "seeded": true
+    },
+    {
+      "fileId": "cfca4792382747e1ad69a08151511d71",
+      "fileName": "Demo YTD AND mapping .xlsx",
+      "storedPath": "gtm_data/uploads/cfca4792382747e1ad69a08151511d71/Demo YTD AND mapping .xlsx",
+      "uploadedAt": "2026-05-27T09:30:09",
+      "uploadType": "project_cf",
+      "recordCount": 13,
+      "deleted": false,
+      "seeded": false
+    },
+    {
+      "fileId": "adca37ba799b498fb03c80b9e04d7edb",
+      "fileName": "Demo GTM AND SBU Sheet 25 May.xlsx",
+      "storedPath": "gtm_data/uploads/adca37ba799b498fb03c80b9e04d7edb/Demo GTM AND SBU Sheet 25 May.xlsx",
+      "uploadedAt": "2026-05-27T11:39:24",
+      "uploadType": "team_master",
+      "recordCount": 19,
+      "deleted": false,
+      "seeded": false
+    }
+  ],
+  "employeeOverrides": {
+    "1448": {
+      "employeeId": "1448",
+      "name": "Ankit Arora",
+      "email": "ankit.arora@flipspaces.com",
+      "grade": "L2",
+      "location": "Mumbai",
+      "department": "Marketing",
+      "designation": "Assistant Vice President - Business Development",
+      "reportingTo": "",
+      "reportingName": "Mrinal Sharma",
+      "managerName": "Mrinal Sharma",
+      "managerDesignation": "",
+      "hierarchyRole": "india_head",
+      "businessUnit": "SBU",
+      "logicKey": "sbu_sales",
+      "disbursalType": "monthly",
+      "projectIncentivePercent": 100.0,
+      "departmentPercent": 30.0,
+      "teamSharePercent": 25.0,
+      "npsScore": 3.57,
+      "status": "active",
+      "sharePercent": 1.2,
+      "mySharePercent": 100.0
+    },
+    "607": {
+      "employeeId": "607",
+      "name": "Amrit Singh",
+      "email": "amrit.singh@flipspaces.com",
+      "grade": "L2",
+      "location": "Noida",
+      "department": "Viztown",
+      "designation": "Vice President - Marketing and PR",
+      "reportingTo": "",
+      "reportingName": "Kunal Sharma",
+      "managerName": "Kunal Sharma",
+      "managerDesignation": "",
+      "hierarchyRole": "india_head",
+      "businessUnit": "GTM",
+      "logicKey": "Viztown",
+      "disbursalType": "annually",
+      "sharePercent": 1.2,
+      "projectIncentivePercent": 25.0,
+      "mySharePercent": 25.0,
+      "departmentPercent": 25.0,
+      "teamSharePercent": 100.0,
+      "npsScore": 3.6,
+      "status": "active"
+    }
+  },
+  "kpiOverrides": {
+    "1448|2026-05|sbu-sbu-sales-login-value-login-value-inr-cr": {
+      "target": 100.0,
+      "achieved": 120.0,
+      "notes": ""
+    },
+    "1448|2026-05|sbu-sbu-sales-pre-login-to-login-ratio-login-efficiency": {
+      "target": 8.0,
+      "achieved": 8.0,
+      "notes": ""
+    },
+    "1448|2026-05|sbu-sbu-sales-npe-npe": {
+      "target": 7.0,
+      "achieved": 6.0,
+      "notes": ""
+    },
+    "1448|2026-05|sbu-sbu-sales-login-to-npe-conversion-efficiency": {
+      "target": 5.0,
+      "achieved": 5.0,
+      "notes": ""
+    },
+    "1448|2026-05|sbu-sbu-sales-financial-performance-presales-cf-ra1": {
+      "target": 4.0,
+      "achieved": 3.0,
+      "notes": ""
+    },
+    "1448|2026-05|sbu-sbu-sales-financial-performance-gm-deviation": {
+      "target": 7.0,
+      "achieved": 5.0,
+      "notes": ""
+    },
+    "1448|2026-05|sbu-sbu-sales-client-experience-csat": {
+      "target": 5.0,
+      "achieved": 5.0,
+      "notes": ""
+    },
+    "1448|2027-03|sbu-sbu-sales-login-value-login-value-inr-cr": {
+      "target": 100.0,
+      "achieved": 90.0,
+      "notes": ""
+    },
+    "607|2027-03|gtm-viztown-funnel-value-login-value-inr-lacs": {
+      "target": 100.0,
+      "achieved": 70.0,
+      "notes": ""
+    },
+    "607|2027-03|gtm-viztown-funnel-value-no-of-logins": {
+      "target": 9.0,
+      "achieved": 8.0,
+      "notes": ""
+    },
+    "607|2027-03|gtm-viztown-conversion-conversion-value-inr-lacs": {
+      "target": 300.0,
+      "achieved": 250.0,
+      "notes": ""
+    },
+    "607|2027-03|gtm-viztown-number-of-clients-pre-login": {
+      "target": 4.0,
+      "achieved": 3.0,
+      "notes": ""
+    },
+    "607|2027-03|gtm-viztown-cac-cac": {
+      "target": 5.0,
+      "achieved": 5.0,
+      "notes": ""
+    }
+  },
+  "projectOverrides": {
+    "607|2027-03|FSINDB25260176": {
+      "sharePercent": 1.2,
+      "departmentPercent": 30.0,
+      "teamSharePercent": 75.0
+    },
+    "1448|2026-05|FSINDB25260176": {
+      "sharePercent": 1.2,
+      "departmentPercent": 30.0,
+      "teamSharePercent": 25.0
+    },
+    "1448|2026-05|FSINDB25260191": {
+      "sharePercent": 1.2,
+      "departmentPercent": 30.0,
+      "teamSharePercent": 25.0
+    },
+    "1448|2026-05|FSINDB25260127": {
+      "sharePercent": 1.2,
+      "departmentPercent": 30.0,
+      "teamSharePercent": 25.0
+    },
+    "1448|2026-05|FSINDB25260206": {
+      "sharePercent": 1.2,
+      "departmentPercent": 30.0,
+      "teamSharePercent": 25.0
+    }
+  },
+  "monthlyStatuses": {},
+  "deletedEmployeeStack": [],
+  "employees": [
+    {
+      "employeeId": "1709",
+      "name": "Shweta",
+      "email": "shweta.gupta@flipspaces.com",
+      "grade": "L1",
+      "gradeBand": "F10",
+      "designation": "Admin",
+      "location": "Mumbai",
+      "department": "Marketing",
+      "sourceDepartment": "Marketing",
+      "currentSbu": "GTM Admin",
+      "newSbu": "GTM Admin",
+      "businessUnit": "GTM",
+      "logicKey": "Marketing",
+      "reportingName": "",
+      "reportingTo": "",
+      "managerName": "",
+      "managerDesignation": "",
+      "hierarchyRole": "india_head",
+      "disbursalType": "annually",
+      "sharePercent": 100.0,
+      "projectIncentivePercent": 3.0,
+      "mySharePercent": 3.0,
+      "departmentPercent": 100.0,
+      "teamSharePercent": 100.0,
+      "npsScore": 4.8,
+      "status": "active"
+    },
+    {
+      "employeeId": "1448",
+      "name": "Ankit Arora",
+      "email": "ankit.arora@flipspaces.com",
+      "grade": "L2",
+      "gradeBand": "",
+      "designation": "Assistant Vice President - Business Development",
+      "location": "Mumbai",
+      "department": "Marketing",
+      "sourceDepartment": "",
+      "currentSbu": "",
+      "newSbu": "",
+      "businessUnit": "SBU",
+      "logicKey": "sbu_sales",
+      "reportingName": "Mrinal Sharma",
+      "reportingTo": "",
+      "managerName": "Mrinal Sharma",
+      "managerDesignation": "",
+      "hierarchyRole": "india_head",
+      "disbursalType": "monthly",
+      "sharePercent": 1.2,
+      "projectIncentivePercent": 100.0,
+      "mySharePercent": 100.0,
+      "departmentPercent": 30.0,
+      "teamSharePercent": 25.0,
+      "npsScore": 3.57,
+      "status": "active"
+    },
+    {
+      "employeeId": "607",
+      "name": "Amrit Singh",
+      "email": "amrit.singh@flipspaces.com",
+      "grade": "L2",
+      "gradeBand": "",
+      "designation": "Vice President - Marketing and PR",
+      "location": "Noida",
+      "department": "Viztown",
+      "sourceDepartment": "",
+      "currentSbu": "",
+      "newSbu": "",
+      "businessUnit": "GTM",
+      "logicKey": "Viztown",
+      "reportingName": "Kunal Sharma",
+      "reportingTo": "",
+      "managerName": "Kunal Sharma",
+      "managerDesignation": "",
+      "hierarchyRole": "india_head",
+      "disbursalType": "annually",
+      "sharePercent": 1.2,
+      "projectIncentivePercent": 25.0,
+      "mySharePercent": 25.0,
+      "departmentPercent": 25.0,
+      "teamSharePercent": 100.0,
+      "npsScore": 3.6,
+      "status": "active"
+    }
+  ],
+  "frameworks": [],
+  "kpis": [],
+  "projects": [],
+  "incentiveRules": {
+    "monthly": [
+      {
+        "min": 3.5,
+        "max": 4,
+        "disbursal": 80
+      },
+      {
+        "min": 4,
+        "max": 4.5,
+        "disbursal": 90
+      },
+      {
+        "min": 4.5,
+        "max": 5.01,
+        "disbursal": 100
+      }
+    ],
+    "quarterly": [
+      {
+        "min": 3.5,
+        "max": 4,
+        "disbursal": 80
+      },
+      {
+        "min": 4,
+        "max": 4.5,
+        "disbursal": 90
+      },
+      {
+        "min": 4.5,
+        "max": 5.01,
+        "disbursal": 100
+      }
+    ],
+    "annually": [
+      {
+        "min": 3.5,
+        "max": 4,
+        "disbursal": 80
+      },
+      {
+        "min": 4,
+        "max": 4.5,
+        "disbursal": 90
+      },
+      {
+        "min": 4.5,
+        "max": 5.01,
+        "disbursal": 100
+      }
+    ]
+  },
+  "loadedAt": "2026-05-27T13:01:06"
+}

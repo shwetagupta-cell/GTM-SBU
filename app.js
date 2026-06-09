@@ -1,726 +1,909 @@
-const incentiveRules = [
-  {
-    bucket: "Sourcing",
-    role: "Head - Marketing",
-    formulaLabel: "20% sourcing bucket x (25% of VT contribution + 25% of DM contribution)",
-    calculateShare: ({ vt, dm }) => 0.2 * (0.25 * vt + 0.25 * dm),
-  },
-  {
-    bucket: "Sourcing",
-    role: "VT & DM - National Head",
-    formulaLabel: "20% sourcing bucket x (20% of VT contribution + 20% of DM contribution)",
-    calculateShare: ({ vt, dm }) => 0.2 * (0.2 * vt + 0.2 * dm),
-  },
-  {
-    bucket: "Sourcing",
-    role: "VT - Regional Head",
-    formulaLabel: "20% sourcing bucket x 55% VT layer x 70%",
-    calculateShare: ({ vt }) => 0.2 * 0.55 * vt * 0.7,
-  },
-  {
-    bucket: "Sourcing",
-    role: "VT - BD Manager",
-    formulaLabel: "20% sourcing bucket x 55% VT layer x 30%",
-    calculateShare: ({ vt }) => 0.2 * 0.55 * vt * 0.3,
-  },
-  {
-    bucket: "Sourcing",
-    role: "DM - DGM",
-    formulaLabel: "20% sourcing bucket x 55% DM layer x 70%",
-    calculateShare: ({ dm }) => 0.2 * 0.55 * dm * 0.7,
-  },
-  {
-    bucket: "Sourcing",
-    role: "DM - Executive",
-    formulaLabel: "20% sourcing bucket x 55% DM layer x 30%",
-    calculateShare: ({ dm }) => 0.2 * 0.55 * dm * 0.3,
-  },
-  {
-    bucket: "Sourcing",
-    role: "KAM - National Head",
-    formulaLabel: "20% sourcing bucket x KAM contribution x 30%",
-    calculateShare: ({ kam }) => 0.2 * kam * 0.3,
-  },
-  {
-    bucket: "Sourcing",
-    role: "KAM - Regional Head",
-    formulaLabel: "20% sourcing bucket x KAM contribution x 45%",
-    calculateShare: ({ kam }) => 0.2 * kam * 0.45,
-  },
-  {
-    bucket: "Sourcing",
-    role: "KAM - Sourcing Mgr",
-    formulaLabel: "20% sourcing bucket x KAM contribution x 25%",
-    calculateShare: ({ kam }) => 0.2 * kam * 0.25,
-  },
-  {
-    bucket: "Closing",
-    role: "Sales Leadership",
-    formulaLabel: "30% closing bucket x 25%",
-    calculateShare: () => 0.3 * 0.25,
-  },
-  {
-    bucket: "Closing",
-    role: "BDM - Sales",
-    formulaLabel: "30% closing bucket x 75% x 73%",
-    calculateShare: () => 0.3 * 0.75 * 0.73,
-  },
-  {
-    bucket: "Closing",
-    role: "Sales Support Mgr",
-    formulaLabel: "30% closing bucket x 75% x 19%",
-    calculateShare: () => 0.3 * 0.75 * 0.19,
-  },
-  {
-    bucket: "Closing",
-    role: "MEP",
-    formulaLabel: "30% closing bucket x 75% x 8%",
-    calculateShare: () => 0.3 * 0.75 * 0.08,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "DGM/AGM Design",
-    formulaLabel: "16% design bucket x 20%",
-    calculateShare: () => 0.16 * 0.2,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "Design Manager - Pre Sales",
-    formulaLabel: "16% design bucket x 15%",
-    calculateShare: () => 0.16 * 0.15,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "Interior Designer - Pre Sales",
-    formulaLabel: "16% design bucket x 10%",
-    calculateShare: () => 0.16 * 0.1,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "3D Artist - Pre Sales",
-    formulaLabel: "16% design bucket x 10%",
-    calculateShare: () => 0.16 * 0.1,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "Developer / Modeller",
-    formulaLabel: "16% design bucket x 3%",
-    calculateShare: () => 0.16 * 0.03,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "Design Manager - Post Sales",
-    formulaLabel: "16% design bucket x 15%",
-    calculateShare: () => 0.16 * 0.15,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "Interior Designer - Post Sales",
-    formulaLabel: "16% design bucket x 10%",
-    calculateShare: () => 0.16 * 0.1,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "3D Artist - Post Sales",
-    formulaLabel: "16% design bucket x 6%",
-    calculateShare: () => 0.16 * 0.06,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "MEP Designer - Post Sales",
-    formulaLabel: "16% design bucket x 6%",
-    calculateShare: () => 0.16 * 0.06,
-  },
-  {
-    bucket: "Pre Sales Design",
-    role: "QS",
-    formulaLabel: "16% design bucket x 5%",
-    calculateShare: () => 0.16 * 0.05,
-  },
-  {
-    bucket: "Operations",
-    role: "AVP/GM Ops",
-    formulaLabel: "34% operations bucket x 26%",
-    calculateShare: () => 0.34 * 0.26,
-  },
-  {
-    bucket: "Operations",
-    role: "AGM/DGM Ops",
-    formulaLabel: "34% operations bucket x 74% x 35%",
-    calculateShare: () => 0.34 * 0.74 * 0.35,
-  },
-  {
-    bucket: "Operations",
-    role: "Sr Mgr/SPM",
-    formulaLabel: "34% operations bucket x 74% x 16%",
-    calculateShare: () => 0.34 * 0.74 * 0.16,
-  },
-  {
-    bucket: "Operations",
-    role: "PM",
-    formulaLabel: "34% operations bucket x 74% x 11%",
-    calculateShare: () => 0.34 * 0.74 * 0.11,
-  },
-  {
-    bucket: "Operations",
-    role: "Client Delight (Mgr)",
-    formulaLabel: "34% operations bucket x 74% x 3%",
-    calculateShare: () => 0.34 * 0.74 * 0.03,
-  },
-  {
-    bucket: "Operations",
-    role: "Client Delight (MST)",
-    formulaLabel: "34% operations bucket x 74% x 3%",
-    calculateShare: () => 0.34 * 0.74 * 0.03,
-  },
-  {
-    bucket: "Operations",
-    role: "SS/APM",
-    formulaLabel: "34% operations bucket x 74% x 9%",
-    calculateShare: () => 0.34 * 0.74 * 0.09,
-  },
-  {
-    bucket: "Operations",
-    role: "GM - CSC",
-    formulaLabel: "34% operations bucket x 74% x 8%",
-    calculateShare: () => 0.34 * 0.74 * 0.08,
-  },
-  {
-    bucket: "Operations",
-    role: "Cat Mgr",
-    formulaLabel: "34% operations bucket x 74% x 8%",
-    calculateShare: () => 0.34 * 0.74 * 0.08,
-  },
-  {
-    bucket: "Operations",
-    role: "Exec",
-    formulaLabel: "34% operations bucket x 74% x 3%",
-    calculateShare: () => 0.34 * 0.74 * 0.03,
-  },
-  {
-    bucket: "Operations",
-    role: "Procurement Manager",
-    formulaLabel: "34% operations bucket x 74% x 4%",
-    calculateShare: () => 0.34 * 0.74 * 0.04,
-  },
-];
-
-const sampleData = {
-  employees: [
-    {
-      name: "Neha Singh",
-      actualDesignation: "Senior Vice President - Marketing & PR",
-      incentiveRole: "Head - Marketing",
-      department: "Marketing and PR",
-    },
-    {
-      name: "Amrit Singh",
-      actualDesignation: "Vice President - Marketing and PR",
-      incentiveRole: "VT & DM - National Head",
-      department: "Business Development",
-    },
-    {
-      name: "Jayesh Patidar",
-      actualDesignation: "3D Design Lead",
-      incentiveRole: "3D Artist - Pre Sales",
-      department: "Design",
-    },
-    {
-      name: "Mohammed Sufiyan Shaikh",
-      actualDesignation: "Senior 3D Artist",
-      incentiveRole: "3D Artist - Post Sales",
-      department: "Design",
-    },
-    {
-      name: "Utsav Nitin Rathod",
-      actualDesignation: "Assistant General Manager- Design",
-      incentiveRole: "Design Manager - Post Sales",
-      department: "Design",
-    },
-    {
-      name: "Syed Humayun",
-      actualDesignation: "Project Manager",
-      incentiveRole: "PM",
-      department: "Operations",
-    },
-    {
-      name: "Akash Behra",
-      actualDesignation: "Senior Category Manager",
-      incentiveRole: "Cat Mgr",
-      department: "Operations",
-    },
-  ],
-  projects: [
-    {
-      name: "Phi Capital",
-      client: "Phi Capital",
-      cashflow: 3451000,
-      vtPercent: 0,
-      dmPercent: 0,
-      kamPercent: 100,
-      assignedEmployeeIds: [],
-    },
-    {
-      name: "66Degrees",
-      client: "66Degrees",
-      cashflow: 2987000,
-      vtPercent: 0,
-      dmPercent: 100,
-      kamPercent: 0,
-      assignedEmployeeIds: [],
-    },
-    {
-      name: "VentureX",
-      client: "VentureX",
-      cashflow: 40009000,
-      vtPercent: 0,
-      dmPercent: 0,
-      kamPercent: 100,
-      assignedEmployeeIds: [],
-    },
-  ],
+const elements = {
+  authShell: document.querySelector("#authShell"),
+  appShell: document.querySelector("#appShell"),
+  loginForm: document.querySelector("#loginForm"),
+  loginType: document.querySelector("#loginType"),
+  loginEmployeeId: document.querySelector("#loginEmployeeId"),
+  loginPassword: document.querySelector("#loginPassword"),
+  toggleLoginPasswordBtn: document.querySelector("#toggleLoginPasswordBtn"),
+  loginNotice: document.querySelector("#loginNotice"),
+  authGreetingTitle: document.querySelector("#authGreetingTitle"),
+  authGreetingCopy: document.querySelector("#authGreetingCopy"),
+  openResetModalBtn: document.querySelector("#openResetModalBtn"),
+  resetPasswordForm: document.querySelector("#resetPasswordForm"),
+  resetEmployeeId: document.querySelector("#resetEmployeeId"),
+  resetEmail: document.querySelector("#resetEmail"),
+  resetOtp: document.querySelector("#resetOtp"),
+  resetNewPassword: document.querySelector("#resetNewPassword"),
+  resetConfirmPassword: document.querySelector("#resetConfirmPassword"),
+  toggleResetPasswordBtn: document.querySelector("#toggleResetPasswordBtn"),
+  toggleResetConfirmPasswordBtn: document.querySelector("#toggleResetConfirmPasswordBtn"),
+  resetNotice: document.querySelector("#resetNotice"),
+  requestOtpBtn: document.querySelector("#requestOtpBtn"),
+  resendOtpBtn: document.querySelector("#resendOtpBtn"),
+  verifyOtpBtn: document.querySelector("#verifyOtpBtn"),
+  resetModal: document.querySelector("#resetModal"),
+  closeResetModalBtn: document.querySelector("#closeResetModalBtn"),
+  sessionUser: document.querySelector("#sessionUser"),
+  sessionMeta: document.querySelector("#sessionMeta"),
+  dashboardTitle: document.querySelector("#dashboardTitle"),
+  dashboardSubtitle: document.querySelector("#dashboardSubtitle"),
+  welcomeHeadline: document.querySelector("#welcomeHeadline"),
+  welcomeSubline: document.querySelector("#welcomeSubline"),
+  logoutBtn: document.querySelector("#logoutBtn"),
+  monthSelect: document.querySelector("#monthSelect"),
+  employeeSwitch: document.querySelector("#employeeSwitch"),
+  searchInput: document.querySelector("#searchInput"),
+  adminEmployeeSearchShell: document.querySelector("#adminEmployeeSearchShell"),
+  adminEmployeeSearchBtn: document.querySelector("#adminEmployeeSearchBtn"),
+  adminEmployeeClearBtn: document.querySelector("#adminEmployeeClearBtn"),
+  refreshDashboardBtn: document.querySelector("#refreshDashboardBtn"),
+  selectedMonthLabel: document.querySelector("#selectedMonthLabel"),
+  selectedMonthNote: document.querySelector("#selectedMonthNote"),
+  monthCfValue: document.querySelector("#monthCfValue"),
+  monthShareValue: document.querySelector("#monthShareValue"),
+  futureValueValue: document.querySelector("#futureValueValue"),
+  profileGrid: document.querySelector("#profileGrid"),
+  projectCards: document.querySelector("#projectCards"),
+  projectNotice: document.querySelector("#projectNotice"),
+  rankingList: document.querySelector("#rankingList"),
+  rankingNotice: document.querySelector("#rankingNotice"),
+  incentiveStatusFilter: document.querySelector("#incentiveStatusFilter"),
+  quarterFilter: document.querySelector("#quarterFilter"),
+  yearFilter: document.querySelector("#yearFilter"),
+  incentiveTableBody: document.querySelector("#incentiveTableBody"),
+  adminPanel: document.querySelector("#adminPanel"),
+  adminNavLink: document.querySelector("#adminNavLink"),
+  adminEmployeeSearch: document.querySelector("#adminEmployeeSearch"),
+  searchPageMeta: document.querySelector("#searchPageMeta"),
+  datasetStatusList: document.querySelector("#datasetStatusList"),
+  datasetUploadForm: document.querySelector("#datasetUploadForm"),
+  uploadDatasetsBtn: document.querySelector("#uploadDatasetsBtn"),
+  deleteDatasetsBtn: document.querySelector("#deleteDatasetsBtn"),
+  reloadDatasetsBtn: document.querySelector("#reloadDatasetsBtn"),
+  uploadNotice: document.querySelector("#uploadNotice"),
+  passwordForm: document.querySelector("#passwordForm"),
+  currentPassword: document.querySelector("#currentPassword"),
+  newPassword: document.querySelector("#newPassword"),
+  confirmPassword: document.querySelector("#confirmPassword"),
+  changePasswordBtn: document.querySelector("#changePasswordBtn"),
+  passwordNotice: document.querySelector("#passwordNotice"),
+  projectDetailModal: document.querySelector("#projectDetailModal"),
+  detailProjectName: document.querySelector("#detailProjectName"),
+  projectDetailGrid: document.querySelector("#projectDetailGrid"),
+  closeDetailModalBtn: document.querySelector("#closeDetailModalBtn"),
+  confirmModal: document.querySelector("#confirmModal"),
+  confirmMessage: document.querySelector("#confirmMessage"),
+  confirmDeleteBtn: document.querySelector("#confirmDeleteBtn"),
+  cancelDeleteBtn: document.querySelector("#cancelDeleteBtn"),
+  loadingOverlay: document.querySelector("#loadingOverlay"),
+  loadingLabel: document.querySelector("#loadingLabel"),
+  toastStack: document.querySelector("#toastStack"),
 };
-
-const incentiveRoleOptions = incentiveRules.map((rule) => rule.role);
 
 const state = {
-  employees: [],
-  projects: [],
+  dashboard: null,
+  selectedMonth: "",
+  selectedEmployeeId: "",
+  searchTerm: "",
+  incentiveStatus: "all",
+  quarterFilter: "all",
+  yearFilter: "all",
+  adminSearch: "",
+  adminSearchResults: null,
+  confirmAction: null,
 };
-
-const elements = {
-  currencySymbol: document.querySelector("#currencySymbol"),
-  monthLabel: document.querySelector("#monthLabel"),
-  incentivePercent: document.querySelector("#incentivePercent"),
-  rulesNotice: document.querySelector("#rulesNotice"),
-  heroCashflow: document.querySelector("#heroCashflow"),
-  heroPool: document.querySelector("#heroPool"),
-  heroPayout: document.querySelector("#heroPayout"),
-  summaryGrid: document.querySelector("#summaryGrid"),
-  employeeTableBody: document.querySelector("#employeeTableBody"),
-  ruleTableBody: document.querySelector("#ruleTableBody"),
-  projectsContainer: document.querySelector("#projectsContainer"),
-  resultsTableBody: document.querySelector("#resultsTableBody"),
-  addEmployeeBtn: document.querySelector("#addEmployeeBtn"),
-  addProjectBtn: document.querySelector("#addProjectBtn"),
-  loadSampleBtn: document.querySelector("#loadSampleBtn"),
-  exportCsvBtn: document.querySelector("#exportCsvBtn"),
-  employeeRowTemplate: document.querySelector("#employeeRowTemplate"),
-  projectCardTemplate: document.querySelector("#projectCardTemplate"),
-};
-
-function uid() {
-  if (globalThis.crypto?.randomUUID) {
-    return globalThis.crypto.randomUUID();
-  }
-  return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function createEmployee(employee = {}) {
-  return {
-    id: employee.id || uid(),
-    name: employee.name || "",
-    actualDesignation: employee.actualDesignation || "",
-    incentiveRole: employee.incentiveRole || incentiveRoleOptions[0],
-    department: employee.department || "",
-  };
-}
-
-function createProject(project = {}) {
-  return {
-    id: project.id || uid(),
-    name: project.name || "",
-    client: project.client || "",
-    cashflow: Number(project.cashflow) || 0,
-    vtPercent: Number(project.vtPercent) || 0,
-    dmPercent: Number(project.dmPercent) || 0,
-    kamPercent: Number(project.kamPercent) || 0,
-    assignedEmployeeIds: Array.isArray(project.assignedEmployeeIds) ? [...project.assignedEmployeeIds] : [],
-  };
-}
-
-function currency() {
-  return elements.currencySymbol.value.trim() || "₹";
-}
 
 function money(value) {
-  return `${currency()}${Math.round(Number(value) || 0).toLocaleString("en-IN")}`;
+  return `₹${Number(value || 0).toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: Number(value || 0) % 1 ? 2 : 0,
+  })}`;
 }
 
-function getIncentivePercent() {
-  return Math.max(Number(elements.incentivePercent.value) || 0, 0);
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
-function normalizedMix(project) {
-  const vt = Math.max(Number(project.vtPercent) || 0, 0);
-  const dm = Math.max(Number(project.dmPercent) || 0, 0);
-  const kam = Math.max(Number(project.kamPercent) || 0, 0);
-  const total = vt + dm + kam;
-  if (!total) {
-    return { vt: 0, dm: 0, kam: 0, totalPercent: 0 };
+function setLoading(isLoading, label = "Loading...") {
+  elements.loadingLabel.textContent = label;
+  elements.loadingOverlay.classList.toggle("hidden", !isLoading);
+}
+
+function showToast(message, tone = "info") {
+  const toast = document.createElement("article");
+  toast.className = `toast toast--${tone}`;
+  toast.textContent = message;
+  elements.toastStack.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("toast--visible"));
+  setTimeout(() => {
+    toast.classList.remove("toast--visible");
+    setTimeout(() => toast.remove(), 250);
+  }, 3200);
+}
+
+function greetingPrefix() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    return "Good Morning";
   }
-  return {
-    vt: vt / total,
-    dm: dm / total,
-    kam: kam / total,
-    totalPercent: total,
-  };
+  if (hour >= 12 && hour < 17) {
+    return "Good Afternoon";
+  }
+  if (hour >= 17 && hour < 22) {
+    return "Good Evening";
+  }
+  return "Welcome Back";
 }
 
-function updateRulesNotice() {
-  elements.rulesNotice.textContent =
-    "Derived from the workbook: Sourcing 20%, Closing 30%, Pre Sales Design 16%, Operations 34%. " +
-    "For each project, cashflow x incentive % creates the pool. VT/DM/KAM inputs are normalized per project and " +
-    "employees with the same incentive role split that role amount equally.";
+function renderAuthGreeting() {
+  const prefix = greetingPrefix();
+  elements.authGreetingTitle.textContent = prefix;
+  elements.authGreetingCopy.textContent = "Sign in to review your latest incentives, mapped projects, and performance updates.";
 }
 
-function calculateResults() {
-  const employeeMap = new Map(state.employees.map((employee) => [employee.id, employee]));
-  const totals = new Map(
-    state.employees.map((employee) => [
-      employee.id,
-      {
-        employee,
-        total: 0,
-        projectCount: 0,
-        breakdown: [],
-      },
-    ])
-  );
-
-  let totalCashflow = 0;
-  let totalPool = 0;
-  let totalPayout = 0;
-  let unallocatedPool = 0;
-
-  state.projects.forEach((project) => {
-    const cashflow = Math.max(Number(project.cashflow) || 0, 0);
-    const pool = cashflow * (getIncentivePercent() / 100);
-    const mix = normalizedMix(project);
-    totalCashflow += cashflow;
-    totalPool += pool;
-
-    const assigned = project.assignedEmployeeIds.map((id) => employeeMap.get(id)).filter(Boolean);
-    const assignedByRole = assigned.reduce((map, employee) => {
-      if (!map.has(employee.incentiveRole)) {
-        map.set(employee.incentiveRole, []);
-      }
-      map.get(employee.incentiveRole).push(employee);
-      return map;
-    }, new Map());
-
-    incentiveRules.forEach((rule) => {
-      const rolePool = pool * rule.calculateShare(mix);
-      if (!rolePool) {
-        return;
-      }
-
-      const assignedEmployees = assignedByRole.get(rule.role) || [];
-      if (!assignedEmployees.length) {
-        unallocatedPool += rolePool;
-        return;
-      }
-
-      const splitAmount = rolePool / assignedEmployees.length;
-      assignedEmployees.forEach((employee) => {
-        const entry = totals.get(employee.id);
-        entry.total += splitAmount;
-        entry.projectCount += 1;
-        entry.breakdown.push({
-          projectName: project.name || "Untitled project",
-          role: rule.role,
-          amount: splitAmount,
-        });
-      });
-      totalPayout += rolePool;
-    });
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    credentials: "same-origin",
+    ...options,
   });
-
-  return {
-    totalCashflow,
-    totalPool,
-    totalPayout,
-    unallocatedPool,
-    employeeResults: Array.from(totals.values())
-      .filter((item) => item.total > 0)
-      .sort((left, right) => right.total - left.total || left.employee.name.localeCompare(right.employee.name)),
-  };
+  const contentType = response.headers.get("Content-Type") || "";
+  const data = contentType.includes("application/json") ? await response.json().catch(() => ({})) : {};
+  if (!response.ok) {
+    throw new Error(data.error || "Request failed");
+  }
+  return data;
 }
 
-function renderEmployees() {
-  elements.employeeTableBody.innerHTML = "";
-
-  state.employees.forEach((employee) => {
-    const fragment = elements.employeeRowTemplate.content.cloneNode(true);
-    const row = fragment.querySelector("tr");
-
-    row.querySelectorAll("input[data-field], select[data-field]").forEach((input) => {
-      const field = input.dataset.field;
-      if (input.tagName === "SELECT") {
-        input.innerHTML = incentiveRoleOptions
-          .map(
-            (role) => `<option value="${role}" ${employee[field] === role ? "selected" : ""}>${role}</option>`
-          )
-          .join("");
-      } else {
-        input.value = employee[field];
-      }
-
-      input.addEventListener("input", (event) => {
-        const value = event.currentTarget.value;
-        state.employees = state.employees.map((current) =>
-          current.id === employee.id ? { ...current, [field]: value } : current
-        );
-        renderAll();
-      });
-
-      input.addEventListener("change", (event) => {
-        const value = event.currentTarget.value;
-        state.employees = state.employees.map((current) =>
-          current.id === employee.id ? { ...current, [field]: value } : current
-        );
-        renderAll();
-      });
-    });
-
-    row.querySelector("[data-action='remove']").addEventListener("click", () => {
-      state.employees = state.employees.filter((current) => current.id !== employee.id);
-      state.projects = state.projects.map((project) => ({
-        ...project,
-        assignedEmployeeIds: project.assignedEmployeeIds.filter((employeeId) => employeeId !== employee.id),
-      }));
-      renderAll();
-    });
-
-    elements.employeeTableBody.appendChild(fragment);
-  });
+function currentEmployee() {
+  return state.dashboard?.viewedEmployee || null;
 }
 
-function renderRules() {
-  elements.ruleTableBody.innerHTML = incentiveRules
+function currentMonthData() {
+  const employee = currentEmployee();
+  return employee?.months?.[state.selectedMonth] || null;
+}
+
+function setLoggedIn(loggedIn) {
+  elements.authShell.classList.toggle("hidden", loggedIn);
+  elements.appShell.classList.toggle("hidden", !loggedIn);
+}
+
+function togglePassword(input, button) {
+  const isHidden = input.type === "password";
+  input.type = isHidden ? "text" : "password";
+  button.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+  button.classList.toggle("password-toggle--active", isHidden);
+}
+
+function renderSession() {
+  const viewer = state.dashboard?.viewer;
+  const employee = currentEmployee();
+  if (!viewer || !employee) {
+    return;
+  }
+  elements.sessionUser.textContent = viewer.name;
+  const mode = viewer.isAdmin ? "Admin login" : viewer.isTeamHead ? "Team head login" : "Employee login";
+  elements.sessionMeta.textContent = `${viewer.designation || "Employee"} | ${mode}`;
+  elements.dashboardTitle.textContent =
+    employee.employeeId === viewer.employeeId ? `${employee.name}'s dashboard` : `${employee.name} dashboard`;
+  elements.dashboardSubtitle.textContent = employee.teamHeadName
+    ? `Reports to ${employee.teamHeadName}. Dynamic data from the latest uploaded Excel sheets.`
+    : "Dynamic data from the latest uploaded Excel sheets.";
+  elements.welcomeHeadline.textContent = `${greetingPrefix()}, ${viewer.name}`;
+  elements.welcomeSubline.textContent = "Hope you have a productive day!";
+}
+
+function renderMonthSelect() {
+  const employee = currentEmployee();
+  const monthOrder = employee?.monthOrder || [];
+  elements.monthSelect.innerHTML = monthOrder.length
+    ? monthOrder.map((month) => `<option value="${escapeHtml(month)}">${escapeHtml(month)}</option>`).join("")
+    : `<option value="">No month available</option>`;
+  state.selectedMonth = monthOrder.includes(state.selectedMonth)
+    ? state.selectedMonth
+    : employee?.latestMonth || monthOrder[0] || "";
+  elements.monthSelect.value = state.selectedMonth;
+}
+
+function renderEmployeeSwitch() {
+  const accessible = state.dashboard?.accessibleEmployees || [];
+  const searchResults = state.dashboard?.viewer?.isAdmin && state.adminSearchResults?.items?.length
+    ? state.adminSearchResults.items
+    : accessible;
+  elements.employeeSwitch.innerHTML = searchResults.length
+    ? searchResults
+        .map(
+          (employee) =>
+            `<option value="${escapeHtml(employee.employeeId)}">${escapeHtml(employee.name)}${employee.department ? ` · ${escapeHtml(employee.department)}` : ""}</option>`
+        )
+        .join("")
+    : `<option value="">No employee available</option>`;
+  elements.employeeSwitch.value = currentEmployee()?.employeeId || "";
+}
+
+function renderHero() {
+  const employee = currentEmployee();
+  const monthData = currentMonthData();
+  const futureValue = Number(monthData?.futureTotal || 0);
+  elements.selectedMonthLabel.textContent = state.selectedMonth || "No month";
+  elements.selectedMonthNote.textContent = employee?.projectCount
+    ? `${employee.projectCount} mapped projects with CF greater than zero`
+    : "Upload data to see month totals";
+  elements.monthCfValue.textContent = money(monthData?.totalCf || 0);
+  elements.monthShareValue.textContent = money(monthData?.totalShare || 0);
+  elements.futureValueValue.textContent = money(futureValue);
+}
+
+function renderProfile() {
+  const employee = currentEmployee();
+  if (!employee) {
+    elements.profileGrid.innerHTML = "";
+    return;
+  }
+  const rows = [
+    ["Employee ID", employee.employeeId],
+    ["Name", employee.name],
+    ["Designation", employee.designation || "Not available"],
+    ["Location", employee.location || "Not available"],
+    ["Team Head", employee.teamHeadName || "Self / head level"],
+    ["Access", employee.isTeamHead ? "Can view own + team dashboards" : "Own dashboard only"],
+  ];
+  elements.profileGrid.innerHTML = rows
     .map(
-      (rule) => `
-        <tr>
-          <td>${rule.bucket}</td>
-          <td>${rule.role}</td>
-          <td class="formula-text">${rule.formulaLabel}</td>
-        </tr>
-      `
+      ([label, value]) =>
+        `<article class="summary-card"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></article>`
     )
     .join("");
+}
+
+function filteredEntries() {
+  const monthData = currentMonthData();
+  const entries = monthData?.entries || [];
+  const term = state.searchTerm.trim().toLowerCase();
+  if (!term) {
+    return entries;
+  }
+  return entries.filter((entry) => entry.projectName.toLowerCase().includes(term));
 }
 
 function renderProjects() {
-  elements.projectsContainer.innerHTML = "";
+  const employee = currentEmployee();
+  const entries = filteredEntries();
+  if (!employee?.monthOrder?.length) {
+    elements.projectCards.innerHTML = "";
+    elements.projectNotice.textContent = `${employee?.name || "This employee"} does not currently have project-wise incentive rows for the selected workbook set.`;
+    return;
+  }
+  if (!entries.length) {
+    elements.projectCards.innerHTML = `<article class="empty-state">No mapped projects with CF greater than zero matched this search for ${escapeHtml(state.selectedMonth)}.</article>`;
+    elements.projectNotice.textContent = "Try a different search or choose another month.";
+    return;
+  }
+  elements.projectCards.innerHTML = entries
+    .map(
+      (entry) => `
+      <button class="project-card" type="button" data-project-id="${escapeHtml(entry.projectId)}">
+        <div>
+          <strong>${escapeHtml(entry.projectName)}</strong>
+          <p>${escapeHtml(entry.sourcingType || "Mapped project")} | This Month CF ${money(entry.thisMonthCf)} | Future Value Secured ${money(entry.futureValueSecured)}</p>
+        </div>
+        <div class="project-card__side">
+          <span class="chip">${escapeHtml(state.selectedMonth)}</span>
+          <strong>${money(entry.yourShare)}</strong>
+        </div>
+      </button>
+    `
+    )
+    .join("");
+  elements.projectNotice.textContent = "Only projects with CF value greater than zero are shown. Click any project row to open the detail view.";
+}
 
-  state.projects.forEach((project) => {
-    const fragment = elements.projectCardTemplate.content.cloneNode(true);
-    const card = fragment.querySelector(".project-card");
-    const checkboxArea = card.querySelector('[data-role="employee-checkboxes"]');
-    const meta = card.querySelector('[data-role="meta"]');
+function medalClass(index) {
+  if (index === 0) return "ranking-card--gold";
+  if (index === 1) return "ranking-card--silver";
+  if (index === 2) return "ranking-card--bronze";
+  return "";
+}
 
-    card.querySelectorAll("input[data-field]").forEach((input) => {
-      const field = input.dataset.field;
-      input.value = project[field];
-      input.addEventListener("input", (event) => {
-        const rawValue = event.currentTarget.value;
-        state.projects = state.projects.map((current) =>
-          current.id === project.id
-            ? { ...current, [field]: event.currentTarget.type === "number" ? Number(rawValue) || 0 : rawValue }
-            : current
-        );
-        renderAll();
-      });
-    });
+function renderRanking() {
+  const viewer = state.dashboard?.viewer;
+  const accessible = state.dashboard?.accessibleEmployees || [];
+  if (!viewer?.isAdmin && !viewer?.isTeamHead) {
+    elements.rankingList.innerHTML = "";
+    elements.rankingNotice.textContent = "Only team heads and admins can see team ranking and switch dashboards.";
+    return;
+  }
+  const sorted = [...accessible]
+    .map((employee) => ({
+      ...employee,
+      score: Number(employee.monthTotals?.[state.selectedMonth] || 0),
+      incentive: Number(employee.monthTotals?.[state.selectedMonth] || 0),
+    }))
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 5);
+  elements.rankingList.innerHTML = sorted.length
+    ? sorted
+        .map(
+          (employee, index) => `
+          <article class="ranking-card ${employee.employeeId === currentEmployee()?.employeeId ? "ranking-card--active" : ""} ${medalClass(index)}">
+            <div>
+              <span class="rank-badge">#${index + 1}</span>
+              <strong>${escapeHtml(employee.name)}</strong>
+              <p>${escapeHtml(employee.department || employee.designation || "Employee")}</p>
+            </div>
+            <div class="ranking-card__side">
+              <strong class="ranking-card__score">${money(employee.score)}</strong>
+              <p>Incentive ${money(employee.incentive)}</p>
+            </div>
+          </article>
+        `
+        )
+        .join("")
+    : `<article class="empty-state">No ranking data is available yet.</article>`;
+  elements.rankingNotice.textContent = `Top 5 ranking is based on ${state.selectedMonth || "the selected month"} incentive share.`;
+}
 
-    card.querySelector("[data-action='remove-project']").addEventListener("click", () => {
-      state.projects = state.projects.filter((current) => current.id !== project.id);
-      renderAll();
-    });
+function renderQuarterAndYearFilters() {
+  const timeline = currentEmployee()?.incentiveTimeline || [];
+  const quarters = [...new Set(timeline.map((item) => item.quarter).filter(Boolean))];
+  const years = [...new Set(timeline.map((item) => item.year).filter(Boolean))];
+  elements.quarterFilter.innerHTML = ['<option value="all">All</option>', ...quarters.map((quarter) => `<option value="${escapeHtml(quarter)}">${escapeHtml(quarter)}</option>`)].join("");
+  elements.yearFilter.innerHTML = ['<option value="all">All</option>', ...years.map((year) => `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`)].join("");
+  elements.quarterFilter.value = quarters.includes(state.quarterFilter) ? state.quarterFilter : "all";
+  elements.yearFilter.value = years.includes(state.yearFilter) ? state.yearFilter : "all";
+}
 
-    const mix = normalizedMix(project);
-    const selectedEmployees = state.employees.filter((employee) => project.assignedEmployeeIds.includes(employee.id));
-    const countsByRole = selectedEmployees.reduce((map, employee) => {
-      map.set(employee.incentiveRole, (map.get(employee.incentiveRole) || 0) + 1);
-      return map;
-    }, new Map());
-
-    meta.innerHTML = `
-      <span class="pill">VT ${Math.round(mix.vt * 100)}%</span>
-      <span class="pill">DM ${Math.round(mix.dm * 100)}%</span>
-      <span class="pill">KAM ${Math.round(mix.kam * 100)}%</span>
-      <span class="pill">Pool ${money((Number(project.cashflow) || 0) * (getIncentivePercent() / 100))}</span>
-    `;
-
-    Array.from(countsByRole.entries()).forEach(([role, count]) => {
-      meta.innerHTML += ` <span class="pill">${role}: ${count}</span>`;
-    });
-
-    state.employees.forEach((employee) => {
-      const wrapper = document.createElement("label");
-      wrapper.className = "checkbox-item";
-      const checked = project.assignedEmployeeIds.includes(employee.id);
-      wrapper.innerHTML = `
-        <input type="checkbox" ${checked ? "checked" : ""} />
-        <span>
-          <strong>${employee.name || "Unnamed employee"}</strong><br />
-          <span class="muted">${employee.incentiveRole || "No role"}</span>
-        </span>
-      `;
-
-      wrapper.querySelector("input").addEventListener("change", (event) => {
-        const nextIds = new Set(project.assignedEmployeeIds);
-        if (event.currentTarget.checked) {
-          nextIds.add(employee.id);
-        } else {
-          nextIds.delete(employee.id);
-        }
-
-        state.projects = state.projects.map((current) =>
-          current.id === project.id ? { ...current, assignedEmployeeIds: Array.from(nextIds) } : current
-        );
-        renderAll();
-      });
-
-      checkboxArea.appendChild(wrapper);
-    });
-
-    if (!state.employees.length) {
-      checkboxArea.innerHTML = '<p class="muted">Add employees first, then assign them to projects here.</p>';
+function filteredTimeline() {
+  const timeline = currentEmployee()?.incentiveTimeline || [];
+  return timeline.filter((item) => {
+    if (state.incentiveStatus !== "all" && item.incentiveStatus !== state.incentiveStatus) {
+      return false;
     }
-
-    elements.projectsContainer.appendChild(fragment);
+    if (state.quarterFilter !== "all" && item.quarter !== state.quarterFilter) {
+      return false;
+    }
+    if (state.yearFilter !== "all" && item.year !== state.yearFilter) {
+      return false;
+    }
+    return true;
   });
 }
 
-function renderSummary(result) {
-  const cards = [
-    ["Month", elements.monthLabel.value.trim() || "Current month"],
-    ["Projects", String(state.projects.length)],
-    ["Unallocated pool", money(result.unallocatedPool)],
-    ["Paid employees", String(result.employeeResults.length)],
-  ];
-
-  elements.summaryGrid.innerHTML = cards
-    .map(
-      ([label, value]) => `
-        <article class="summary-card">
-          <span>${label}</span>
-          <strong>${value}</strong>
-        </article>
-      `
-    )
-    .join("");
+function timelineRowClass(status) {
+  if (status === "Past") return "incentive-row--past";
+  if (status === "Future") return "incentive-row--future";
+  return "incentive-row--current";
 }
 
-function renderResults(result) {
-  if (!result.employeeResults.length) {
-    elements.resultsTableBody.innerHTML = `
-      <tr>
-        <td colspan="5" class="muted">No employee incentive has been generated yet. Add employees, projects, and project assignments.</td>
-      </tr>
-    `;
+function renderIncentiveTable() {
+  renderQuarterAndYearFilters();
+  const timeline = filteredTimeline();
+  elements.incentiveTableBody.innerHTML = timeline.length
+    ? timeline
+        .map(
+          (item) => `
+          <tr class="${timelineRowClass(item.incentiveStatus)}">
+            <td>${escapeHtml(item.month)}</td>
+            <td>${money(item.incentiveEarned)}</td>
+            <td>${escapeHtml(item.incentiveStatus)}</td>
+            <td>${money(item.futureProjection)}</td>
+            <td>${escapeHtml(item.remarks)}</td>
+          </tr>
+        `
+        )
+        .join("")
+    : `<tr><td colspan="5">No incentive rows matched the selected filters.</td></tr>`;
+}
+
+function renderAdminSearchMeta() {
+  if (!state.dashboard?.viewer?.isAdmin) {
+    elements.searchPageMeta.textContent = "";
     return;
   }
-
-  elements.resultsTableBody.innerHTML = result.employeeResults
-    .map(({ employee, total, projectCount, breakdown }) => {
-      const breakdownHtml = breakdown
-        .map((item) => `${item.projectName} (${item.role}) ${money(item.amount)}`)
-        .join("<br />");
-
-      return `
-        <tr>
-          <td>${employee.name}</td>
-          <td>${employee.incentiveRole}</td>
-          <td>${projectCount}</td>
-          <td class="mono">${money(total)}</td>
-          <td>${breakdownHtml}</td>
-        </tr>
-      `;
-    })
-    .join("");
+  const meta = state.adminSearchResults;
+  if (!state.adminSearch) {
+    elements.searchPageMeta.textContent = "Showing full employee list";
+    return;
+  }
+  if (!meta) {
+    elements.searchPageMeta.textContent = "No search result loaded";
+    return;
+  }
+  elements.searchPageMeta.textContent = `${meta.total} matching employee${meta.total === 1 ? "" : "s"}`;
 }
 
-function renderHero(result) {
-  elements.heroCashflow.textContent = money(result.totalCashflow);
-  elements.heroPool.textContent = money(result.totalPool);
-  elements.heroPayout.textContent = money(result.totalPayout);
+function renderAdmin() {
+  const adminEnabled = Boolean(state.dashboard?.admin?.enabled);
+  elements.adminPanel.classList.toggle("hidden", !adminEnabled);
+  elements.adminNavLink.classList.toggle("hidden", !adminEnabled);
+  elements.adminEmployeeSearchShell.classList.toggle("hidden", !adminEnabled);
+  renderAdminSearchMeta();
+  const datasets = state.dashboard?.admin?.datasets || [];
+  elements.datasetStatusList.innerHTML = datasets.length
+    ? datasets
+        .map(
+          (dataset) => `
+          <article class="dataset-item">
+            <div>
+              <strong>${escapeHtml(dataset.label)}</strong>
+              <p>${escapeHtml(dataset.fileName || "No file uploaded")}</p>
+            </div>
+            <div class="dataset-meta">
+              <span class="chip ${dataset.exists ? "" : "chip--muted"}">${dataset.exists ? "Loaded" : "Missing"}</span>
+              <code>${escapeHtml(dataset.path || "-")}</code>
+              <div class="inline-actions inline-actions--tight">
+                <button class="ghost-btn dataset-delete-btn" type="button" data-dataset-key="${escapeHtml(dataset.key)}" ${dataset.exists ? "" : "disabled"}>Delete</button>
+              </div>
+            </div>
+          </article>
+        `
+        )
+        .join("")
+    : `<article class="empty-state">No dataset information available.</article>`;
 }
 
-function renderAll() {
-  updateRulesNotice();
-  renderEmployees();
-  renderRules();
+function renderDashboard(dashboard) {
+  state.dashboard = dashboard;
+  renderSession();
+  renderMonthSelect();
+  renderEmployeeSwitch();
+  renderHero();
+  renderProfile();
   renderProjects();
-  const result = calculateResults();
-  renderSummary(result);
-  renderResults(result);
-  renderHero(result);
+  renderRanking();
+  renderIncentiveTable();
+  renderAdmin();
+  setLoggedIn(true);
 }
 
-function loadSampleData() {
-  state.employees = sampleData.employees.map((employee) => createEmployee(employee));
-  state.projects = sampleData.projects.map((project) => createProject(project));
-
-  if (state.projects[0]) {
-    state.projects[0].assignedEmployeeIds = [
-      state.employees[2].id,
-      state.employees[3].id,
-      state.employees[4].id,
-    ];
+async function refreshDashboard(employeeId = "", refresh = false) {
+  const params = new URLSearchParams();
+  if (employeeId) {
+    params.set("employeeId", employeeId);
   }
-  if (state.projects[1]) {
-    state.projects[1].assignedEmployeeIds = [state.employees[0].id, state.employees[5].id];
+  if (refresh) {
+    params.set("refresh", "1");
   }
-  if (state.projects[2]) {
-    state.projects[2].assignedEmployeeIds = [state.employees[1].id, state.employees[2].id, state.employees[6].id];
-  }
-
-  renderAll();
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  const dashboard = await api(`/api/me${suffix}`);
+  renderDashboard(dashboard);
 }
 
-function exportCsv() {
-  const result = calculateResults();
-  const header = ["employee_name", "actual_designation", "incentive_role", "project_count", "total_incentive", "breakdown"];
-  const lines = result.employeeResults.map(({ employee, total, projectCount, breakdown }) =>
-    [
-      employee.name,
-      employee.actualDesignation,
-      employee.incentiveRole,
-      projectCount,
-      Math.round(total),
-      breakdown.map((item) => `${item.projectName} - ${item.role} - ${Math.round(item.amount)}`).join(" | "),
+async function handleLogin(event) {
+  event.preventDefault();
+  setLoading(true, "Signing in...");
+  elements.loginNotice.textContent = "Signing in...";
+  try {
+    const dashboard = await api("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        loginType: elements.loginType.value,
+        employeeId: elements.loginEmployeeId.value.trim(),
+        password: elements.loginPassword.value,
+      }),
+    });
+    elements.loginForm.reset();
+    renderDashboard(dashboard);
+    showToast("Login successful.", "success");
+  } catch (error) {
+    elements.loginNotice.textContent = error.message;
+    showToast(error.message, "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function handleLogout() {
+  await api("/api/logout", { method: "POST" });
+  state.dashboard = null;
+  state.selectedMonth = "";
+  state.selectedEmployeeId = "";
+  state.adminSearchResults = null;
+  setLoggedIn(false);
+}
+
+async function handleChangePassword() {
+  setLoading(true, "Updating password...");
+  elements.passwordNotice.textContent = "Updating password...";
+  try {
+    const response = await api("/api/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        currentPassword: elements.currentPassword.value,
+        newPassword: elements.newPassword.value,
+        confirmPassword: elements.confirmPassword.value,
+      }),
+    });
+    elements.passwordForm.reset();
+    elements.passwordNotice.textContent = response.message || "Password updated successfully.";
+    showToast(elements.passwordNotice.textContent, "success");
+    await refreshDashboard(currentEmployee()?.employeeId || "");
+  } catch (error) {
+    elements.passwordNotice.textContent = error.message;
+    showToast(error.message, "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function handleRequestOtp(isResend = false) {
+  setLoading(true, "Sending OTP...");
+  elements.resetNotice.textContent = isResend ? "Resending OTP..." : "Sending OTP...";
+  try {
+    const response = await api("/api/request-reset-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employeeId: elements.resetEmployeeId.value.trim(),
+        email: elements.resetEmail.value.trim(),
+      }),
+    });
+    elements.resetNotice.textContent = response.message || "OTP sent.";
+    showToast(elements.resetNotice.textContent, response.delivered ? "success" : "info");
+  } catch (error) {
+    elements.resetNotice.textContent = error.message;
+    showToast(error.message, "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function handleVerifyOtp() {
+  setLoading(true, "Verifying OTP...");
+  elements.resetNotice.textContent = "Verifying OTP...";
+  try {
+    const response = await api("/api/verify-reset-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employeeId: elements.resetEmployeeId.value.trim(),
+        email: elements.resetEmail.value.trim(),
+        otp: elements.resetOtp.value.trim(),
+      }),
+    });
+    elements.resetNotice.textContent = response.message || "OTP verified successfully.";
+    showToast(elements.resetNotice.textContent, "success");
+  } catch (error) {
+    elements.resetNotice.textContent = error.message;
+    showToast(error.message, "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function handleResetPassword(event) {
+  event.preventDefault();
+  setLoading(true, "Resetting password...");
+  elements.resetNotice.textContent = "Resetting password...";
+  try {
+    const response = await api("/api/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        employeeId: elements.resetEmployeeId.value.trim(),
+        email: elements.resetEmail.value.trim(),
+        otp: elements.resetOtp.value.trim(),
+        newPassword: elements.resetNewPassword.value,
+        confirmPassword: elements.resetConfirmPassword.value,
+      }),
+    });
+    elements.resetPasswordForm.reset();
+    elements.resetNotice.textContent = response.message || "Password reset successfully.";
+    showToast(elements.resetNotice.textContent, "success");
+    elements.resetModal.close();
+  } catch (error) {
+    elements.resetNotice.textContent = error.message;
+    showToast(error.message, "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function handleDatasetUpload() {
+  const formData = new FormData(elements.datasetUploadForm);
+  let fileCount = 0;
+  for (const value of formData.values()) {
+    if (value instanceof File && value.size) {
+      fileCount += 1;
+    }
+  }
+  if (!fileCount) {
+    elements.uploadNotice.textContent = "Choose at least one Excel file before uploading.";
+    return;
+  }
+  setLoading(true, "Uploading files...");
+  elements.uploadNotice.textContent = "Uploading and refreshing dashboard data...";
+  try {
+    const response = await api("/api/admin/upload-datasets", {
+      method: "POST",
+      body: formData,
+    });
+    elements.datasetUploadForm.reset();
+    elements.uploadNotice.textContent = response.message || "Upload complete.";
+    renderDashboard(response.dashboard);
+    showToast(elements.uploadNotice.textContent, "success");
+  } catch (error) {
+    elements.uploadNotice.textContent = error.message;
+    showToast(error.message, "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function handleDeleteDatasets() {
+  openConfirmModal(
+    "Are you sure you want to delete all uploaded files and reset the current dashboard data?",
+    async () => {
+      setLoading(true, "Deleting uploaded files...");
+      elements.uploadNotice.textContent = "Clearing current dataset...";
+      try {
+        const response = await api("/api/admin/delete-datasets", { method: "POST" });
+        elements.uploadNotice.textContent = response.message || "Existing data deleted.";
+        renderDashboard(response.dashboard);
+        showToast(elements.uploadNotice.textContent, "success");
+      } catch (error) {
+        elements.uploadNotice.textContent = error.message;
+        showToast(error.message, "error");
+      } finally {
+        setLoading(false);
+      }
+    }
+  );
+}
+
+async function handleDeleteDataset(datasetKey) {
+  openConfirmModal("Are you sure you want to delete this file?", async () => {
+    setLoading(true, "Deleting file...");
+      try {
+        const response = await api("/api/admin/delete-dataset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ datasetKey }),
+        });
+        elements.uploadNotice.textContent = response.message || "Selected file deleted.";
+        renderDashboard(response.dashboard);
+        showToast(elements.uploadNotice.textContent, "success");
+      } catch (error) {
+        elements.uploadNotice.textContent = error.message;
+        showToast(error.message, "error");
+      } finally {
+        setLoading(false);
+      }
+  });
+}
+
+async function handleReloadDashboard() {
+  setLoading(true, "Reloading latest data...");
+  try {
+    const response = await api("/api/admin/reload-dashboard", { method: "POST" });
+    elements.uploadNotice.textContent = response.message || "Dashboard reloaded.";
+    renderDashboard(response.dashboard);
+    showToast(elements.uploadNotice.textContent, "success");
+  } catch (error) {
+    elements.uploadNotice.textContent = error.message;
+    showToast(error.message, "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function handleAdminEmployeeSearch() {
+  if (!state.dashboard?.viewer?.isAdmin) {
+    return;
+  }
+  if (!state.adminSearch) {
+    clearAdminEmployeeSearch();
+    return;
+  }
+  try {
+    const query = new URLSearchParams({
+      term: state.adminSearch,
+      page: "1",
+      perPage: "25",
+    });
+    const results = await api(`/api/admin/search-employees?${query.toString()}`);
+    state.adminSearchResults = results;
+    renderEmployeeSwitch();
+    renderAdminSearchMeta();
+    if (results.items?.length) {
+      state.selectedEmployeeId = results.items[0].employeeId;
+      await refreshDashboard(state.selectedEmployeeId);
+      showToast(`Found ${results.total} matching employees.`, "success");
+    } else {
+      showToast("No employees matched that search.", "info");
+    }
+  } catch (error) {
+    elements.uploadNotice.textContent = error.message;
+    showToast(error.message, "error");
+  }
+}
+
+function clearAdminEmployeeSearch() {
+  state.adminSearch = "";
+  state.adminSearchResults = null;
+  elements.adminEmployeeSearch.value = "";
+  renderEmployeeSwitch();
+  renderAdminSearchMeta();
+}
+
+async function openProjectDetail(projectId) {
+  const employee = currentEmployee();
+  if (!employee || !state.selectedMonth) {
+    return;
+  }
+  setLoading(true, "Loading project detail...");
+  try {
+    const detail = await api(
+      `/api/project-detail?employeeId=${encodeURIComponent(employee.employeeId)}&projectId=${encodeURIComponent(projectId)}&month=${encodeURIComponent(state.selectedMonth)}`
+    );
+    elements.detailProjectName.textContent = detail.projectName;
+    elements.projectDetailGrid.innerHTML = [
+      { label: "Employee Name", value: detail.employeeName },
+      { label: "Project Name", value: detail.projectName },
+      { label: "Selected Month", value: detail.month },
+      { label: "This Month CF", value: money(detail.thisMonthCf) },
+      { label: "Your Share", value: money(detail.yourShare) },
+      { label: "Future Value Secured", value: money(detail.futureValueSecured) },
+      { label: "Sourcing Type", value: detail.sourcingType || "Not available" },
+      {
+        label: "Mapped Closure Roles",
+        value: (detail.closureRoles || []).join(" | ") || "Not available",
+        multiline: true,
+        wide: true,
+      },
+      { label: "YTD Paid", value: money(detail.ytdMeta?.paid || 0) },
+      { label: "YTD Remaining", value: money(detail.ytdMeta?.remaining || 0) },
     ]
-      .map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`)
-      .join(",")
+      .map((item) => {
+        const valueClass = item.multiline ? "detail-value detail-value--multiline" : "detail-value";
+        const cardClass = item.wide ? "summary-card summary-card--detail summary-card--wide" : "summary-card summary-card--detail";
+        return `<article class="${cardClass}"><span>${escapeHtml(item.label)}</span><div class="${valueClass}">${escapeHtml(item.value)}</div></article>`;
+      })
+      .join("");
+    elements.projectDetailModal.showModal();
+  } catch (error) {
+    elements.projectNotice.textContent = error.message;
+    showToast(error.message, "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function restoreSession() {
+  try {
+    const dashboard = await api("/api/me");
+    renderDashboard(dashboard);
+  } catch {
+    setLoggedIn(false);
+  }
+}
+
+function openConfirmModal(message, callback) {
+  state.confirmAction = callback;
+  elements.confirmMessage.textContent = message;
+  elements.confirmModal.showModal();
+}
+
+function bindEvents() {
+  renderAuthGreeting();
+  elements.loginForm.addEventListener("submit", handleLogin);
+  elements.logoutBtn.addEventListener("click", handleLogout);
+  elements.openResetModalBtn.addEventListener("click", () => elements.resetModal.showModal());
+  elements.closeResetModalBtn.addEventListener("click", () => elements.resetModal.close());
+  elements.resetModal.addEventListener("click", (event) => {
+    if (event.target === elements.resetModal) {
+      elements.resetModal.close();
+    }
+  });
+  elements.requestOtpBtn.addEventListener("click", () => handleRequestOtp(false));
+  elements.resendOtpBtn.addEventListener("click", () => handleRequestOtp(true));
+  elements.verifyOtpBtn.addEventListener("click", handleVerifyOtp);
+  elements.resetPasswordForm.addEventListener("submit", handleResetPassword);
+  elements.changePasswordBtn.addEventListener("click", handleChangePassword);
+  elements.uploadDatasetsBtn.addEventListener("click", handleDatasetUpload);
+  elements.deleteDatasetsBtn.addEventListener("click", handleDeleteDatasets);
+  elements.reloadDatasetsBtn.addEventListener("click", handleReloadDashboard);
+  elements.refreshDashboardBtn.addEventListener("click", () => refreshDashboard(currentEmployee()?.employeeId || "", true));
+  elements.closeDetailModalBtn.addEventListener("click", () => elements.projectDetailModal.close());
+  elements.projectDetailModal.addEventListener("click", (event) => {
+    if (event.target === elements.projectDetailModal) {
+      elements.projectDetailModal.close();
+    }
+  });
+  elements.confirmDeleteBtn.addEventListener("click", async () => {
+    elements.confirmModal.close();
+    if (state.confirmAction) {
+      const action = state.confirmAction;
+      state.confirmAction = null;
+      await action();
+    }
+  });
+  elements.cancelDeleteBtn.addEventListener("click", () => {
+    state.confirmAction = null;
+    elements.confirmModal.close();
+  });
+
+  elements.toggleLoginPasswordBtn.addEventListener("click", () =>
+    togglePassword(elements.loginPassword, elements.toggleLoginPasswordBtn)
+  );
+  elements.toggleResetPasswordBtn.addEventListener("click", () =>
+    togglePassword(elements.resetNewPassword, elements.toggleResetPasswordBtn)
+  );
+  elements.toggleResetConfirmPasswordBtn.addEventListener("click", () =>
+    togglePassword(elements.resetConfirmPassword, elements.toggleResetConfirmPasswordBtn)
   );
 
-  const csv = [header.join(","), ...lines].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "monthly-incentive-results.csv";
-  link.click();
-  URL.revokeObjectURL(url);
+  elements.monthSelect.addEventListener("change", (event) => {
+    state.selectedMonth = event.target.value;
+    renderHero();
+    renderProjects();
+    renderRanking();
+  });
+
+  elements.employeeSwitch.addEventListener("change", async (event) => {
+    state.selectedEmployeeId = event.target.value;
+    await refreshDashboard(state.selectedEmployeeId);
+  });
+
+  elements.searchInput.addEventListener("input", (event) => {
+    state.searchTerm = event.target.value;
+    renderProjects();
+  });
+
+  elements.projectCards.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-project-id]");
+    if (!card) {
+      return;
+    }
+    openProjectDetail(card.dataset.projectId);
+  });
+
+  elements.incentiveStatusFilter.addEventListener("change", (event) => {
+    state.incentiveStatus = event.target.value;
+    renderIncentiveTable();
+  });
+  elements.quarterFilter.addEventListener("change", (event) => {
+    state.quarterFilter = event.target.value;
+    renderIncentiveTable();
+  });
+  elements.yearFilter.addEventListener("change", (event) => {
+    state.yearFilter = event.target.value;
+    renderIncentiveTable();
+  });
+
+  elements.datasetStatusList.addEventListener("click", (event) => {
+    const target = event.target.closest(".dataset-delete-btn");
+    if (!target) {
+      return;
+    }
+    handleDeleteDataset(target.dataset.datasetKey);
+  });
+
+  elements.adminEmployeeSearchBtn.addEventListener("click", async () => {
+    state.adminSearch = elements.adminEmployeeSearch.value.trim();
+    await handleAdminEmployeeSearch();
+  });
+  elements.adminEmployeeClearBtn.addEventListener("click", async () => {
+    clearAdminEmployeeSearch();
+    await refreshDashboard(currentEmployee()?.employeeId || "");
+  });
+  elements.adminEmployeeSearch.addEventListener("keydown", async (event) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+    event.preventDefault();
+    state.adminSearch = elements.adminEmployeeSearch.value.trim();
+    await handleAdminEmployeeSearch();
+  });
 }
 
-elements.addEmployeeBtn.addEventListener("click", () => {
-  state.employees.push(createEmployee());
-  renderAll();
-});
-
-elements.addProjectBtn.addEventListener("click", () => {
-  state.projects.push(createProject({ vtPercent: 0, dmPercent: 0, kamPercent: 100 }));
-  renderAll();
-});
-
-elements.loadSampleBtn.addEventListener("click", loadSampleData);
-elements.exportCsvBtn.addEventListener("click", exportCsv);
-
-[elements.currencySymbol, elements.monthLabel, elements.incentivePercent].forEach((input) =>
-  input.addEventListener("input", renderAll)
-);
-
-loadSampleData();
+bindEvents();
+restoreSession();
