@@ -427,7 +427,7 @@ function renderKpis() {
   const rows = summary?.kpis || [];
 
   els.kpiNotice.textContent = summary
-    ? `${rows.length} project-specific KPI rows loaded for ${summary.displayPeriod}. Incentive is allocated from selected-month project disbursal.`
+    ? `${rows.length} KPI rows loaded for ${summary.displayPeriod}. Target, score slabs, and weightage are mapped from the ${employee?.businessUnit || "GTM"} ${employee?.logicKey || employee?.department || ""} logic sheet.`
     : "KPI scorecard will appear here.";
 
   els.kpiTableBody.innerHTML = rows.length
@@ -438,8 +438,13 @@ function renderKpis() {
             <tr data-record-id="${escapeHtml(row.recordId)}">
               <td>${escapeHtml(row.kraCategory || "-")}</td>
               <td>${escapeHtml(row.kpiName || "-")}</td>
+              <td><input class="small-input target-input" type="number" step="0.01" value="${escapeHtml(row.target)}" ${isAdmin() ? "" : "disabled"} /></td>
               <td><input class="small-input achieved-input" type="number" step="0.01" value="${escapeHtml(row.achieved)}" ${isAdmin() ? "" : "disabled"} /></td>
+              <td>${escapeHtml(row.achievementPercent)}%</td>
               <td>${escapeHtml(row.score)}</td>
+              <td>${escapeHtml(row.weightage)}</td>
+              <td>${escapeHtml(row.finalWeightedScore)}</td>
+              <td>${escapeHtml(row.npsScore)}</td>
               <td>${money(row.incentiveAmount || 0)}</td>
               <td>
                 <div class="action-cell">
@@ -451,7 +456,7 @@ function renderKpis() {
           `;
         })
         .join("")
-    : `<tr><td colspan="6">No KPI rows are available for this employee yet.</td></tr>`;
+    : `<tr><td colspan="11">No KPI rows are available for this employee yet.</td></tr>`;
 }
 
 function renderProjects() {
@@ -767,6 +772,7 @@ async function saveKpi(event) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         recordId: row.dataset.recordId,
+        target: row.querySelector(".target-input")?.value,
         achieved: row.querySelector(".achieved-input")?.value,
       }),
     });
