@@ -6,15 +6,23 @@ from datetime import datetime
 from pathlib import Path
 
 from gtm_tool.auth_service import sync_accounts
-from gtm_tool.config import DEPARTMENTS, DEFAULT_ADMIN_ID, STATE_FILE, UPLOADS_DIR, ensure_dirs
+from gtm_tool.config import DEPARTMENTS, DEFAULT_ADMIN_ID, ROOT, STATE_FILE, UPLOADS_DIR, ensure_dirs
 from gtm_tool.excel_service import parse_workbook
 from services.utils import clean_string, month_label, normalize_name, parse_number, slugify
 
 
-DEFAULT_TEAM_PATH = Path("/Users/shwetagupta/Downloads/Demo GTM AND SBU Sheet 25 May.xlsx")
-DEFAULT_GTM_LOGIC_PATH = Path("/Users/shwetagupta/Downloads/GTM - KPIs & Incentive Structure-2.xlsx")
-DEFAULT_SBU_LOGIC_PATH = Path("/Users/shwetagupta/Downloads/SME SBU INCENTIVES 2026-27 (UPDATED).xlsx")
-DEFAULT_PROJECT_PATH = Path("/Users/shwetagupta/Downloads/Demo YTD AND mapping .xlsx")
+SEED_DATA_DIR = ROOT / "gtm_seed_data"
+DEFAULT_TEAM_PATH = SEED_DATA_DIR / "Demo GTM AND SBU Sheet 25 May.xlsx"
+DEFAULT_GTM_LOGIC_PATH = SEED_DATA_DIR / "GTM - KPIs & Incentive Structure-2.xlsx"
+DEFAULT_SBU_LOGIC_PATH = SEED_DATA_DIR / "SME SBU INCENTIVES 2026-27 (UPDATED).xlsx"
+DEFAULT_PROJECT_PATH = SEED_DATA_DIR / "Demo YTD AND mapping .xlsx"
+
+SEED_UPLOADS = {
+    "team_master": ("seed-team-master", DEFAULT_TEAM_PATH),
+    "gtm_logic": ("seed-gtm-logic", DEFAULT_GTM_LOGIC_PATH),
+    "sbu_logic": ("seed-sbu-logic", DEFAULT_SBU_LOGIC_PATH),
+    "project_cf": ("seed-project-cf", DEFAULT_PROJECT_PATH),
+}
 
 
 def _now():
@@ -93,13 +101,40 @@ def _make_seed_upload(file_id, file_name, path, upload_type):
     return {
         "fileId": file_id,
         "fileName": file_name,
-        "storedPath": str(path),
+        "storedPath": _portable_path(path),
         "uploadedAt": _now(),
         "uploadType": upload_type,
         "recordCount": 0,
         "deleted": False,
         "seeded": True,
     }
+
+
+def _portable_path(path):
+    path = Path(path)
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def _resolve_stored_path(path_value):
+    cleaned_path = clean_string(path_value)
+    if not cleaned_path:
+        return Path()
+    path = Path(cleaned_path)
+    if not path:
+        return path
+    if path.exists():
+        return path
+    if not path.is_absolute():
+        root_path = ROOT / path
+        if root_path.exists():
+            return root_path
+    for _, seed_path in SEED_UPLOADS.values():
+        if path.name == seed_path.name and seed_path.exists():
+            return seed_path
+    return path
 
 
 def _parse_achievement_band(text):
@@ -262,10 +297,8 @@ class GTMDataService:
         return {
             "schemaVersion": 3,
             "uploadedFiles": [
-                _make_seed_upload("seed-team-master", DEFAULT_TEAM_PATH.name, DEFAULT_TEAM_PATH, "team_master"),
-                _make_seed_upload("seed-gtm-logic", DEFAULT_GTM_LOGIC_PATH.name, DEFAULT_GTM_LOGIC_PATH, "gtm_logic"),
-                _make_seed_upload("seed-sbu-logic", DEFAULT_SBU_LOGIC_PATH.name, DEFAULT_SBU_LOGIC_PATH, "sbu_logic"),
-                _make_seed_upload("seed-project-cf", DEFAULT_PROJECT_PATH.name, DEFAULT_PROJECT_PATH, "project_cf"),
+                _make_seed_upload(file_id, seed_path.name, seed_path, upload_type)
+                for upload_type, (file_id, seed_path) in SEED_UPLOADS.items()
             ],
             "employeeOverrides": {},
             "kpiOverrides": {},
@@ -282,6 +315,45 @@ class GTMDataService:
 
     def _needs_bootstrap(self, raw):
         return raw.get("schemaVersion") != 3
+
+    def _ensure_seed_uploads(self, raw_state):
+        uploads = raw_state.setdefault("uploadedFiles", [])
+        active_types = set()
+        by_file_id = {item.get("fileId"): item for item in uploads}
+        seed_by_file_id = {file_id: (upload_type, seed_path) for upload_type, (file_id, seed_path) in SEED_UPLOADS.items()}
+
+        for upload in uploads:
+            if upload.get("deleted"):
+                continue
+            seed_record = seed_by_file_id.get(upload.get("fileId"))
+            if seed_record and seed_record[1].exists():
+                upload["uploadType"] = seed_record[0]
+                upload["fileName"] = seed_record[1].name
+                upload["storedPath"] = _portable_path(seed_record[1])
+                upload["seeded"] = True
+                stored_path = seed_record[1]
+            else:
+                stored_path = _resolve_stored_path(upload.get("storedPath", ""))
+            if stored_path.exists():
+                upload["storedPath"] = _portable_path(stored_path)
+                active_types.add(upload.get("uploadType"))
+
+        for upload_type, (file_id, seed_path) in SEED_UPLOADS.items():
+            if upload_type in active_types or not seed_path.exists():
+                continue
+            existing = by_file_id.get(file_id)
+            if existing:
+                existing.update(
+                    {
+                        "fileName": seed_path.name,
+                        "storedPath": _portable_path(seed_path),
+                        "uploadType": upload_type,
+                        "deleted": False,
+                        "seeded": True,
+                    }
+                )
+            else:
+                uploads.append(_make_seed_upload(file_id, seed_path.name, seed_path, upload_type))
 
     def _frameworks_for_employee(self, employee, frameworks):
         logic_key = clean_string(employee.get("logicKey"))
@@ -311,15 +383,17 @@ class GTMDataService:
         return merged
 
     def _build_from_uploads(self, raw_state):
+        self._ensure_seed_uploads(raw_state)
         employees = {DEFAULT_ADMIN_ID: _admin_employee()}
         frameworks = []
         projects = []
         incentive_rows = []
 
         for upload in [item for item in raw_state.get("uploadedFiles", []) if not item.get("deleted")]:
-            stored_path = Path(upload.get("storedPath", ""))
+            stored_path = _resolve_stored_path(upload.get("storedPath", ""))
             if not stored_path.exists():
                 continue
+            upload["storedPath"] = _portable_path(stored_path)
             parsed = parse_workbook(stored_path, upload.get("uploadType", ""))
             upload["recordCount"] = parsed.get("recordCount", 0)
             upload["uploadType"] = parsed.get("uploadType") or upload.get("uploadType")
