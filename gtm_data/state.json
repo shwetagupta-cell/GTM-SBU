@@ -40,26 +40,6 @@
       "recordCount": 13,
       "deleted": false,
       "seeded": true
-    },
-    {
-      "fileId": "cfca4792382747e1ad69a08151511d71",
-      "fileName": "Demo YTD AND mapping .xlsx",
-      "storedPath": "gtm_data/uploads/cfca4792382747e1ad69a08151511d71/Demo YTD AND mapping .xlsx",
-      "uploadedAt": "2026-05-27T09:30:09",
-      "uploadType": "project_cf",
-      "recordCount": 13,
-      "deleted": false,
-      "seeded": false
-    },
-    {
-      "fileId": "adca37ba799b498fb03c80b9e04d7edb",
-      "fileName": "Demo GTM AND SBU Sheet 25 May.xlsx",
-      "storedPath": "gtm_data/uploads/adca37ba799b498fb03c80b9e04d7edb/Demo GTM AND SBU Sheet 25 May.xlsx",
-      "uploadedAt": "2026-05-27T11:39:24",
-      "uploadType": "team_master",
-      "recordCount": 19,
-      "deleted": false,
-      "seeded": false
     }
   ],
   "employeeOverrides": {
@@ -500,7 +480,7 @@
       "department": "Operations",
       "sourceDepartment": "Operations",
       "currentSbu": "Operations",
-      "newSbu": "SBU - SME West",
+      "newSbu": "Ops SBU - SME West",
       "businessUnit": "SBU",
       "logicKey": "sbu_ops",
       "reportingName": "Mrinal Sharma",
@@ -528,7 +508,7 @@
       "department": "Marketing",
       "sourceDepartment": "Business Development",
       "currentSbu": "Business Development",
-      "newSbu": "SBU - SME West",
+      "newSbu": "Business Development SBU - SME West",
       "businessUnit": "SBU",
       "logicKey": "sbu_sales",
       "reportingName": "Mrinal Sharma",
@@ -556,7 +536,7 @@
       "department": "Marketing",
       "sourceDepartment": "Business Development",
       "currentSbu": "Business Development",
-      "newSbu": "SBU - SME West",
+      "newSbu": "Business Development SBU - SME West",
       "businessUnit": "SBU",
       "logicKey": "sbu_sales",
       "reportingName": "Ankit Arora",
@@ -584,7 +564,7 @@
       "department": "Operations",
       "sourceDepartment": "Operations",
       "currentSbu": "Operations",
-      "newSbu": "SBU - SME Central",
+      "newSbu": "Ops SBU - SME Central",
       "businessUnit": "SBU",
       "logicKey": "sbu_ops",
       "reportingName": "Ankit Arora",
@@ -612,7 +592,7 @@
       "department": "Marketing",
       "sourceDepartment": "Business Development",
       "currentSbu": "Business Development",
-      "newSbu": "SBU - SME West",
+      "newSbu": "Business Development SBU - SME West",
       "businessUnit": "SBU",
       "logicKey": "sbu_sales",
       "reportingName": "Ankit Arora",
@@ -640,7 +620,7 @@
       "department": "Design",
       "sourceDepartment": "Design",
       "currentSbu": "Design",
-      "newSbu": "SBU - SME West",
+      "newSbu": "Design SBU - SME West",
       "businessUnit": "SBU",
       "logicKey": "sbu_design_post",
       "reportingName": "Ankit Arora",
@@ -668,7 +648,7 @@
       "department": "Design",
       "sourceDepartment": "Design",
       "currentSbu": "Design",
-      "newSbu": "SBU - SME West",
+      "newSbu": "Design SBU - SME West",
       "businessUnit": "SBU",
       "logicKey": "sbu_design_post",
       "reportingName": "Ankit Arora",
@@ -696,7 +676,7 @@
       "department": "Design",
       "sourceDepartment": "Design",
       "currentSbu": "Design",
-      "newSbu": "SBU - SME West",
+      "newSbu": "Design SBU - SME West",
       "businessUnit": "SBU",
       "logicKey": "sbu_design_post",
       "reportingName": "Ankit Arora",
@@ -724,7 +704,7 @@
       "department": "Marketing",
       "sourceDepartment": "Business Development",
       "currentSbu": "Business Development",
-      "newSbu": "SBU - SME West",
+      "newSbu": "Business Development SBU - SME West",
       "businessUnit": "SBU",
       "logicKey": "sbu_sales",
       "reportingName": "Ankit Arora",
@@ -752,7 +732,7 @@
       "department": "Operations",
       "sourceDepartment": "Operations",
       "currentSbu": "Operations",
-      "newSbu": "SME West",
+      "newSbu": "Ops SME West",
       "businessUnit": "GTM",
       "logicKey": "Operations",
       "reportingName": "Kamlesh Sharma",
@@ -28049,5 +28029,5 @@
       }
     ]
   },
-  "loadedAt": "2026-06-09T08:00:53"
+  "loadedAt": "2026-06-09T08:43:19"
 }
