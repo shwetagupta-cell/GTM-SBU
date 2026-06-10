@@ -58,7 +58,7 @@ class _MultipartForm:
 # ---------------------------------------------------------------------------
 
 from gtm_tool.auth_service import find_account, load_accounts, send_reset_otp_email, update_password, verify_password
-from gtm_tool.config import ROOT, load_config
+from gtm_tool.config import DEFAULT_ADMIN_ID, ROOT, load_config, save_config
 from gtm_tool.data_service import DATA_SERVICE
 from services.utils import clean_string
 
@@ -345,10 +345,22 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
         session = self.require_admin()
         if not session:
             return
+        payload = self.read_json()
         try:
-            employee = DATA_SERVICE.upsert_employee(self.read_json())
+            employee = DATA_SERVICE.upsert_employee(payload)
         except ValueError as error:
             return self.send_json({"error": str(error)}, status=HTTPStatus.BAD_REQUEST)
+        if "adminAccess" in payload:
+            config = load_config()
+            admin_ids = set(config.get("adminEmployeeIds", []))
+            admin_ids.add(DEFAULT_ADMIN_ID)
+            employee_id = clean_string(employee.get("employeeId"))
+            if payload.get("adminAccess"):
+                admin_ids.add(employee_id)
+            elif employee_id != DEFAULT_ADMIN_ID:
+                admin_ids.discard(employee_id)
+            config["adminEmployeeIds"] = sorted(admin_ids)
+            save_config(config)
         return self.send_json({"ok": True, "employee": employee})
 
     def handle_delete_employee(self):

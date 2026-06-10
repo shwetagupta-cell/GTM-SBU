@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from gtm_tool.auth_service import sync_accounts, upsert_account
-from gtm_tool.config import DEPARTMENTS, DEFAULT_ADMIN_ID, ROOT, STATE_FILE, UPLOADS_DIR, ensure_dirs
+from gtm_tool.config import DEPARTMENTS, DEFAULT_ADMIN_ID, ROOT, STATE_FILE, UPLOADS_DIR, ensure_dirs, load_config
 from gtm_tool.excel_service import parse_workbook
 from services.utils import clean_string, month_label, normalize_name, parse_number, slugify
 
@@ -598,6 +598,7 @@ class GTMDataService:
     def employee_search(self, viewer_id, admin_mode=False, term=""):
         term = clean_string(term).lower()
         accessible = set(self._accessible_employee_ids(viewer_id, admin_mode))
+        admin_ids = set(load_config().get("adminEmployeeIds", []))
         items = []
         for employee in self.state["employees"].values():
             if employee.get("status") != "active" or employee["employeeId"] not in accessible:
@@ -632,6 +633,7 @@ class GTMDataService:
                     "npsScore": employee.get("npsScore", 4.5),
                     "email": employee.get("email", ""),
                     "businessUnit": employee.get("businessUnit", "GTM"),
+                    "adminAccess": employee["employeeId"] in admin_ids,
                 }
             )
         return sorted(items, key=lambda item: (item["name"], item["employeeId"]))
@@ -828,6 +830,7 @@ class GTMDataService:
         employee = self.state["employees"].get(employee_id)
         if not employee or employee.get("status") != "active":
             return None
+        admin_ids = set(load_config().get("adminEmployeeIds", []))
         grouped = {}
         for row in self.state["kpis"]:
             if row.get("employeeId") != employee_id:
@@ -865,6 +868,7 @@ class GTMDataService:
             "selectedPeriod": chosen,
             "latestSummary": latest,
             "mustChangePassword": bool(employee.get("mustChangePassword", True)),
+            "adminAccess": employee_id in admin_ids,
         }
 
     def admin_dashboard(self, selected_period="", start_date="", end_date=""):

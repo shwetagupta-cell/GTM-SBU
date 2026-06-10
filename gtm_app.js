@@ -85,6 +85,7 @@ const els = {
   employeeDisbursalInput: document.getElementById("employeeDisbursalInput"),
   employeeProjectIncentiveInput: document.getElementById("employeeProjectIncentiveInput"),
   employeeTempPasswordInput: document.getElementById("employeeTempPasswordInput"),
+  employeeAdminAccessInput: document.getElementById("employeeAdminAccessInput"),
   employeeDepartmentPercentInput: document.getElementById("employeeDepartmentPercentInput"),
   employeeTeamSharePercentInput: document.getElementById("employeeTeamSharePercentInput"),
   employeeNpsInput: document.getElementById("employeeNpsInput"),
@@ -445,7 +446,6 @@ function renderKpis() {
               <td>${escapeHtml(row.weightage)}</td>
               <td>${escapeHtml(row.finalWeightedScore)}</td>
               <td>${escapeHtml(row.npsScore)}</td>
-              <td>${money(row.incentiveAmount || 0)}</td>
               <td>
                 <div class="action-cell">
                   <span class="status-badge">${escapeHtml(row.action)}</span>
@@ -456,7 +456,7 @@ function renderKpis() {
           `;
         })
         .join("")
-    : `<tr><td colspan="11">No KPI rows are available for this employee yet.</td></tr>`;
+    : `<tr><td colspan="10">No KPI rows are available for this employee yet.</td></tr>`;
 }
 
 function renderProjects() {
@@ -592,6 +592,7 @@ function fillEmployeeForm(employee) {
   els.employeeDisbursalInput.value = employee.disbursalType || source.disbursalType || "quarterly";
   els.employeeProjectIncentiveInput.value = employee.mySharePercent ?? source.mySharePercent ?? employee.projectIncentivePercent ?? source.projectIncentivePercent ?? "";
   els.employeeTempPasswordInput.value = "";
+  els.employeeAdminAccessInput.value = employee.adminAccess || source.adminAccess ? "true" : "false";
   els.employeeDepartmentPercentInput.value = employee.departmentPercent ?? source.departmentPercent ?? "";
   els.employeeTeamSharePercentInput.value = employee.teamSharePercent ?? source.teamSharePercent ?? "";
   els.employeeNpsInput.value = currentSummary()?.npsScore ?? employee.npsScore ?? source.npsScore ?? "";
@@ -724,6 +725,7 @@ async function saveEmployee() {
         projectIncentivePercent: els.employeeProjectIncentiveInput.value,
         mySharePercent: els.employeeProjectIncentiveInput.value,
         tempPassword: els.employeeTempPasswordInput.value.trim(),
+        adminAccess: els.employeeAdminAccessInput.value === "true",
         departmentPercent: els.employeeDepartmentPercentInput.value,
         teamSharePercent: els.employeeTeamSharePercentInput.value,
         npsScore: els.employeeNpsInput.value,
