@@ -39,6 +39,14 @@ def _normalize_headers(values):
     return [slugify(value).replace("-", "_") for value in values]
 
 
+def _month_from_text(value):
+    text = clean_string(value).lower().replace("-", " ").replace("_", " ")
+    for part in text.split():
+        if part in MONTH_NAMES:
+            return MONTH_NAMES[part]
+    return None
+
+
 def _period_from_value(value, sheet_name=""):
     text = clean_string(value) or clean_string(sheet_name)
     parts = text.replace("-", " ").replace("_", " ").split()
@@ -50,8 +58,18 @@ def _period_from_value(value, sheet_name=""):
             month = MONTH_NAMES[lowered]
         elif part.isdigit() and len(part) == 4:
             year = int(part)
+        elif part.isdigit() and len(part) == 2:
+            year = 2000 + int(part)
     if month and year:
         return f"{year}-{month:02d}"
+    return ""
+
+
+def _first_value(row, *keys):
+    for key in keys:
+        value = row.get(key)
+        if clean_string(value):
+            return value
     return ""
 
 
@@ -408,30 +426,30 @@ def parse_project_workbook(path):
     workbook = pd.ExcelFile(path)
 
     monthly_projects = []
-    month_sheets = [name for name in workbook.sheet_names if clean_string(name).lower() in MONTH_NAMES]
+    month_sheets = [name for name in workbook.sheet_names if _month_from_text(name)]
     for sheet_name in month_sheets:
-        frame = _frame_from_sheet(path, sheet_name, ["month", "project_name", "employee"])
+        frame = _frame_from_sheet(path, sheet_name, ["project"])
         for _, row in frame.iterrows():
-            project_id = clean_string(row.get("project_id") or row.get("poject_id"))
-            project_name = clean_string(row.get("project_name"))
-            employee_id = normalize_emp_code(row.get("employee_id"))
-            employee_name = clean_string(row.get("employee_name") or row.get("employee"))
+            project_id = clean_string(_first_value(row, "project_id", "poject_id", "project_code"))
+            project_name = clean_string(_first_value(row, "project_name", "project", "client_name", "customer_name"))
+            employee_id = normalize_emp_code(_first_value(row, "employee_id", "emp_code", "employee_code", "employeeid"))
+            employee_name = clean_string(_first_value(row, "employee_name", "employee", "name", "sales_person", "owner"))
             if not (project_id or project_name) or not (employee_id or employee_name):
                 continue
-            period_label = _period_from_value(row.get("month"), sheet_name)
+            period_label = _period_from_value(_first_value(row, "month", "period", "billing_month"), sheet_name)
             monthly_projects.append(
                 {
                     "periodLabel": period_label,
                     "projectId": project_id or project_name,
                     "projectName": project_name or project_id,
-                    "projectValue": parse_number(row.get("cashflow") or row.get("project_value") or row.get("project_value_")),
+                    "projectValue": parse_number(_first_value(row, "cashflow", "cash_flow", "project_value", "project_value_", "value", "amount")),
                     "employeeId": employee_id,
                     "mappedEmployees": [employee_name] if employee_name else [],
-                    "assignedRole": clean_string(row.get("assigned_role")),
-                    "sourceStatus": clean_string(row.get("approval_status")) or "Pending",
+                    "assignedRole": clean_string(_first_value(row, "assigned_role", "role", "designation")),
+                    "sourceStatus": clean_string(_first_value(row, "approval_status", "status")) or "Pending",
                     "sourceScore": parse_number(row.get("score")),
-                    "sourceIncentivePercent": parse_number(row.get("incentive")),
-                    "sourceIncentiveAmount": parse_number(row.get("incentive_amount")),
+                    "sourceIncentivePercent": parse_number(_first_value(row, "incentive", "incentive_percent", "incentive_")),
+                    "sourceIncentiveAmount": parse_number(_first_value(row, "incentive_amount", "incentive_value")),
                     "remarks": clean_string(row.get("remarks")),
                 }
             )
@@ -503,7 +521,7 @@ def parse_workbook(path, upload_type=""):
     pd = _load_pandas()
     workbook = pd.ExcelFile(path)
     sheet_names = {clean_string(name) for name in workbook.sheet_names}
-    if any(name.lower() in MONTH_NAMES for name in sheet_names):
+    if any(_month_from_text(name) for name in sheet_names):
         return parse_project_workbook(path)
     if "SBU KPIs (Updated)" in sheet_names:
         return parse_sbu_logic_workbook(path)

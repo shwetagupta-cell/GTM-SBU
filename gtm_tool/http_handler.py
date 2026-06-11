@@ -428,6 +428,8 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
             uploaded = DATA_SERVICE.apply_workbook_upload(workbook.filename, workbook.file.read(), upload_type, replace_file_id)
         except ValueError as error:
             return self.send_json({"error": str(error)}, status=HTTPStatus.BAD_REQUEST)
+        except Exception as error:
+            return self.send_json({"error": f"Could not read workbook: {error}"}, status=HTTPStatus.BAD_REQUEST)
         return self.send_json({"ok": True, "upload": uploaded})
 
     def handle_delete_upload(self):
