@@ -1,3 +1,5 @@
+import re
+
 from services.utils import clean_string, normalize_emp_code, normalize_name, parse_number, slugify
 
 
@@ -71,6 +73,55 @@ def _first_value(row, *keys):
         if clean_string(value):
             return value
     return ""
+
+
+def _split_people(value):
+    text = clean_string(value)
+    if not text:
+        return []
+    parts = re.split(r"\s*(?:,|;|\||\n|/|\band\b|&)\s*", text, flags=re.IGNORECASE)
+    people = []
+    seen = set()
+    for part in parts:
+        name = clean_string(part)
+        key = normalize_name(name)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        people.append(name)
+    return people
+
+
+def _mapped_people_from_row(row):
+    people = []
+    seen = set()
+    keys = [
+        "team_members",
+        "team_member",
+        "mapped_employees",
+        "mapped_employee",
+        "employees",
+        "employee_names",
+        "employee_name",
+        "employee",
+        "sales_person",
+        "owner",
+        "person_1",
+        "person_2",
+        "person_3",
+        "person_4",
+        "person_5",
+        "person_6",
+        "person_7",
+        "person_8",
+    ]
+    for key in keys:
+        for name in _split_people(row.get(key)):
+            normalized = normalize_name(name)
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                people.append(name)
+    return people
 
 
 def _best_header_row(dataframe, required_terms):
@@ -433,18 +484,19 @@ def parse_project_workbook(path):
             project_id = clean_string(_first_value(row, "project_id", "poject_id", "project_code"))
             project_name = clean_string(_first_value(row, "project_name", "project", "client_name", "customer_name"))
             employee_id = normalize_emp_code(_first_value(row, "employee_id", "emp_code", "employee_code", "employeeid"))
-            employee_name = clean_string(_first_value(row, "employee_name", "employee", "name", "sales_person", "owner"))
-            if not (project_id or project_name) or not (employee_id or employee_name):
+            mapped_people = _mapped_people_from_row(row)
+            if not (project_id or project_name) or not (employee_id or mapped_people):
                 continue
             period_label = _period_from_value(_first_value(row, "month", "period", "billing_month"), sheet_name)
+            row_employee_id = employee_id if employee_id and len(mapped_people) <= 1 else ""
             monthly_projects.append(
                 {
                     "periodLabel": period_label,
                     "projectId": project_id or project_name,
                     "projectName": project_name or project_id,
                     "projectValue": parse_number(_first_value(row, "cashflow", "cash_flow", "project_value", "project_value_", "value", "amount")),
-                    "employeeId": employee_id,
-                    "mappedEmployees": [employee_name] if employee_name else [],
+                    "employeeId": row_employee_id,
+                    "mappedEmployees": mapped_people,
                     "assignedRole": clean_string(_first_value(row, "assigned_role", "role", "designation")),
                     "sourceStatus": clean_string(_first_value(row, "approval_status", "status")) or "Pending",
                     "sourceScore": parse_number(row.get("score")),
