@@ -348,7 +348,7 @@ def parse_team_workbook(path):
         if business_unit == "SBU":
             descriptor = f"{source_department} {designation} {current_sbu} {new_sbu}".lower()
             if "design" in descriptor:
-                if "pre sales" in descriptor:
+                if any(token in descriptor for token in ("pre sales", "pre-sales", "presales", "pre sale", "pre-sale")):
                     logic_key = "sbu_design_pre"
                 else:
                     logic_key = "sbu_design_post"

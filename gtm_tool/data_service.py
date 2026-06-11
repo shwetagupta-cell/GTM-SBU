@@ -343,6 +343,8 @@ class GTMDataService:
                 continue
             existing = by_file_id.get(file_id)
             if existing:
+                if existing.get("deleted"):
+                    continue
                 existing.update(
                     {
                         "fileName": seed_path.name,
@@ -359,9 +361,6 @@ class GTMDataService:
         logic_key = clean_string(employee.get("logicKey"))
         business_unit = clean_string(employee.get("businessUnit"))
         if business_unit == "SBU":
-            if logic_key == "sbu_design_post":
-                keys = {"sbu_design_post", "sbu_design_pre"}
-                return [item for item in frameworks if item.get("source") == "sbu" and item.get("matchKey") in keys]
             return [item for item in frameworks if item.get("source") == "sbu" and item.get("matchKey") == logic_key]
         return [item for item in frameworks if item.get("source") == "gtm" and item.get("matchKey") == employee.get("department")]
 
@@ -984,15 +983,20 @@ class GTMDataService:
         stored_path = target_dir / file_name
         stored_path.write_bytes(data_bytes)
         parsed = parse_workbook(stored_path, upload_type)
+        parsed_upload_type = parsed.get("uploadType", upload_type)
         if replace_file_id:
             self.delete_upload(replace_file_id, persist=False)
+        for item in self.state.get("uploadedFiles", []):
+            if item.get("deleted") or item.get("uploadType") != parsed_upload_type:
+                continue
+            item["deleted"] = True
         self.state["uploadedFiles"].append(
             {
                 "fileId": file_id,
                 "fileName": file_name,
                 "storedPath": str(stored_path),
                 "uploadedAt": _now(),
-                "uploadType": parsed.get("uploadType", upload_type),
+                "uploadType": parsed_upload_type,
                 "recordCount": parsed.get("recordCount", 0),
                 "deleted": False,
                 "seeded": False,

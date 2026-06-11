@@ -839,7 +839,7 @@ async function uploadWorkbook(uploadType, inputId) {
   formData.append("uploadType", uploadType);
   try {
     await api("/api/admin/upload-workbook", { method: "POST", body: formData });
-    els.uploadNotice.textContent = `${file.name} uploaded successfully.`;
+    els.uploadNotice.textContent = `${file.name} uploaded successfully and replaced the active file for this upload type.`;
     input.value = "";
     await refreshDashboard();
   } catch (error) {
@@ -855,7 +855,7 @@ async function deleteUpload(fileId) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fileId }),
     });
-    els.uploadNotice.textContent = "Uploaded file deleted successfully.";
+    els.uploadNotice.textContent = "Uploaded file deleted successfully. Upload the updated workbook to rebuild the mapping.";
     await refreshDashboard();
   } catch (error) {
     els.uploadNotice.textContent = error.message;
