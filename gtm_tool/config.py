@@ -29,8 +29,8 @@ ENABLE_SEED_DATA = os.environ.get("GTM_ENABLE_SEED_DATA", "").strip().lower() in
 
 
 def ensure_dirs():
-    DATA_DIR.mkdir(exist_ok=True)
-    UPLOADS_DIR.mkdir(exist_ok=True)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def load_config():
