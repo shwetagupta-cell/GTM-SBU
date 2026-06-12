@@ -1,3 +1,4 @@
+import base64
 import csv
 import io
 import json
@@ -135,6 +136,30 @@ def _resolve_stored_path(path_value):
         if path.name == seed_path.name and seed_path.exists():
             return seed_path
     return path
+
+
+def _restore_upload_file(upload):
+    stored_path = _resolve_stored_path(upload.get("storedPath", ""))
+    if stored_path.exists():
+        return stored_path
+
+    encoded = clean_string(upload.get("fileData"))
+    if not encoded:
+        return stored_path
+
+    file_id = clean_string(upload.get("fileId")) or uuid.uuid4().hex
+    file_name = clean_string(upload.get("fileName")) or "upload.xlsx"
+    target_dir = UPLOADS_DIR / file_id
+    target_dir.mkdir(parents=True, exist_ok=True)
+    restored_path = target_dir / file_name
+    restored_path.write_bytes(base64.b64decode(encoded.encode("ascii")))
+    upload["fileId"] = file_id
+    upload["storedPath"] = _portable_path(restored_path)
+    return restored_path
+
+
+def _public_upload(upload):
+    return {key: value for key, value in upload.items() if key != "fileData"}
 
 
 def _parse_achievement_band(text):
@@ -333,7 +358,7 @@ class GTMDataService:
                 upload["seeded"] = True
                 stored_path = seed_record[1]
             else:
-                stored_path = _resolve_stored_path(upload.get("storedPath", ""))
+                stored_path = _restore_upload_file(upload)
             if stored_path.exists():
                 upload["storedPath"] = _portable_path(stored_path)
                 active_types.add(upload.get("uploadType"))
@@ -402,7 +427,7 @@ class GTMDataService:
         incentive_rows = []
 
         for upload in self._latest_active_uploads(raw_state):
-            stored_path = _resolve_stored_path(upload.get("storedPath", ""))
+            stored_path = _restore_upload_file(upload)
             if not stored_path.exists():
                 continue
             upload["storedPath"] = _portable_path(stored_path)
@@ -914,7 +939,10 @@ class GTMDataService:
                 }
                 for department, values in sorted(departments.items())
             ],
-            "uploadHistory": sorted(self.state["uploadedFiles"], key=lambda item: item.get("uploadedAt", ""), reverse=True),
+            "uploadHistory": [
+                _public_upload(item)
+                for item in sorted(self.state["uploadedFiles"], key=lambda item: item.get("uploadedAt", ""), reverse=True)
+            ],
         }
 
     def dashboard_payload(self, viewer_id, target_employee_id="", admin_mode=False, search="", start_date="", end_date="", period_label=""):
@@ -1003,26 +1031,29 @@ class GTMDataService:
             if item.get("deleted") or item.get("uploadType") != parsed_upload_type:
                 continue
             item["deleted"] = True
+            item.pop("fileData", None)
         self.state["uploadedFiles"].append(
             {
                 "fileId": file_id,
                 "fileName": file_name,
-                "storedPath": str(stored_path),
+                "storedPath": _portable_path(stored_path),
                 "uploadedAt": _now(),
                 "uploadType": parsed_upload_type,
                 "recordCount": parsed.get("recordCount", 0),
                 "deleted": False,
                 "seeded": False,
+                "fileData": base64.b64encode(data_bytes).decode("ascii"),
             }
         )
         self.persist()
-        return self.state["uploadedFiles"][-1]
+        return _public_upload(self.state["uploadedFiles"][-1])
 
     def delete_upload(self, file_id, persist=True):
         deleted = False
         for item in self.state["uploadedFiles"]:
             if item.get("fileId") == file_id and not item.get("deleted"):
                 item["deleted"] = True
+                item.pop("fileData", None)
                 deleted = True
         if persist:
             self.persist()
