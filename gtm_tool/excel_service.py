@@ -142,6 +142,35 @@ def _frame_from_sheet(path, sheet_name, required_terms):
     return frame
 
 
+def _frame_from_matching_sheet(path, required_terms, preferred_sheet_name=""):
+    pd = _load_pandas()
+    workbook = pd.ExcelFile(path)
+    candidates = []
+    if preferred_sheet_name and preferred_sheet_name in workbook.sheet_names:
+        candidates.append(preferred_sheet_name)
+    candidates.extend(name for name in workbook.sheet_names if name not in candidates)
+
+    fallback = None
+    for sheet_name in candidates:
+        raw = pd.read_excel(path, sheet_name=sheet_name, header=None)
+        if fallback is None:
+            fallback = raw
+        header_row = _best_header_row(raw, required_terms)
+        headers = _normalize_headers(raw.iloc[header_row].tolist())
+        if all(any(term in cell for cell in headers) for term in required_terms):
+            frame = raw.iloc[header_row + 1 :].copy().fillna("").infer_objects(copy=False)
+            frame.columns = headers
+            return frame
+
+    if fallback is None:
+        raise ValueError("Workbook does not contain any worksheets.")
+    header_row = _best_header_row(fallback, required_terms)
+    headers = [clean_string(value) for value in fallback.iloc[header_row].tolist()]
+    frame = fallback.iloc[header_row + 1 :].copy().fillna("").infer_objects(copy=False)
+    frame.columns = _normalize_headers(headers)
+    return frame
+
+
 def _normalize_department(value, fallback=""):
     text = clean_string(value).upper()
     mapping = {
@@ -398,7 +427,7 @@ def parse_sbu_logic_workbook(path):
 
 
 def parse_team_workbook(path):
-    frame = _frame_from_sheet(path, "Sheet1", ["emp_code", "employee_name", "reports_to"])
+    frame = _frame_from_matching_sheet(path, ["emp_code", "employee_name"], preferred_sheet_name="Sheet1")
     employees = []
     for _, row in frame.iterrows():
         employee_id = normalize_emp_code(row.get("emp_code"))
@@ -444,9 +473,9 @@ def parse_team_workbook(path):
                 "newSbu": new_sbu,
                 "businessUnit": business_unit,
                 "logicKey": logic_key,
-                "reportingName": clean_string(row.get("reports_to")),
+                "reportingName": clean_string(row.get("reports_to") or row.get("reporting_manager")),
                 "reportingTo": "",
-                "managerName": clean_string(row.get("reports_to")),
+                "managerName": clean_string(row.get("reports_to") or row.get("reporting_manager")),
                 "managerDesignation": "",
                 "hierarchyRole": role,
                 "disbursalType": _disbursal_type_from_designation(designation),
