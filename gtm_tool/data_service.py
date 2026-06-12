@@ -381,6 +381,19 @@ class GTMDataService:
                 merged[key] = value
         return merged
 
+    def _latest_active_uploads(self, raw_state):
+        latest_by_type = {}
+        for upload in raw_state.get("uploadedFiles", []):
+            if upload.get("deleted"):
+                continue
+            upload_type = clean_string(upload.get("uploadType"))
+            if not upload_type:
+                continue
+            current = latest_by_type.get(upload_type)
+            if not current or clean_string(upload.get("uploadedAt")) >= clean_string(current.get("uploadedAt")):
+                latest_by_type[upload_type] = upload
+        return sorted(latest_by_type.values(), key=lambda item: clean_string(item.get("uploadedAt")))
+
     def _build_from_uploads(self, raw_state):
         self._ensure_seed_uploads(raw_state)
         employees = {DEFAULT_ADMIN_ID: _admin_employee()}
@@ -388,7 +401,7 @@ class GTMDataService:
         projects = []
         incentive_rows = []
 
-        for upload in [item for item in raw_state.get("uploadedFiles", []) if not item.get("deleted")]:
+        for upload in self._latest_active_uploads(raw_state):
             stored_path = _resolve_stored_path(upload.get("storedPath", ""))
             if not stored_path.exists():
                 continue
