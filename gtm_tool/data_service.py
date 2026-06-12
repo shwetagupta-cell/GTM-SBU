@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from gtm_tool.auth_service import sync_accounts, upsert_account
-from gtm_tool.config import DEPARTMENTS, DEFAULT_ADMIN_ID, ROOT, STATE_FILE, UPLOADS_DIR, ensure_dirs, load_config
+from gtm_tool.config import DEPARTMENTS, DEFAULT_ADMIN_ID, ENABLE_SEED_DATA, ROOT, STATE_FILE, UPLOADS_DIR, ensure_dirs, load_config
 from gtm_tool.excel_service import parse_workbook
 from services.utils import clean_string, month_label, normalize_name, parse_number, slugify
 
@@ -321,10 +321,7 @@ class GTMDataService:
     def _default_state(self):
         return {
             "schemaVersion": 3,
-            "uploadedFiles": [
-                _make_seed_upload(file_id, seed_path.name, seed_path, upload_type)
-                for upload_type, (file_id, seed_path) in SEED_UPLOADS.items()
-            ],
+            "uploadedFiles": self._seed_uploads() if ENABLE_SEED_DATA else [],
             "employeeOverrides": {},
             "kpiOverrides": {},
             "projectOverrides": {},
@@ -338,11 +335,23 @@ class GTMDataService:
             "loadedAt": _now(),
         }
 
+    def _seed_uploads(self):
+        return [
+            _make_seed_upload(file_id, seed_path.name, seed_path, upload_type)
+            for upload_type, (file_id, seed_path) in SEED_UPLOADS.items()
+        ]
+
     def _needs_bootstrap(self, raw):
         return raw.get("schemaVersion") != 3
 
     def _ensure_seed_uploads(self, raw_state):
         uploads = raw_state.setdefault("uploadedFiles", [])
+        if not ENABLE_SEED_DATA:
+            raw_state["uploadedFiles"] = [
+                upload for upload in uploads if not upload.get("seeded") and not clean_string(upload.get("fileId")).startswith("seed-")
+            ]
+            return
+
         active_types = set()
         by_file_id = {item.get("fileId"): item for item in uploads}
         seed_by_file_id = {file_id: (upload_type, seed_path) for upload_type, (file_id, seed_path) in SEED_UPLOADS.items()}

@@ -25,6 +25,7 @@ BUNDLED_PYTHON = Path(
 
 DEPARTMENTS = ["Viztown", "Events", "Digital Marketing", "Marketing", "Founder Connect"]
 DEFAULT_ADMIN_ID = "1709"
+ENABLE_SEED_DATA = os.environ.get("GTM_ENABLE_SEED_DATA", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def ensure_dirs():
