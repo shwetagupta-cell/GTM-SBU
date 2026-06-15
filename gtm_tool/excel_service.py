@@ -234,6 +234,15 @@ def _role_from_designation(designation, level=""):
     return "manager"
 
 
+def _sales_stage_from_text(value):
+    text = clean_string(value).lower().replace("-", " ")
+    if "pre" in text and "sale" in text:
+        return "pre"
+    if "post" in text and "sale" in text:
+        return "post"
+    return ""
+
+
 def _disbursal_type_from_designation(designation):
     lowered = clean_string(designation).lower()
     if any(token in lowered for token in ("vice president", "vp", "avp", "founder", "chief")):
@@ -462,13 +471,15 @@ def parse_team_workbook(path):
         source_department = clean_string(row.get("department"))
         current_sbu = clean_string(row.get("current_sbu"))
         new_sbu = clean_string(row.get("new_sbu_as_per_aop"))
-        business_unit = "SBU" if "sbu" in f"{current_sbu} {new_sbu}".lower() else "GTM"
+        sales_stage = _sales_stage_from_text(row.get("pre_post_sales") or row.get("pre_post_sale") or row.get("category"))
+        sbu_descriptor = f"{current_sbu} {new_sbu}".lower()
+        business_unit = "GTM" if "gtm" in sbu_descriptor else "SBU" if any(token in sbu_descriptor for token in ("sbu", "sme")) else "GTM"
         normalized_department = _normalize_department(new_sbu, source_department or current_sbu)
 
         if business_unit == "SBU":
             descriptor = f"{source_department} {designation} {current_sbu} {new_sbu}".lower()
             if "design" in descriptor:
-                if any(token in descriptor for token in ("pre sales", "pre-sales", "presales", "pre sale", "pre-sale")):
+                if sales_stage == "pre" or any(token in descriptor for token in ("pre sales", "pre-sales", "presales", "pre sale", "pre-sale")):
                     logic_key = "sbu_design_pre"
                 else:
                     logic_key = "sbu_design_post"
@@ -493,6 +504,7 @@ def parse_team_workbook(path):
                 "sourceDepartment": source_department,
                 "currentSbu": current_sbu,
                 "newSbu": new_sbu,
+                "salesStage": sales_stage,
                 "businessUnit": business_unit,
                 "logicKey": logic_key,
                 "reportingName": clean_string(row.get("reports_to") or row.get("reporting_manager")),
