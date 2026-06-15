@@ -128,6 +128,12 @@ const EYE_ICON = `
 `;
 
 const QUARTER_SEQUENCE = ["Q1", "Q2", "Q3", "Q4"];
+const REQUIRED_UPLOAD_TYPES = [
+  ["team_master", "Team Sheet"],
+  ["gtm_logic", "GTM Logic"],
+  ["sbu_logic", "SBU Logic"],
+  ["project_cf", "Project Sheet"],
+];
 const WORKBOOK_BACKUP_DB = "gtm-workbook-backups";
 const WORKBOOK_BACKUP_STORE = "workbooks";
 
@@ -169,15 +175,17 @@ async function withWorkbookBackupStore(mode, action) {
 }
 
 async function backupWorkbook(uploadType, file, uploadedAt = "") {
-  await withWorkbookBackupStore("readwrite", (store) =>
+  const arrayBuffer = await file.arrayBuffer();
+  const saved = await withWorkbookBackupStore("readwrite", (store) =>
     store.put({
       uploadType,
       fileName: file.name,
       mimeType: file.type || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       updatedAt: uploadedAt || new Date().toISOString(),
-      blob: file,
+      arrayBuffer,
     })
   );
+  return saved !== null;
 }
 
 async function removeWorkbookBackup(uploadType) {
@@ -602,9 +610,23 @@ function renderAdmin() {
         .join("")
     : `<article class="trend-item empty-state">Department summaries will appear after KPI updates.</article>`;
 
-  els.uploadHistory.innerHTML = (admin.uploadHistory || []).length
-    ? admin.uploadHistory
-        .filter((item) => !item.deleted)
+  const activeUploads = (admin.uploadHistory || []).filter((item) => !item.deleted);
+  const activeUploadTypes = new Set(activeUploads.map((item) => item.uploadType).filter(Boolean));
+  const missingUploadCards = REQUIRED_UPLOAD_TYPES.filter(([uploadType]) => !activeUploadTypes.has(uploadType))
+    .map(
+      ([, label]) => `
+        <article class="upload-item empty-state">
+          <div>
+            <strong>${escapeHtml(label)} missing</strong>
+            <p>Upload the latest workbook so dashboards stay fully mapped.</p>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+
+  els.uploadHistory.innerHTML = activeUploads.length
+    ? activeUploads
         .map((item) => {
           const uploaded = formatLoadedAt(item.uploadedAt);
           return `
@@ -621,7 +643,7 @@ function renderAdmin() {
             </article>
           `;
         })
-        .join("")
+        .join("") + missingUploadCards
     : `<article class="upload-item empty-state">Uploaded workbooks will appear here.</article>`;
 
   renderDepartmentOptions();
@@ -722,7 +744,7 @@ async function restoreMissingWorkbookBackups() {
         activeByType.set(item.uploadType, item);
       }
     });
-  const backups = (await getWorkbookBackups()).filter((item) => item?.uploadType && item?.blob);
+  const backups = (await getWorkbookBackups()).filter((item) => item?.uploadType && (item?.arrayBuffer || item?.blob));
   const missingBackups = backups.filter((item) => {
     const active = activeByType.get(item.uploadType);
     return !active || Number(active.recordCount || 0) <= 0 || String(item.updatedAt || "") > String(active.uploadedAt || "");
@@ -733,7 +755,8 @@ async function restoreMissingWorkbookBackups() {
   let restored = 0;
   try {
     for (const backup of missingBackups) {
-      const file = new File([backup.blob], backup.fileName || `${backup.uploadType}.xlsx`, {
+      const workbookData = backup.arrayBuffer || backup.blob;
+      const file = new File([workbookData], backup.fileName || `${backup.uploadType}.xlsx`, {
         type: backup.mimeType || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const formData = new FormData();
@@ -950,8 +973,10 @@ async function uploadWorkbook(uploadType, inputId) {
   formData.append("uploadType", uploadType);
   try {
     const result = await api("/api/admin/upload-workbook", { method: "POST", body: formData });
-    await backupWorkbook(uploadType, file, result.upload?.uploadedAt);
-    els.uploadNotice.textContent = `${file.name} uploaded successfully and replaced the active file for this upload type.`;
+    const backedUp = await backupWorkbook(uploadType, file, result.upload?.uploadedAt);
+    els.uploadNotice.textContent = backedUp
+      ? `${file.name} uploaded successfully and replaced the active file for this upload type.`
+      : `${file.name} uploaded successfully, but the browser backup could not be saved. Please keep this file available.`;
     input.value = "";
     await refreshDashboard();
   } catch (error) {
