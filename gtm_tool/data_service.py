@@ -4,6 +4,7 @@ import io
 import json
 import uuid
 from datetime import datetime
+from difflib import SequenceMatcher
 from pathlib import Path
 
 from gtm_tool.auth_service import sync_accounts, upsert_account
@@ -311,6 +312,26 @@ def _within_date_range(period_label, start_date="", end_date=""):
         except ValueError:
             pass
     return True
+
+
+def _name_tokens(value):
+    return [token for token in normalize_name(value).split() if len(token) > 1]
+
+
+def _similar_token(left, right):
+    if not left or not right:
+        return False
+    return left == right or left.startswith(right) or right.startswith(left) or SequenceMatcher(None, left, right).ratio() >= 0.86
+
+
+def _project_name_matches_employee(mapped_name, employee_name):
+    mapped_tokens = _name_tokens(mapped_name)
+    employee_tokens = _name_tokens(employee_name)
+    if not mapped_tokens or not employee_tokens:
+        return False
+    if normalize_name(mapped_name) == normalize_name(employee_name):
+        return True
+    return all(any(_similar_token(mapped_token, employee_token) for employee_token in employee_tokens) for mapped_token in mapped_tokens)
 
 
 class GTMDataService:
@@ -808,6 +829,41 @@ class GTMDataService:
             "action": action,
         }
 
+    def _resolve_project_employee_ids(self, mapped_names):
+        employees = [item for item in self.state["employees"].values() if item.get("status") == "active"]
+        resolved_ids = []
+        seen = set()
+        for mapped_name in mapped_names:
+            mapped_key = normalize_name(mapped_name)
+            if not mapped_key:
+                continue
+            matches = [
+                employee
+                for employee in employees
+                if _project_name_matches_employee(mapped_name, employee.get("name"))
+            ]
+            if not matches:
+                mapped_tokens = _name_tokens(mapped_name)
+                if len(mapped_tokens) == 1:
+                    matches = [
+                        employee
+                        for employee in employees
+                        if any(_similar_token(mapped_tokens[0], token) for token in _name_tokens(employee.get("name")))
+                    ]
+                elif mapped_tokens:
+                    matches = [
+                        employee
+                        for employee in employees
+                        if _name_tokens(employee.get("name")) and _similar_token(mapped_tokens[0], _name_tokens(employee.get("name"))[0])
+                    ]
+            if len(matches) != 1:
+                continue
+            employee_id = matches[0]["employeeId"]
+            if employee_id not in seen:
+                seen.add(employee_id)
+                resolved_ids.append(employee_id)
+        return resolved_ids
+
     def _project_rows_for_employee(self, employee, period_label, disbursal_percent):
         employee_name_key = normalize_name(employee.get("name"))
         employee_id_key = clean_string(employee.get("employeeId"))
@@ -818,9 +874,13 @@ class GTMDataService:
         for project in candidate_projects:
             mapped = [clean_string(name) for name in project.get("mappedEmployees", []) if clean_string(name)]
             normalized = [normalize_name(name) for name in mapped]
+            resolved_employee_ids = self._resolve_project_employee_ids(mapped)
             project_employee_id = clean_string(project.get("employeeId"))
             if project_employee_id:
                 if project_employee_id != employee_id_key:
+                    continue
+            elif resolved_employee_ids:
+                if employee_id_key not in resolved_employee_ids:
                     continue
             elif employee_name_key not in normalized:
                 continue
@@ -829,7 +889,7 @@ class GTMDataService:
             share_percent = parse_number(override.get("sharePercent")) if override.get("sharePercent") not in (None, "") else parse_number(employee.get("sharePercent"))
             department_percent = parse_number(override.get("departmentPercent")) if override.get("departmentPercent") not in (None, "") else parse_number(employee.get("departmentPercent"))
             team_share_percent = parse_number(override.get("teamSharePercent")) if override.get("teamSharePercent") not in (None, "") else (
-                100.0 / max(len(normalized), 1)
+                100.0 / max(len(resolved_employee_ids) or len(normalized), 1)
             )
             my_share_percent = parse_number(employee.get("mySharePercent")) or parse_number(employee.get("projectIncentivePercent"))
             project_value = parse_number(project.get("projectValue"))
