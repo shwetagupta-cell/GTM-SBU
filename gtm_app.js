@@ -128,9 +128,65 @@ const EYE_ICON = `
 `;
 
 const QUARTER_SEQUENCE = ["Q1", "Q2", "Q3", "Q4"];
+const WORKBOOK_BACKUP_DB = "gtm-workbook-backups";
+const WORKBOOK_BACKUP_STORE = "workbooks";
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function openWorkbookBackupDb() {
+  if (!window.indexedDB) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const request = window.indexedDB.open(WORKBOOK_BACKUP_DB, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(WORKBOOK_BACKUP_STORE)) {
+        db.createObjectStore(WORKBOOK_BACKUP_STORE, { keyPath: "uploadType" });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => resolve(null);
+  });
+}
+
+async function withWorkbookBackupStore(mode, action) {
+  const db = await openWorkbookBackupDb();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    const transaction = db.transaction(WORKBOOK_BACKUP_STORE, mode);
+    const store = transaction.objectStore(WORKBOOK_BACKUP_STORE);
+    const result = action(store);
+    transaction.oncomplete = () => {
+      db.close();
+      resolve(result?.result ?? result ?? null);
+    };
+    transaction.onerror = () => {
+      db.close();
+      resolve(null);
+    };
+  });
+}
+
+async function backupWorkbook(uploadType, file, uploadedAt = "") {
+  await withWorkbookBackupStore("readwrite", (store) =>
+    store.put({
+      uploadType,
+      fileName: file.name,
+      mimeType: file.type || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      updatedAt: uploadedAt || new Date().toISOString(),
+      blob: file,
+    })
+  );
+}
+
+async function removeWorkbookBackup(uploadType) {
+  if (!uploadType) return;
+  await withWorkbookBackupStore("readwrite", (store) => store.delete(uploadType));
+}
+
+async function getWorkbookBackups() {
+  return (await withWorkbookBackupStore("readonly", (store) => store.getAll())) || [];
 }
 
 function isNetworkError(error) {
@@ -646,10 +702,58 @@ async function refreshDashboard() {
   if (state.endDate) query.set("endDate", state.endDate);
   if (state.selectedPeriod) query.set("period", state.selectedPeriod);
   state.dashboard = await api(`/api/me?${query.toString()}`);
+  if (await restoreMissingWorkbookBackups()) {
+    state.dashboard = await api(`/api/me?${query.toString()}`);
+  }
   state.selectedEmployeeId = state.dashboard?.viewedEmployee?.employeeId || state.selectedEmployeeId;
   state.selectedPeriod = state.dashboard?.viewedEmployee?.selectedPeriod || state.selectedPeriod || state.dashboard?.currentPeriod || "";
   state.selectedQuarter = quarterForPeriod(state.selectedPeriod);
   renderAll();
+}
+
+async function restoreMissingWorkbookBackups() {
+  if (!state.dashboard?.viewer?.isAdmin || state.restoreInProgress) return false;
+  const activeByType = new Map();
+  (state.dashboard?.admin?.uploadHistory || [])
+    .filter((item) => !item.deleted && item.uploadType)
+    .forEach((item) => {
+      const current = activeByType.get(item.uploadType);
+      if (!current || String(item.uploadedAt || "") > String(current.uploadedAt || "")) {
+        activeByType.set(item.uploadType, item);
+      }
+    });
+  const backups = (await getWorkbookBackups()).filter((item) => item?.uploadType && item?.blob);
+  const missingBackups = backups.filter((item) => {
+    const active = activeByType.get(item.uploadType);
+    return !active || Number(active.recordCount || 0) <= 0 || String(item.updatedAt || "") > String(active.uploadedAt || "");
+  });
+  if (!missingBackups.length) return false;
+
+  state.restoreInProgress = true;
+  let restored = 0;
+  try {
+    for (const backup of missingBackups) {
+      const file = new File([backup.blob], backup.fileName || `${backup.uploadType}.xlsx`, {
+        type: backup.mimeType || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const formData = new FormData();
+      formData.append("workbook", file);
+      formData.append("uploadType", backup.uploadType);
+      await api("/api/admin/upload-workbook", { method: "POST", body: formData });
+      restored += 1;
+    }
+    if (restored && els.uploadNotice) {
+      els.uploadNotice.textContent = `${restored} last uploaded workbook${restored === 1 ? "" : "s"} restored automatically.`;
+    }
+    return restored > 0;
+  } catch (error) {
+    if (els.uploadNotice) {
+      els.uploadNotice.textContent = `Could not restore saved workbook backup: ${error.message}`;
+    }
+    return false;
+  } finally {
+    state.restoreInProgress = false;
+  }
 }
 
 async function login(event) {
@@ -677,6 +781,12 @@ async function login(event) {
     state.selectedPeriod = state.dashboard?.viewedEmployee?.selectedPeriod || state.dashboard?.currentPeriod || "";
     state.selectedQuarter = quarterForPeriod(state.selectedPeriod);
     setLoggedIn(true);
+    if (await restoreMissingWorkbookBackups()) {
+      state.dashboard = await api("/api/me");
+      state.selectedEmployeeId = state.dashboard?.viewedEmployee?.employeeId || "";
+      state.selectedPeriod = state.dashboard?.viewedEmployee?.selectedPeriod || state.dashboard?.currentPeriod || "";
+      state.selectedQuarter = quarterForPeriod(state.selectedPeriod);
+    }
     renderAll();
     els.loginNotice.textContent = "Use your employee ID and password to continue.";
   } catch (error) {
@@ -839,7 +949,8 @@ async function uploadWorkbook(uploadType, inputId) {
   formData.append("workbook", file);
   formData.append("uploadType", uploadType);
   try {
-    await api("/api/admin/upload-workbook", { method: "POST", body: formData });
+    const result = await api("/api/admin/upload-workbook", { method: "POST", body: formData });
+    await backupWorkbook(uploadType, file, result.upload?.uploadedAt);
     els.uploadNotice.textContent = `${file.name} uploaded successfully and replaced the active file for this upload type.`;
     input.value = "";
     await refreshDashboard();
@@ -850,12 +961,14 @@ async function uploadWorkbook(uploadType, inputId) {
 
 async function deleteUpload(fileId) {
   if (!window.confirm("Delete this uploaded file from the dashboard history?")) return;
+  const uploadType = (state.dashboard?.admin?.uploadHistory || []).find((item) => item.fileId === fileId)?.uploadType || "";
   try {
     await api("/api/admin/delete-upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fileId }),
     });
+    await removeWorkbookBackup(uploadType);
     els.uploadNotice.textContent = "Uploaded file deleted successfully. Upload the updated workbook to rebuild the mapping.";
     await refreshDashboard();
   } catch (error) {
