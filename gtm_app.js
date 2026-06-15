@@ -501,12 +501,13 @@ function renderProjects() {
               <td>${escapeHtml(row.projectName || "-")}</td>
               <td>${escapeHtml(row.projectId || "-")}</td>
               <td>${money(row.projectValue || 0)}</td>
+              <td>${money(row.cashflowValue || 0)}</td>
               ${adminControls}
             </tr>
           `;
         })
         .join("")
-    : `<tr><td colspan="11">No mapped projects are available for this employee in the selected month.</td></tr>`;
+    : `<tr><td colspan="12">No mapped projects are available for this employee in the selected month.</td></tr>`;
 }
 
 function renderAdmin() {

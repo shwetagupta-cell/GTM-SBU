@@ -43,6 +43,9 @@ def _normalize_headers(values):
 
 def _month_from_text(value):
     text = clean_string(value).lower().replace("-", " ").replace("_", " ")
+    numeric = re.search(r"\b(0?[1-9]|1[0-2])\s*[./ ]\s*(20\d{2}|\d{2})\b", text)
+    if numeric:
+        return int(numeric.group(1))
     for part in text.split():
         if part in MONTH_NAMES:
             return MONTH_NAMES[part]
@@ -50,7 +53,18 @@ def _month_from_text(value):
 
 
 def _period_from_value(value, sheet_name=""):
+    if hasattr(value, "strftime"):
+        try:
+            return value.strftime("%Y-%m")
+        except (TypeError, ValueError):
+            pass
     text = clean_string(value) or clean_string(sheet_name)
+    numeric = re.search(r"\b(0?[1-9]|1[0-2])\s*[./ -]\s*(20\d{2}|\d{2})\b", text)
+    if numeric:
+        year = int(numeric.group(2))
+        if year < 100:
+            year += 2000
+        return f"{year}-{int(numeric.group(1)):02d}"
     parts = text.replace("-", " ").replace("_", " ").split()
     month = None
     year = None
@@ -67,10 +81,18 @@ def _period_from_value(value, sheet_name=""):
     return ""
 
 
+def _is_blank(value):
+    if value is None or (isinstance(value, float) and value != value):
+        return True
+    if isinstance(value, (int, float)):
+        return False
+    return clean_string(value) == ""
+
+
 def _first_value(row, *keys):
     for key in keys:
         value = row.get(key)
-        if clean_string(value):
+        if not _is_blank(value):
             return value
     return ""
 
@@ -517,13 +539,19 @@ def parse_project_workbook(path):
             if not (project_id or project_name) or not (employee_id or mapped_people):
                 continue
             period_label = _period_from_value(_first_value(row, "month", "period", "billing_month"), sheet_name)
+            project_value_raw = _first_value(row, "project_value", "project_value_", "value", "amount")
+            cashflow_raw = _first_value(row, "cashflow", "cash_flow", "monthly_cashflow", "monthly_cash_flow", "cash_flow_value")
+            project_value = parse_number(project_value_raw)
+            cashflow_value = parse_number(cashflow_raw)
             row_employee_id = employee_id if employee_id and len(mapped_people) <= 1 else ""
             monthly_projects.append(
                 {
                     "periodLabel": period_label,
                     "projectId": project_id or project_name,
                     "projectName": project_name or project_id,
-                    "projectValue": parse_number(_first_value(row, "cashflow", "cash_flow", "project_value", "project_value_", "value", "amount")),
+                    "projectValue": project_value,
+                    "cashflowValue": cashflow_value,
+                    "incentiveBaseValue": cashflow_value if not _is_blank(cashflow_raw) else project_value,
                     "employeeId": row_employee_id,
                     "mappedEmployees": mapped_people,
                     "assignedRole": clean_string(_first_value(row, "assigned_role", "role", "designation")),

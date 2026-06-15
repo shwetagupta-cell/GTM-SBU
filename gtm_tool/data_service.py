@@ -812,8 +812,16 @@ class GTMDataService:
                 100.0 / max(len(normalized), 1)
             )
             my_share_percent = parse_number(employee.get("mySharePercent")) or parse_number(employee.get("projectIncentivePercent"))
+            project_value = parse_number(project.get("projectValue"))
+            cashflow_value = parse_number(project.get("cashflowValue"))
+            if project.get("incentiveBaseValue") not in (None, ""):
+                incentive_base_value = parse_number(project.get("incentiveBaseValue"))
+            elif project.get("cashflowValue") not in (None, ""):
+                incentive_base_value = cashflow_value
+            else:
+                incentive_base_value = project_value
             accrued_value = (
-                parse_number(project.get("projectValue"))
+                incentive_base_value
                 * (share_percent / 100.0)
                 * (department_percent / 100.0)
                 * (team_share_percent / 100.0)
@@ -827,7 +835,9 @@ class GTMDataService:
                     "periodLabel": clean_string(project.get("periodLabel")) or period_label,
                     "assignedRole": clean_string(project.get("assignedRole")),
                     "sourceStatus": clean_string(project.get("sourceStatus")),
-                    "projectValue": round(parse_number(project.get("projectValue")), 2),
+                    "projectValue": round(project_value, 2),
+                    "cashflowValue": round(cashflow_value, 2),
+                    "incentiveBaseValue": round(incentive_base_value, 2),
                     "sharePercent": round(share_percent, 2),
                     "departmentPercent": round(department_percent, 2),
                     "teamSharePercent": round(team_share_percent, 2),
@@ -1096,6 +1106,8 @@ class GTMDataService:
                 "NPS Score",
                 "NPS Disbursal %",
                 "Project Value",
+                "Cashflow",
+                "Incentive Base",
                 "Share %",
                 "Department %",
                 "Team Share %",
@@ -1146,6 +1158,8 @@ class GTMDataService:
                             summary["npsScore"],
                             summary["disbursalPercent"],
                             project.get("projectValue", summary.get("projectValue", 0)),
+                            project.get("cashflowValue", ""),
+                            project.get("incentiveBaseValue", ""),
                             project.get("sharePercent", dashboard.get("sharePercent", "")),
                             project.get("departmentPercent", dashboard.get("departmentPercent", "")),
                             project.get("teamSharePercent", dashboard.get("teamSharePercent", "")),
