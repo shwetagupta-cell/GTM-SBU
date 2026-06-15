@@ -144,15 +144,31 @@ function sleep(ms) {
 function openWorkbookBackupDb() {
   if (!window.indexedDB) return Promise.resolve(null);
   return new Promise((resolve) => {
-    const request = window.indexedDB.open(WORKBOOK_BACKUP_DB, 1);
+    let settled = false;
+    let timeoutId;
+    const finish = (db = null) => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      resolve(db);
+    };
+    let request;
+    try {
+      request = window.indexedDB.open(WORKBOOK_BACKUP_DB, 1);
+    } catch (error) {
+      finish(null);
+      return;
+    }
+    timeoutId = setTimeout(() => finish(null), 2000);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(WORKBOOK_BACKUP_STORE)) {
         db.createObjectStore(WORKBOOK_BACKUP_STORE, { keyPath: "uploadType" });
       }
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => resolve(null);
+    request.onsuccess = () => finish(request.result);
+    request.onerror = () => finish(null);
+    request.onblocked = () => finish(null);
   });
 }
 
@@ -160,14 +176,26 @@ async function withWorkbookBackupStore(mode, action) {
   const db = await openWorkbookBackupDb();
   if (!db) return null;
   return new Promise((resolve) => {
-    const transaction = db.transaction(WORKBOOK_BACKUP_STORE, mode);
-    const store = transaction.objectStore(WORKBOOK_BACKUP_STORE);
-    const result = action(store);
+    let transaction;
+    let result;
+    try {
+      transaction = db.transaction(WORKBOOK_BACKUP_STORE, mode);
+      const store = transaction.objectStore(WORKBOOK_BACKUP_STORE);
+      result = action(store);
+    } catch (error) {
+      db.close();
+      resolve(null);
+      return;
+    }
     transaction.oncomplete = () => {
       db.close();
       resolve(result?.result ?? result ?? null);
     };
     transaction.onerror = () => {
+      db.close();
+      resolve(null);
+    };
+    transaction.onabort = () => {
       db.close();
       resolve(null);
     };
@@ -716,7 +744,22 @@ function renderAll() {
   updateDownloadLinks();
 }
 
-async function refreshDashboard() {
+function scheduleWorkbookRestore() {
+  if (!state.dashboard?.viewer?.isAdmin || state.restoreInProgress) return;
+  restoreMissingWorkbookBackups()
+    .then((restored) => {
+      if (restored) return refreshDashboard({ skipRestore: true });
+      return null;
+    })
+    .catch((error) => {
+      console.error(error);
+      if (els.uploadNotice) {
+        els.uploadNotice.textContent = "Signed in. Workbook restore will retry after the next upload or refresh.";
+      }
+    });
+}
+
+async function refreshDashboard(options = {}) {
   const query = new URLSearchParams();
   if (state.selectedEmployeeId) query.set("employeeId", state.selectedEmployeeId);
   if (state.searchTerm) query.set("search", state.searchTerm);
@@ -724,13 +767,11 @@ async function refreshDashboard() {
   if (state.endDate) query.set("endDate", state.endDate);
   if (state.selectedPeriod) query.set("period", state.selectedPeriod);
   state.dashboard = await api(`/api/me?${query.toString()}`);
-  if (await restoreMissingWorkbookBackups()) {
-    state.dashboard = await api(`/api/me?${query.toString()}`);
-  }
   state.selectedEmployeeId = state.dashboard?.viewedEmployee?.employeeId || state.selectedEmployeeId;
   state.selectedPeriod = state.dashboard?.viewedEmployee?.selectedPeriod || state.selectedPeriod || state.dashboard?.currentPeriod || "";
   state.selectedQuarter = quarterForPeriod(state.selectedPeriod);
   renderAll();
+  if (!options.skipRestore) scheduleWorkbookRestore();
 }
 
 async function restoreMissingWorkbookBackups() {
@@ -804,13 +845,8 @@ async function login(event) {
     state.selectedPeriod = state.dashboard?.viewedEmployee?.selectedPeriod || state.dashboard?.currentPeriod || "";
     state.selectedQuarter = quarterForPeriod(state.selectedPeriod);
     setLoggedIn(true);
-    if (await restoreMissingWorkbookBackups()) {
-      state.dashboard = await api("/api/me");
-      state.selectedEmployeeId = state.dashboard?.viewedEmployee?.employeeId || "";
-      state.selectedPeriod = state.dashboard?.viewedEmployee?.selectedPeriod || state.dashboard?.currentPeriod || "";
-      state.selectedQuarter = quarterForPeriod(state.selectedPeriod);
-    }
     renderAll();
+    scheduleWorkbookRestore();
     els.loginNotice.textContent = "Use your employee ID and password to continue.";
   } catch (error) {
     console.error(error);
