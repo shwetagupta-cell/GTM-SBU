@@ -434,6 +434,8 @@ class GTMDataService:
         frameworks = []
         projects = []
         incentive_rows = []
+        parsed_upload_types = set()
+        cached_incentive_rules = raw_state.get("incentiveRules", _default_nps_rules())
 
         for upload in self._latest_active_uploads(raw_state):
             stored_path = _restore_upload_file(upload)
@@ -444,14 +446,32 @@ class GTMDataService:
             upload["recordCount"] = parsed.get("recordCount", 0)
             upload["uploadType"] = parsed.get("uploadType") or upload.get("uploadType")
             if upload["uploadType"] == "team_master":
+                parsed_upload_types.add("team_master")
                 for employee in parsed.get("employees", []):
                     current = employees.get(employee["employeeId"], {})
                     employees[employee["employeeId"]] = {**current, **employee}
             elif upload["uploadType"] in {"gtm_logic", "sbu_logic"}:
+                parsed_upload_types.add(upload["uploadType"])
                 frameworks.extend(parsed.get("frameworks", []))
                 incentive_rows.extend(parsed.get("incentiveRules", []))
             elif upload["uploadType"] == "project_cf":
+                parsed_upload_types.add("project_cf")
                 projects = parsed.get("projects", [])
+
+        if "team_master" not in parsed_upload_types:
+            for employee in raw_state.get("employees", []):
+                employee_id = clean_string(employee.get("employeeId"))
+                if not employee_id or employee_id == DEFAULT_ADMIN_ID:
+                    continue
+                employees[employee_id] = dict(employee)
+        if not {"gtm_logic", "sbu_logic"} & parsed_upload_types:
+            frameworks = list(raw_state.get("frameworks", []))
+        elif "gtm_logic" not in parsed_upload_types or "sbu_logic" not in parsed_upload_types:
+            existing_frameworks = list(raw_state.get("frameworks", []))
+            parsed_sources = {"gtm" if item == "gtm_logic" else "sbu" for item in parsed_upload_types if item in {"gtm_logic", "sbu_logic"}}
+            frameworks.extend([item for item in existing_frameworks if item.get("source") not in parsed_sources])
+        if "project_cf" not in parsed_upload_types:
+            projects = list(raw_state.get("projects", []))
 
         for employee_id, override in raw_state.get("employeeOverrides", {}).items():
             if employee_id not in employees:
@@ -562,7 +582,7 @@ class GTMDataService:
             "frameworks": frameworks,
             "kpis": kpis,
             "projects": projects,
-            "incentiveRules": _parse_incentive_rules(incentive_rows),
+            "incentiveRules": _parse_incentive_rules(incentive_rows) if incentive_rows else cached_incentive_rules,
             "loadedAt": _now(),
         }
 
