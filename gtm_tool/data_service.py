@@ -321,7 +321,11 @@ def _name_tokens(value):
 def _similar_token(left, right):
     if not left or not right:
         return False
-    return left == right or left.startswith(right) or right.startswith(left) or SequenceMatcher(None, left, right).ratio() >= 0.86
+    if left == right or left.startswith(right) or right.startswith(left):
+        return True
+    if len(left) <= 4 and len(right) <= 4 and len(left) == len(right) and sorted(left) == sorted(right):
+        return True
+    return SequenceMatcher(None, left, right).ratio() >= 0.86
 
 
 def _project_name_matches_employee(mapped_name, employee_name):
