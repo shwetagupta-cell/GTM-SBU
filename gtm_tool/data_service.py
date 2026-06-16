@@ -337,7 +337,12 @@ def _project_name_matches_employee(mapped_name, employee_name):
 class GTMDataService:
     def __init__(self):
         self.state = {}
+        self._clear_match_caches()
         self.reload()
+
+    def _clear_match_caches(self):
+        self._project_resolution_cache = {}
+        self._active_employee_match_cache = None
 
     def _default_state(self):
         return {
@@ -637,6 +642,7 @@ class GTMDataService:
             "deletedEmployeeStack": raw.get("deletedEmployeeStack", []),
             "loadedAt": raw.get("loadedAt", _now()),
         }
+        self._clear_match_caches()
 
     def persist(self):
         ensure_dirs()
@@ -829,8 +835,24 @@ class GTMDataService:
             "action": action,
         }
 
+    def _active_employees_for_project_matching(self):
+        if self._active_employee_match_cache is None:
+            self._active_employee_match_cache = [
+                {
+                    "employeeId": employee["employeeId"],
+                    "name": employee.get("name", ""),
+                    "nameTokens": _name_tokens(employee.get("name")),
+                }
+                for employee in self.state["employees"].values()
+                if employee.get("status") == "active"
+            ]
+        return self._active_employee_match_cache
+
     def _resolve_project_employee_ids(self, mapped_names):
-        employees = [item for item in self.state["employees"].values() if item.get("status") == "active"]
+        cache_key = tuple(normalize_name(name) for name in mapped_names if normalize_name(name))
+        if cache_key in self._project_resolution_cache:
+            return list(self._project_resolution_cache[cache_key])
+        employees = self._active_employees_for_project_matching()
         resolved_ids = []
         seen = set()
         for mapped_name in mapped_names:
@@ -848,13 +870,13 @@ class GTMDataService:
                     matches = [
                         employee
                         for employee in employees
-                        if any(_similar_token(mapped_tokens[0], token) for token in _name_tokens(employee.get("name")))
+                        if any(_similar_token(mapped_tokens[0], token) for token in employee.get("nameTokens", []))
                     ]
                 elif mapped_tokens:
                     matches = [
                         employee
                         for employee in employees
-                        if _name_tokens(employee.get("name")) and _similar_token(mapped_tokens[0], _name_tokens(employee.get("name"))[0])
+                        if employee.get("nameTokens") and _similar_token(mapped_tokens[0], employee["nameTokens"][0])
                     ]
             if len(matches) != 1:
                 continue
@@ -862,6 +884,7 @@ class GTMDataService:
             if employee_id not in seen:
                 seen.add(employee_id)
                 resolved_ids.append(employee_id)
+        self._project_resolution_cache[cache_key] = tuple(resolved_ids)
         return resolved_ids
 
     def _project_rows_for_employee(self, employee, period_label, disbursal_percent):
@@ -1007,6 +1030,16 @@ class GTMDataService:
             "adminAccess": employee_id in admin_ids,
         }
 
+    def _employee_summary_for_admin(self, employee, selected_period="", start_date="", end_date=""):
+        grouped = {}
+        for row in self.state["kpis"]:
+            if row.get("employeeId") != employee["employeeId"]:
+                continue
+            grouped.setdefault(row.get("periodLabel", _current_period()), []).append(row)
+        order = [label for label in sorted(grouped.keys(), key=_period_sort_key) if _within_date_range(label, start_date, end_date)]
+        chosen = selected_period if selected_period in grouped else (order[-1] if order else _current_period())
+        return self._period_summary(employee, chosen, grouped.get(chosen, []))
+
     def admin_dashboard(self, selected_period="", start_date="", end_date=""):
         total_accrued = 0.0
         total_disbursal = 0.0
@@ -1015,8 +1048,7 @@ class GTMDataService:
         for employee in self.state["employees"].values():
             if employee.get("status") != "active" or employee["employeeId"] == DEFAULT_ADMIN_ID:
                 continue
-            dashboard = self.employee_dashboard(employee["employeeId"], selected_period=selected_period, start_date=start_date, end_date=end_date)
-            latest = dashboard.get("latestSummary") if dashboard else None
+            latest = self._employee_summary_for_admin(employee, selected_period=selected_period, start_date=start_date, end_date=end_date)
             if not latest:
                 continue
             total_accrued += latest["accruedRs"]
@@ -1145,7 +1177,9 @@ class GTMDataService:
             }
         )
         self.persist()
-        return _public_upload(self.state["uploadedFiles"][-1])
+        uploaded_public = _public_upload(self.state["uploadedFiles"][-1])
+        self.reload()
+        return uploaded_public
 
     def delete_upload(self, file_id, persist=True):
         deleted = False
@@ -1156,6 +1190,8 @@ class GTMDataService:
                 deleted = True
         if persist:
             self.persist()
+            if deleted:
+                self.reload()
         return deleted
 
     def export_csv(self, viewer_id="", admin_mode=False, employee_id="", start_date="", end_date="", period_label=""):
