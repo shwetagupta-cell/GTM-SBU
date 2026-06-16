@@ -187,6 +187,10 @@ def _score_from_framework(row, framework):
     target = parse_number(row.get("target"))
     achieved = parse_number(row.get("achieved"))
     kpi_name = clean_string(row.get("kpiName")).lower()
+    if not achieved:
+        return 0
+    if not target and kpi_name not in {"csat", "tsat"} and clean_string((framework.get("scoreBands") or {}).get("5")).lower() != "actual csat rating":
+        return 0
     achievement_percent = (achieved / target * 100) if target else 0
     if kpi_name == "cac %":
         achievement_percent = (target / achieved * 100) if achieved else 0
@@ -824,11 +828,16 @@ class GTMDataService:
         target = parse_number(row.get("target"))
         achieved = parse_number(row.get("achieved"))
         kpi_name = clean_string(row.get("kpiName")).lower()
+        has_score_input = bool(achieved) and (
+            bool(target)
+            or kpi_name in {"csat", "tsat"}
+            or clean_string((framework.get("scoreBands") or {}).get("5")).lower() == "actual csat rating"
+        )
         if kpi_name == "cac %":
-            achievement_percent = (target / achieved * 100) if achieved else 0
+            achievement_percent = (target / achieved * 100) if has_score_input and achieved else 0
         else:
-            achievement_percent = (achieved / target * 100) if target else 0
-        score = _score_from_framework(row, framework) if framework else 0
+            achievement_percent = (achieved / target * 100) if has_score_input and target else 0
+        score = _score_from_framework(row, framework) if framework and has_score_input else 0
         weighted_score = score * parse_number(row.get("weightage"))
         action = "Above Target" if achievement_percent > 100 else "On Track" if achievement_percent >= 80 else "Needs Improvement"
         return {
