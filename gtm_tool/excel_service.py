@@ -143,6 +143,58 @@ def _mapped_people_from_row(row):
             if normalized and normalized not in seen:
                 seen.add(normalized)
                 people.append(name)
+
+    # Project sheets commonly label only the first assignment column as
+    # "Employee" and leave the remaining assignment headers blank. Pandas
+    # exposes those trailing cells as "item" columns, so include them until
+    # another recognised project-data column begins.
+    employee_columns = {
+        "team_members",
+        "team_member",
+        "mapped_employees",
+        "mapped_employee",
+        "employees",
+        "employee_names",
+        "employee_name",
+        "employee",
+        "sales_person",
+        "owner",
+    }
+    stop_columns = {
+        "month",
+        "period",
+        "billing_month",
+        "cashflow",
+        "cash_flow",
+        "monthly_cashflow",
+        "monthly_cash_flow",
+        "cash_flow_value",
+        "approval_status",
+        "status",
+        "score",
+        "incentive",
+        "incentive_percent",
+        "incentive_amount",
+        "incentive_value",
+        "remarks",
+    }
+    assignment_started = False
+    for column, value in row.items():
+        column_name = clean_string(column).lower()
+        if column_name in employee_columns or column_name.startswith("person_"):
+            assignment_started = True
+            continue
+        if not assignment_started:
+            continue
+        if column_name in stop_columns:
+            break
+        if column_name != "item" and not column_name.startswith("item_"):
+            continue
+        for name in _split_people(value):
+            normalized = normalize_name(name)
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                people.append(name)
     return people
 
 
