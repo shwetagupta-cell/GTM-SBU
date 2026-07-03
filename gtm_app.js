@@ -558,6 +558,7 @@ function renderProjects() {
               <td><input class="small-input project-share-input" type="number" min="0" step="0.01" value="${escapeHtml(row.sharePercent)}" /></td>
               <td><input class="small-input project-department-input" type="number" min="0" step="0.01" value="${escapeHtml(row.departmentPercent)}" /></td>
               <td><input class="small-input project-team-input" type="number" min="0" step="0.01" value="${escapeHtml(row.teamSharePercent)}" /></td>
+              <td>${percent(row.mySharePercent)}</td>
               <td><input class="small-input project-team-count-input" type="number" min="1" step="1" value="${escapeHtml(row.teamCount || 1)}" /></td>
               <td class="project-accrued-value">${money(row.accruedValue)}</td>
               <td>${percent(row.npsDisbursalPercent)}</td>
@@ -569,6 +570,7 @@ function renderProjects() {
               <td>${percent(row.sharePercent)}</td>
               <td>${percent(row.departmentPercent)}</td>
               <td>${percent(row.teamSharePercent)}</td>
+              <td>${percent(row.mySharePercent)}</td>
               <td>${escapeHtml(row.teamCount || 1)}</td>
               <td>${money(row.accruedValue)}</td>
               <td>${percent(row.npsDisbursalPercent)}</td>
@@ -587,7 +589,7 @@ function renderProjects() {
           `;
         })
         .join("")
-    : `<tr><td colspan="13">No mapped projects are available for this employee in the selected month.</td></tr>`;
+    : `<tr><td colspan="14">No mapped projects are available for this employee in the selected month.</td></tr>`;
 }
 
 function renderAdmin() {
