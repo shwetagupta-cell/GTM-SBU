@@ -534,6 +534,60 @@ select:focus {
   margin-top: 6px;
 }
 
+.monthly-status-card {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.monthly-status-controls {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.monthly-status-controls label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.monthly-status-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.monthly-status-bar span {
+  position: relative;
+  padding: 11px 14px;
+  border-radius: 999px;
+  background: rgba(24, 33, 47, 0.07);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.monthly-status-bar span:not(:last-child)::after {
+  content: "→";
+  position: absolute;
+  right: -15px;
+  color: var(--muted);
+}
+
+.monthly-status-bar span.is-complete,
+.monthly-status-bar span.is-current {
+  background: rgba(207, 91, 57, 0.18);
+  color: var(--accent);
+}
+
+.monthly-status-bar span.is-current {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .accent-card {
   background: linear-gradient(135deg, #df6a44, #bf5536);
   color: var(--accent-ink);
@@ -883,7 +937,8 @@ select:focus {
   .trend-list--quarter,
   .quarter-tabs,
   .formula-strip,
-  .project-stats {
+  .project-stats,
+  .monthly-status-controls {
     grid-template-columns: 1fr;
   }
 

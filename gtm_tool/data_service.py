@@ -361,6 +361,7 @@ class GTMDataService:
             "kpiOverrides": {},
             "projectOverrides": {},
             "monthlyStatuses": {},
+            "monthlyDisbursalStatuses": {},
             "deletedEmployeeStack": [],
             "employees": [],
             "frameworks": [],
@@ -612,6 +613,7 @@ class GTMDataService:
             "kpiOverrides": raw_state.get("kpiOverrides", {}),
             "projectOverrides": raw_state.get("projectOverrides", {}),
             "monthlyStatuses": raw_state.get("monthlyStatuses", {}),
+            "monthlyDisbursalStatuses": raw_state.get("monthlyDisbursalStatuses", {}),
             "deletedEmployeeStack": raw_state.get("deletedEmployeeStack", []),
             "employees": list(employees.values()),
             "frameworks": frameworks,
@@ -648,6 +650,7 @@ class GTMDataService:
             "kpiOverrides": raw.get("kpiOverrides", {}),
             "projectOverrides": raw.get("projectOverrides", {}),
             "monthlyStatuses": raw.get("monthlyStatuses", {}),
+            "monthlyDisbursalStatuses": raw.get("monthlyDisbursalStatuses", {}),
             "deletedEmployeeStack": raw.get("deletedEmployeeStack", []),
             "loadedAt": raw.get("loadedAt", _now()),
         }
@@ -665,6 +668,7 @@ class GTMDataService:
                     "kpiOverrides": self.state["kpiOverrides"],
                     "projectOverrides": self.state["projectOverrides"],
                     "monthlyStatuses": self.state["monthlyStatuses"],
+                    "monthlyDisbursalStatuses": self.state["monthlyDisbursalStatuses"],
                     "deletedEmployeeStack": self.state["deletedEmployeeStack"],
                     "employees": list(self.state["employees"].values()),
                     "kpis": self.state["kpis"],
@@ -1062,6 +1066,15 @@ class GTMDataService:
             total_disbursal += latest["finalDisbursal"]
             departments.setdefault(employee.get("department") or "Unassigned", []).append(latest["npsScore"])
             status_counts[latest["disbursalStatus"]] = status_counts.get(latest["disbursalStatus"], 0) + 1
+        monthly_status = self.state.get("monthlyDisbursalStatuses", {}).get(selected_period, "")
+        if monthly_status:
+            active_count = sum(
+                1
+                for employee in self.state["employees"].values()
+                if employee.get("status") == "active" and employee["employeeId"] != DEFAULT_ADMIN_ID
+            )
+            status_counts = {"Pending": 0, "In Process": 0, "Disbursed": 0}
+            status_counts[monthly_status] = active_count
         return {
             "enabled": True,
             "totalEmployees": len([item for item in self.state["employees"].values() if item.get("status") == "active" and item["employeeId"] != DEFAULT_ADMIN_ID]),
@@ -1069,6 +1082,9 @@ class GTMDataService:
             "totalDisbursal": round(total_disbursal, 2),
             "dataUpdated": self.state["loadedAt"],
             "disbursalStatus": " | ".join(f"{key}: {value}" for key, value in status_counts.items()),
+            "selectedPeriod": selected_period,
+            "monthlyDisbursalStatus": monthly_status or "Pending",
+            "monthlyDisbursalStatuses": self.state.get("monthlyDisbursalStatuses", {}),
             "departmentPerformance": [
                 {
                     "department": department,
@@ -1092,6 +1108,8 @@ class GTMDataService:
             non_admin_options = [item["employeeId"] for item in employee_options if item["employeeId"] != viewer_id]
             default_target = non_admin_options[0] if non_admin_options else viewer_id
         target_id = target_employee_id if target_employee_id in allowed_ids else default_target
+        viewed_employee = self.employee_dashboard(target_id, selected_period=period_label, start_date=start_date, end_date=end_date)
+        effective_period = period_label or (viewed_employee or {}).get("selectedPeriod") or _current_period()
         return {
             "viewer": {
                 "employeeId": viewer.get("employeeId", viewer_id),
@@ -1103,9 +1121,9 @@ class GTMDataService:
                 "businessUnit": viewer.get("businessUnit", "GTM"),
                 "isAdmin": admin_mode,
             },
-            "viewedEmployee": self.employee_dashboard(target_id, selected_period=period_label, start_date=start_date, end_date=end_date),
+            "viewedEmployee": viewed_employee,
             "employees": employee_options,
-            "admin": self.admin_dashboard(selected_period=period_label, start_date=start_date, end_date=end_date) if admin_mode else {"enabled": False},
+            "admin": self.admin_dashboard(selected_period=effective_period, start_date=start_date, end_date=end_date) if admin_mode else {"enabled": False},
             "departments": DEPARTMENTS + ["Operations", "Design"],
             "loadedAt": self.state["loadedAt"],
             "currentPeriod": _current_period(),
@@ -1148,9 +1166,15 @@ class GTMDataService:
         return override
 
     def update_disbursal_status(self, payload):
-        employee_id = clean_string(payload.get("employeeId"))
         period_label = clean_string(payload.get("periodLabel")) or _current_period()
         status = clean_string(payload.get("status")) or "Pending"
+        if status not in {"Pending", "In Process", "Disbursed"}:
+            raise ValueError("Select a valid disbursal status")
+        if clean_string(payload.get("scope")).lower() == "month":
+            self.state.setdefault("monthlyDisbursalStatuses", {})[period_label] = status
+            self.persist(reload_state=False)
+            return {"periodLabel": period_label, "status": status, "scope": "month"}
+        employee_id = clean_string(payload.get("employeeId"))
         if not employee_id:
             raise ValueError("Employee is required")
         self.state["monthlyStatuses"][f"{employee_id}|{period_label}"] = status

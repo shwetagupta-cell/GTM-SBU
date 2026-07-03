@@ -66,6 +66,11 @@ const els = {
   annualPayoutValue: document.getElementById("annualPayoutValue"),
   dataUpdatedMeta: document.getElementById("dataUpdatedMeta"),
   disbursalStatusSummary: document.getElementById("disbursalStatusSummary"),
+  monthlyStatusMonth: document.getElementById("monthlyStatusMonth"),
+  monthlyStatusInput: document.getElementById("monthlyStatusInput"),
+  submitMonthlyStatusBtn: document.getElementById("submitMonthlyStatusBtn"),
+  monthlyStatusBar: document.getElementById("monthlyStatusBar"),
+  monthlyStatusNotice: document.getElementById("monthlyStatusNotice"),
   departmentList: document.getElementById("departmentList"),
   uploadHistory: document.getElementById("uploadHistory"),
   uploadNotice: document.getElementById("uploadNotice"),
@@ -737,6 +742,24 @@ function renderProjects() {
     : `<tr><td colspan="14">No mapped projects are available for this employee in the selected month.</td></tr>`;
 }
 
+function monthlyStatusCounts(status, totalEmployees) {
+  const counts = { Pending: 0, "In Process": 0, Disbursed: 0 };
+  counts[status] = Number(totalEmployees || 0);
+  return `Pending: ${counts.Pending} | In Process: ${counts["In Process"]} | Disbursed: ${counts.Disbursed}`;
+}
+
+function updateMonthlyStatusDisplay(periodLabel, status, totalEmployees) {
+  const sequence = ["Pending", "In Process", "Disbursed"];
+  const currentIndex = Math.max(0, sequence.indexOf(status));
+  els.monthlyStatusInput.value = status;
+  els.monthlyStatusBar.querySelectorAll("[data-status]").forEach((step, index) => {
+    step.classList.toggle("is-complete", index < currentIndex);
+    step.classList.toggle("is-current", index === currentIndex);
+    step.setAttribute("aria-current", index === currentIndex ? "step" : "false");
+  });
+  els.disbursalStatusSummary.textContent = `${displayPeriod(periodLabel)} — ${monthlyStatusCounts(status, totalEmployees)}`;
+}
+
 function renderAdmin() {
   const admin = state.dashboard?.admin || { enabled: false };
   const showAdmin = Boolean(admin.enabled) && isAdmin();
@@ -753,7 +776,13 @@ function renderAdmin() {
   els.quarterlyPayoutValue.textContent = money(admin.totalDisbursal || 0);
   els.annualPayoutValue.textContent = updated.primary;
   els.dataUpdatedMeta.textContent = updated.secondary;
-  els.disbursalStatusSummary.textContent = admin.disbursalStatus || "-";
+  const availablePeriods = state.dashboard?.periodOptions || [];
+  const selectedStatusPeriod = admin.selectedPeriod || state.selectedPeriod || availablePeriods[availablePeriods.length - 1] || "";
+  els.monthlyStatusMonth.innerHTML = availablePeriods
+    .map((periodLabel) => `<option value="${escapeHtml(periodLabel)}">${escapeHtml(displayPeriod(periodLabel))}</option>`)
+    .join("");
+  els.monthlyStatusMonth.value = selectedStatusPeriod;
+  updateMonthlyStatusDisplay(selectedStatusPeriod, admin.monthlyDisbursalStatus || "Pending", admin.totalEmployees || 0);
 
   els.departmentList.innerHTML = (admin.departmentPerformance || []).length
     ? admin.departmentPerformance
@@ -1155,6 +1184,35 @@ async function saveDisbursalStatus() {
   }
 }
 
+async function saveMonthlyDisbursalStatus() {
+  const periodLabel = els.monthlyStatusMonth.value;
+  const status = els.monthlyStatusInput.value;
+  els.submitMonthlyStatusBtn.disabled = true;
+  els.submitMonthlyStatusBtn.textContent = "Saving...";
+  try {
+    await api("/api/admin/status/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ periodLabel, status, scope: "month" }),
+    });
+    const admin = state.dashboard?.admin;
+    if (admin) {
+      admin.monthlyDisbursalStatuses = { ...(admin.monthlyDisbursalStatuses || {}), [periodLabel]: status };
+      admin.monthlyDisbursalStatus = status;
+      admin.selectedPeriod = periodLabel;
+      admin.disbursalStatus = monthlyStatusCounts(status, admin.totalEmployees || 0);
+    }
+    updateMonthlyStatusDisplay(periodLabel, status, admin?.totalEmployees || 0);
+    els.monthlyStatusNotice.textContent = `${displayPeriod(periodLabel)} status saved as ${status}.`;
+    els.submitMonthlyStatusBtn.textContent = "Saved";
+  } catch (error) {
+    els.monthlyStatusNotice.textContent = error.message;
+    els.submitMonthlyStatusBtn.textContent = "Submit Status";
+  } finally {
+    els.submitMonthlyStatusBtn.disabled = false;
+  }
+}
+
 async function uploadWorkbook(uploadType, inputId) {
   const input = document.getElementById(inputId);
   const file = input?.files?.[0];
@@ -1389,6 +1447,22 @@ function bindEvents() {
   });
 
   els.saveStatusBtn.addEventListener("click", saveDisbursalStatus);
+  els.monthlyStatusMonth.addEventListener("change", () => {
+    state.selectedPeriod = els.monthlyStatusMonth.value;
+    state.selectedQuarter = quarterForPeriod(state.selectedPeriod);
+    refreshDashboard().catch((error) => {
+      els.monthlyStatusNotice.textContent = error.message;
+    });
+  });
+  els.monthlyStatusInput.addEventListener("change", () => {
+    updateMonthlyStatusDisplay(
+      els.monthlyStatusMonth.value,
+      els.monthlyStatusInput.value,
+      state.dashboard?.admin?.totalEmployees || 0
+    );
+    els.submitMonthlyStatusBtn.textContent = "Submit Status";
+  });
+  els.submitMonthlyStatusBtn.addEventListener("click", saveMonthlyDisbursalStatus);
   els.saveEmployeeBtn.addEventListener("click", saveEmployee);
   els.deleteEmployeeBtn.addEventListener("click", deleteEmployee);
   els.undoEmployeeBtn.addEventListener("click", undoDeleteEmployee);
