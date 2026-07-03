@@ -653,8 +653,9 @@ class GTMDataService:
         }
         self._clear_match_caches()
 
-    def persist(self):
+    def persist(self, reload_state=True):
         ensure_dirs()
+        self.state["loadedAt"] = _now()
         STATE_FILE.write_text(
             json.dumps(
                 {
@@ -670,13 +671,14 @@ class GTMDataService:
                     "frameworks": self.state["frameworks"],
                     "projects": self.state["projects"],
                     "incentiveRules": self.state["incentiveRules"],
-                    "loadedAt": _now(),
+                    "loadedAt": self.state["loadedAt"],
                 },
                 indent=2,
             ),
             encoding="utf-8",
         )
-        self.reload()
+        if reload_state:
+            self.reload()
 
     def _accessible_employee_ids(self, viewer_id, admin_mode=False):
         if admin_mode:
@@ -1122,9 +1124,11 @@ class GTMDataService:
         override["achieved"] = parse_number(payload.get("achieved")) if payload.get("achieved") is not None else row.get("achieved")
         override["notes"] = clean_string(payload.get("notes")) or row.get("notes", "")
         self.state["kpiOverrides"][record_key] = override
-        self.persist()
-        updated = next((item for item in self.state["kpis"] if item.get("recordId") == record_id), None)
-        return self._kpi_metrics(updated) if updated else None
+        row["target"] = override["target"]
+        row["achieved"] = override["achieved"]
+        row["notes"] = override["notes"]
+        self.persist(reload_state=False)
+        return self._kpi_metrics(row)
 
     def update_project(self, payload):
         employee_id = clean_string(payload.get("employeeId"))
@@ -1140,7 +1144,7 @@ class GTMDataService:
         override["mySharePercent"] = parse_number(payload.get("mySharePercent"))
         override["teamCount"] = max(1, int(parse_number(payload.get("teamCount")) or 1))
         self.state["projectOverrides"][key] = override
-        self.persist()
+        self.persist(reload_state=False)
         return override
 
     def update_disbursal_status(self, payload):
@@ -1150,7 +1154,7 @@ class GTMDataService:
         if not employee_id:
             raise ValueError("Employee is required")
         self.state["monthlyStatuses"][f"{employee_id}|{period_label}"] = status
-        self.persist()
+        self.persist(reload_state=False)
         return {"employeeId": employee_id, "periodLabel": period_label, "status": status}
 
     def apply_workbook_upload(self, file_name, data_bytes, upload_type="", replace_file_id=""):

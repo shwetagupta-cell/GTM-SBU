@@ -1070,10 +1070,48 @@ async function saveKpi(event) {
   }
 }
 
+function updateProjectRow(row) {
+  const summary = currentSummary();
+  const project = summary?.projects?.find((item) => (item.projectId || item.projectName) === row?.dataset.projectId);
+  if (!row || !project) return;
+  const sharePercent = rawPercent(row.querySelector(".project-share-input")?.value);
+  const departmentPercent = rawPercent(row.querySelector(".project-department-input")?.value);
+  const teamSharePercent = rawPercent(row.querySelector(".project-team-input")?.value);
+  const mySharePercent = rawPercent(row.querySelector(".project-my-share-input")?.value);
+  const teamCount = Math.max(1, Math.floor(Number(row.querySelector(".project-team-count-input")?.value) || 1));
+  const accruedValue = Number(project.incentiveBaseValue || 0) * sharePercent / 100 * departmentPercent / 100 * teamSharePercent / 100 * mySharePercent / 100;
+  const finalDisbursalValue = accruedValue * rawPercent(project.npsDisbursalPercent) / 100;
+  const perEmployeeIncentive = finalDisbursalValue / teamCount;
+
+  Object.assign(project, {
+    sharePercent,
+    departmentPercent,
+    teamSharePercent,
+    mySharePercent,
+    teamCount,
+    accruedValue,
+    finalDisbursalValue,
+    perEmployeeIncentive,
+  });
+  summary.accruedRs = summary.projects.reduce((sum, item) => sum + Number(item.accruedValue || 0), 0);
+  summary.finalDisbursal = summary.projects.reduce((sum, item) => sum + Number(item.finalDisbursalValue || 0), 0);
+
+  row.querySelector(".project-accrued-value").textContent = money(accruedValue);
+  row.querySelector(".project-final-value").textContent = money(finalDisbursalValue);
+  row.querySelector(".project-per-employee-value").textContent = money(perEmployeeIncentive);
+  els.projectFinalDisbursal.textContent = money(summary.finalDisbursal);
+  els.accruedValue.textContent = money(summary.accruedRs);
+  els.accruedLabel.textContent = `Final disbursal ${money(summary.finalDisbursal)}`;
+  updateKpiTotalsAndIncentives();
+}
+
 async function saveProject(event) {
   const row = event.target.closest("tr");
   const employee = currentEmployee();
   if (!row || !employee) return;
+  const button = event.target;
+  button.disabled = true;
+  button.textContent = "Saving...";
   try {
     await api("/api/admin/project/update", {
       method: "POST",
@@ -1089,9 +1127,12 @@ async function saveProject(event) {
         teamCount: row.querySelector(".project-team-count-input")?.value,
       }),
     });
-    await refreshDashboard();
+    button.textContent = "Saved";
   } catch (error) {
     els.uploadNotice.textContent = error.message;
+    button.textContent = "Save";
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -1341,18 +1382,10 @@ function bindEvents() {
   els.projectTableBody.addEventListener("input", (event) => {
     if (!event.target.matches(".project-share-input, .project-department-input, .project-team-input, .project-my-share-input, .project-team-count-input")) return;
     const row = event.target.closest("tr");
-    const project = currentSummary()?.projects?.find((item) => (item.projectId || item.projectName) === row?.dataset.projectId);
-    if (!row || !project) return;
-    const share = rawPercent(row.querySelector(".project-share-input")?.value);
-    const department = rawPercent(row.querySelector(".project-department-input")?.value);
-    const teamShare = rawPercent(row.querySelector(".project-team-input")?.value);
-    const myShare = rawPercent(row.querySelector(".project-my-share-input")?.value);
-    const teamCount = Math.max(1, Math.floor(Number(row.querySelector(".project-team-count-input")?.value) || 1));
-    const accrued = Number(project.incentiveBaseValue || 0) * share / 100 * department / 100 * teamShare / 100 * myShare / 100;
-    const finalDisbursal = accrued * rawPercent(project.npsDisbursalPercent) / 100;
-    row.querySelector(".project-accrued-value").textContent = money(accrued);
-    row.querySelector(".project-final-value").textContent = money(finalDisbursal);
-    row.querySelector(".project-per-employee-value").textContent = money(finalDisbursal / teamCount);
+    if (!row) return;
+    updateProjectRow(row);
+    const button = row.querySelector(".save-project-btn");
+    if (button) button.textContent = "Save";
   });
 
   els.saveStatusBtn.addEventListener("click", saveDisbursalStatus);
