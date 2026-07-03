@@ -558,7 +558,7 @@ function renderProjects() {
               <td><input class="small-input project-share-input" type="number" min="0" step="0.01" value="${escapeHtml(row.sharePercent)}" /></td>
               <td><input class="small-input project-department-input" type="number" min="0" step="0.01" value="${escapeHtml(row.departmentPercent)}" /></td>
               <td><input class="small-input project-team-input" type="number" min="0" step="0.01" value="${escapeHtml(row.teamSharePercent)}" /></td>
-              <td>${percent(row.mySharePercent)}</td>
+              <td><input class="small-input project-my-share-input" type="number" min="0" step="0.01" value="${escapeHtml(row.mySharePercent)}" /></td>
               <td><input class="small-input project-team-count-input" type="number" min="1" step="1" value="${escapeHtml(row.teamCount || 1)}" /></td>
               <td class="project-accrued-value">${money(row.accruedValue)}</td>
               <td>${percent(row.npsDisbursalPercent)}</td>
@@ -924,6 +924,7 @@ async function saveProject(event) {
         sharePercent: row.querySelector(".project-share-input")?.value,
         departmentPercent: row.querySelector(".project-department-input")?.value,
         teamSharePercent: row.querySelector(".project-team-input")?.value,
+        mySharePercent: row.querySelector(".project-my-share-input")?.value,
         teamCount: row.querySelector(".project-team-count-input")?.value,
       }),
     });
@@ -1169,15 +1170,16 @@ function bindEvents() {
     }
   });
   els.projectTableBody.addEventListener("input", (event) => {
-    if (!event.target.matches(".project-share-input, .project-department-input, .project-team-input, .project-team-count-input")) return;
+    if (!event.target.matches(".project-share-input, .project-department-input, .project-team-input, .project-my-share-input, .project-team-count-input")) return;
     const row = event.target.closest("tr");
     const project = currentSummary()?.projects?.find((item) => (item.projectId || item.projectName) === row?.dataset.projectId);
     if (!row || !project) return;
     const share = rawPercent(row.querySelector(".project-share-input")?.value);
     const department = rawPercent(row.querySelector(".project-department-input")?.value);
     const teamShare = rawPercent(row.querySelector(".project-team-input")?.value);
+    const myShare = rawPercent(row.querySelector(".project-my-share-input")?.value);
     const teamCount = Math.max(1, Math.floor(Number(row.querySelector(".project-team-count-input")?.value) || 1));
-    const accrued = Number(project.incentiveBaseValue || 0) * share / 100 * department / 100 * teamShare / 100 * rawPercent(project.mySharePercent) / 100;
+    const accrued = Number(project.incentiveBaseValue || 0) * share / 100 * department / 100 * teamShare / 100 * myShare / 100;
     const finalDisbursal = accrued * rawPercent(project.npsDisbursalPercent) / 100;
     row.querySelector(".project-accrued-value").textContent = money(accrued);
     row.querySelector(".project-final-value").textContent = money(finalDisbursal);

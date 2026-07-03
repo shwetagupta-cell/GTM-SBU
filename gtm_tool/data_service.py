@@ -912,7 +912,9 @@ class GTMDataService:
                 100.0 / max(len(resolved_employee_ids) or len(normalized), 1)
             )
             team_count = max(1, int(parse_number(override.get("teamCount")) or 1))
-            my_share_percent = parse_number(employee.get("mySharePercent")) or parse_number(employee.get("projectIncentivePercent"))
+            my_share_percent = parse_number(override.get("mySharePercent")) if override.get("mySharePercent") not in (None, "") else (
+                parse_number(employee.get("mySharePercent")) or parse_number(employee.get("projectIncentivePercent"))
+            )
             project_value = parse_number(project.get("projectValue"))
             cashflow_value = parse_number(project.get("cashflowValue"))
             if project.get("incentiveBaseValue") not in (None, ""):
@@ -1132,6 +1134,7 @@ class GTMDataService:
         override["sharePercent"] = parse_number(payload.get("sharePercent"))
         override["departmentPercent"] = parse_number(payload.get("departmentPercent"))
         override["teamSharePercent"] = parse_number(payload.get("teamSharePercent"))
+        override["mySharePercent"] = parse_number(payload.get("mySharePercent"))
         override["teamCount"] = max(1, int(parse_number(payload.get("teamCount")) or 1))
         self.state["projectOverrides"][key] = override
         self.persist()
