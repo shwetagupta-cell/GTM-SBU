@@ -48,6 +48,8 @@ const els = {
   trendList: document.getElementById("trendList"),
   periodSelect: document.getElementById("periodSelect"),
   kpiNotice: document.getElementById("kpiNotice"),
+  kpiTotalScore: document.getElementById("kpiTotalScore"),
+  kpiTotalIncentive: document.getElementById("kpiTotalIncentive"),
   kpiTableBody: document.getElementById("kpiTableBody"),
   projectMonthSelect: document.getElementById("projectMonthSelect"),
   projectValueTotal: document.getElementById("projectValueTotal"),
@@ -108,6 +110,7 @@ const state = {
   endDate: "",
   selectedPeriod: "",
   selectedQuarter: "",
+  kpiMetrics: new Map(),
 };
 
 const EYE_ICON = `
@@ -503,6 +506,144 @@ function renderQuarterTrend() {
     .join("");
 }
 
+function roundMetric(value) {
+  return Number((Number(value) || 0).toFixed(2));
+}
+
+function parseScoreBand(text) {
+  const value = String(text ?? "").replaceAll(" ", "").replaceAll("%", "");
+  if (!value) return null;
+  if (value.startsWith(">=")) return ["gte", Number(value.slice(2)) || 0];
+  if (value.startsWith(">")) return ["gt", Number(value.slice(1)) || 0];
+  if (value.startsWith("<")) return ["lt", Number(value.slice(1)) || 0];
+  if (value.includes("-")) {
+    const [lower, upper] = value.split("-", 2);
+    return ["range", Number(lower) || 0, Number(upper) || 0];
+  }
+  return ["gte", Number(value) || 0];
+}
+
+function scoreFromKpi(row, target, achieved) {
+  const kpiName = String(row.kpiName || "").trim().toLowerCase();
+  const bands = row.scoreBands || {};
+  const topBand = String(bands["5"] || "").trim();
+  if (!achieved) return 0;
+  if (!target && !["csat", "tsat"].includes(kpiName) && topBand.toLowerCase() !== "actual csat rating") return 0;
+
+  let achievementPercent = target ? achieved / target * 100 : 0;
+  if (kpiName === "cac %") achievementPercent = achieved ? target / achieved * 100 : 0;
+
+  if (topBand.toLowerCase() === "actual csat rating") {
+    if (achieved >= 4.5) return 5;
+    if (achieved >= 4) return 4;
+    if (achieved >= 3.5) return 3;
+    if (achieved >= 3) return 2;
+    return 1;
+  }
+  if (topBand.toLowerCase().includes("<t")) {
+    const delta = achieved - target;
+    if (delta < 0) return 5;
+    if (delta <= 7) return 4;
+    if (delta <= 14) return 3;
+    if (delta <= 21) return 2;
+    return 1;
+  }
+  if (topBand.includes("+2")) {
+    const delta = achieved - target;
+    if (delta > 0.02) return 5;
+    if (delta >= 0) return 4;
+    if (delta >= -0.02) return 3;
+    if (delta >= -0.05) return 2;
+    return 1;
+  }
+  if (["csat", "tsat"].includes(kpiName)) {
+    if (achieved >= 4.5) return 5;
+    if (achieved >= 4) return 4;
+    if (achieved >= 3.5) return 3;
+    if (achieved >= 3) return 2;
+    return 1;
+  }
+  for (const score of ["5", "4", "3", "2", "1"]) {
+    const band = parseScoreBand(bands[score]);
+    if (!band) continue;
+    const [kind, lower, upper] = band;
+    if (kind === "gt" && achievementPercent > lower) return Number(score);
+    if (kind === "gte" && achievementPercent >= lower) return Number(score);
+    if (kind === "lt" && (target > 1 ? achieved : achievementPercent) < lower) return Number(score);
+    if (kind === "range" && achievementPercent >= lower && achievementPercent <= upper) return Number(score);
+  }
+  return 0;
+}
+
+function calculateKpiRow(row, target, achieved) {
+  const kpiName = String(row.kpiName || "").trim().toLowerCase();
+  const hasScoreInput = Boolean(achieved) && (
+    Boolean(target) ||
+    ["csat", "tsat"].includes(kpiName) ||
+    String(row.scoreBands?.["5"] || "").trim().toLowerCase() === "actual csat rating"
+  );
+  const achievementPercent = kpiName === "cac %"
+    ? (hasScoreInput && achieved ? target / achieved * 100 : 0)
+    : (hasScoreInput && target ? achieved / target * 100 : 0);
+  const score = hasScoreInput ? scoreFromKpi(row, target, achieved) : 0;
+  return {
+    target,
+    achieved,
+    achievementPercent: roundMetric(achievementPercent),
+    score,
+    finalWeightedScore: roundMetric(score * Number(row.weightage || 0)),
+    action: achievementPercent > 100 ? "Above Target" : achievementPercent >= 80 ? "On Track" : "Needs Improvement",
+  };
+}
+
+function disbursalPercentForScore(score) {
+  const scheme = String(currentEmployee()?.disbursalType || "quarterly").toLowerCase();
+  const rules = state.dashboard?.incentiveRules?.[scheme] || [];
+  return Number(rules.find((rule) => Number(rule.min) <= score && score < Number(rule.max))?.disbursal || 0);
+}
+
+function updateKpiTotalsAndIncentives() {
+  const metrics = [...state.kpiMetrics.values()];
+  const totalWeightage = metrics.reduce((sum, item) => sum + Number(item.weightage || 0), 0);
+  const totalWeightedScore = metrics.reduce((sum, item) => sum + Number(item.finalWeightedScore || 0), 0);
+  const totalScore = totalWeightage ? totalWeightedScore / totalWeightage : 0;
+  const npsScore = metrics.length ? roundMetric(metrics.reduce((sum, item) => sum + Number(item.score || 0), 0) / metrics.length) : 0;
+  const disbursalPercent = disbursalPercentForScore(npsScore);
+  const accruedTotal = (currentSummary()?.projects || []).reduce((sum, project) => sum + Number(project.accruedValue || 0), 0);
+  const totalIncentive = accruedTotal * disbursalPercent / 100;
+
+  els.kpiTotalScore.textContent = roundMetric(totalScore).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  els.kpiTotalIncentive.textContent = money(totalIncentive);
+  els.npsScoreValue.textContent = npsScore.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  els.npsDisbursalValue.textContent = percent(disbursalPercent);
+
+  for (const [recordId, item] of state.kpiMetrics) {
+    const rowElement = els.kpiTableBody.querySelector(`tr[data-record-id="${CSS.escape(recordId)}"]`);
+    if (!rowElement) continue;
+    const incentiveAmount = totalWeightedScore ? totalIncentive * Number(item.finalWeightedScore || 0) / totalWeightedScore : 0;
+    item.incentiveAmount = roundMetric(incentiveAmount);
+    item.npsScore = npsScore;
+    rowElement.querySelector(".kpi-incentive").textContent = money(item.incentiveAmount);
+    rowElement.querySelector(".kpi-nps").textContent = npsScore.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  }
+}
+
+function updateKpiRow(rowElement) {
+  const cached = state.kpiMetrics.get(rowElement.dataset.recordId);
+  if (!cached) return;
+  const metrics = calculateKpiRow(
+    cached,
+    Number(rowElement.querySelector(".target-input")?.value) || 0,
+    Number(rowElement.querySelector(".achieved-input")?.value) || 0
+  );
+  Object.assign(cached, metrics);
+  rowElement.querySelector(".kpi-achievement").textContent = `${metrics.achievementPercent}%`;
+  rowElement.querySelector(".kpi-score").textContent = metrics.score;
+  rowElement.querySelector(".kpi-weighted-score").textContent = metrics.finalWeightedScore;
+  rowElement.querySelector(".kpi-action").textContent = metrics.action;
+  updateKpiTotalsAndIncentives();
+}
+
 function renderKpis() {
   const employee = currentEmployee();
   const summary = currentSummary();
@@ -511,6 +652,9 @@ function renderKpis() {
   els.kpiNotice.textContent = summary
     ? `${rows.length} KPI rows loaded for ${summary.displayPeriod}. Target, score slabs, and weightage are mapped from the ${employee?.businessUnit || "GTM"} ${employee?.logicKey || employee?.department || ""} logic sheet.`
     : "KPI scorecard will appear here.";
+  state.kpiMetrics = new Map(rows.map((row) => [String(row.recordId), { ...row }]));
+  els.kpiTotalScore.textContent = Number(summary?.finalScore || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  els.kpiTotalIncentive.textContent = money(summary?.finalDisbursal || 0);
 
   els.kpiTableBody.innerHTML = rows.length
     ? rows
@@ -522,14 +666,15 @@ function renderKpis() {
               <td>${escapeHtml(row.kpiName || "-")}</td>
               <td><input class="small-input target-input" type="number" step="0.01" value="${escapeHtml(row.target)}" ${isAdmin() ? "" : "disabled"} /></td>
               <td><input class="small-input achieved-input" type="number" step="0.01" value="${escapeHtml(row.achieved)}" ${isAdmin() ? "" : "disabled"} /></td>
-              <td>${escapeHtml(row.achievementPercent)}%</td>
-              <td>${escapeHtml(row.score)}</td>
+              <td class="kpi-achievement">${escapeHtml(row.achievementPercent)}%</td>
+              <td class="kpi-score">${escapeHtml(row.score)}</td>
               <td>${escapeHtml(row.weightage)}</td>
-              <td>${escapeHtml(row.finalWeightedScore)}</td>
-              <td>${escapeHtml(row.npsScore)}</td>
+              <td class="kpi-weighted-score">${escapeHtml(row.finalWeightedScore)}</td>
+              <td class="kpi-incentive">${money(row.incentiveAmount)}</td>
+              <td class="kpi-nps">${escapeHtml(row.npsScore)}</td>
               <td>
                 <div class="action-cell">
-                  <span class="status-badge">${escapeHtml(row.action)}</span>
+                  <span class="status-badge kpi-action">${escapeHtml(row.action)}</span>
                   ${saveButton}
                 </div>
               </td>
@@ -537,7 +682,7 @@ function renderKpis() {
           `;
         })
         .join("")
-    : `<tr><td colspan="10">No KPI rows are available for this employee yet.</td></tr>`;
+    : `<tr><td colspan="11">No KPI rows are available for this employee yet.</td></tr>`;
 }
 
 function renderProjects() {
@@ -892,8 +1037,11 @@ async function undoDeleteEmployee() {
 async function saveKpi(event) {
   const row = event.target.closest("tr");
   if (!row) return;
+  const button = event.target;
+  button.disabled = true;
+  button.textContent = "Saving...";
   try {
-    await api("/api/admin/kpi/update", {
+    const response = await api("/api/admin/kpi/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -902,10 +1050,23 @@ async function saveKpi(event) {
         achieved: row.querySelector(".achieved-input")?.value,
       }),
     });
+    const updated = response.kpi;
+    const cached = state.kpiMetrics.get(row.dataset.recordId);
+    if (cached && updated) {
+      Object.assign(cached, updated);
+      row.querySelector(".kpi-achievement").textContent = `${updated.achievementPercent}%`;
+      row.querySelector(".kpi-score").textContent = updated.score;
+      row.querySelector(".kpi-weighted-score").textContent = updated.finalWeightedScore;
+      row.querySelector(".kpi-action").textContent = updated.action;
+      updateKpiTotalsAndIncentives();
+    }
     els.kpiNotice.textContent = "KPI row saved successfully.";
-    await refreshDashboard();
+    button.textContent = "Saved";
   } catch (error) {
     els.kpiNotice.textContent = error.message;
+    button.textContent = "Save";
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -1163,6 +1324,14 @@ function bindEvents() {
     if (event.target.classList.contains("save-kpi-btn")) {
       saveKpi(event);
     }
+  });
+  els.kpiTableBody.addEventListener("input", (event) => {
+    if (!event.target.matches(".target-input, .achieved-input")) return;
+    const row = event.target.closest("tr");
+    if (!row) return;
+    updateKpiRow(row);
+    const button = row.querySelector(".save-kpi-btn");
+    if (button) button.textContent = "Save";
   });
   els.projectTableBody.addEventListener("click", (event) => {
     if (event.target.classList.contains("save-project-btn")) {

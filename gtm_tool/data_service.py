@@ -351,6 +351,7 @@ class GTMDataService:
     def _clear_match_caches(self):
         self._project_resolution_cache = {}
         self._active_employee_match_cache = None
+        self._framework_by_id = {item.get("frameworkId"): item for item in self.state.get("frameworks", [])}
 
     def _default_state(self):
         return {
@@ -805,7 +806,7 @@ class GTMDataService:
         return self.state["employees"].get(employee_id)
 
     def _framework_map(self):
-        return {item.get("frameworkId"): item for item in self.state["frameworks"]}
+        return self._framework_by_id
 
     def _kpi_metrics(self, row):
         framework = self._framework_map().get(row.get("frameworkId"), {})
@@ -830,6 +831,7 @@ class GTMDataService:
             "score": score,
             "finalWeightedScore": round(weighted_score, 2),
             "action": action,
+            "scoreBands": framework.get("scoreBands") or {},
         }
 
     def _active_employees_for_project_matching(self):
@@ -1106,6 +1108,7 @@ class GTMDataService:
             "loadedAt": self.state["loadedAt"],
             "currentPeriod": _current_period(),
             "periodOptions": _fy_periods(),
+            "incentiveRules": self.state.get("incentiveRules", _default_nps_rules()),
         }
 
     def update_kpi(self, payload):

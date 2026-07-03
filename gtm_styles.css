@@ -470,6 +470,11 @@ select:focus {
   margin-bottom: 24px;
 }
 
+.kpi-live-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 14px 0;
+}
+
 .grid-two {
   grid-template-columns: 1fr 1fr;
 }
