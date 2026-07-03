@@ -58,6 +58,8 @@ const els = {
   projectDisbursalPercent: document.getElementById("projectDisbursalPercent"),
   projectFinalDisbursal: document.getElementById("projectFinalDisbursal"),
   projectTableBody: document.getElementById("projectTableBody"),
+  monthlyStatusPanel: document.getElementById("monthlyStatusPanel"),
+  monthlyStatusNav: document.getElementById("monthlyStatusNav"),
   adminPanel: document.getElementById("adminPanel"),
   adminNav: document.getElementById("adminNav"),
   totalEmployeesValue: document.getElementById("totalEmployeesValue"),
@@ -763,6 +765,8 @@ function updateMonthlyStatusDisplay(periodLabel, status, totalEmployees) {
 function renderAdmin() {
   const admin = state.dashboard?.admin || { enabled: false };
   const showAdmin = Boolean(admin.enabled) && isAdmin();
+  els.monthlyStatusPanel.classList.toggle("hidden", !showAdmin);
+  els.monthlyStatusNav.classList.toggle("hidden", !showAdmin);
   els.adminPanel.classList.toggle("hidden", !showAdmin);
   els.adminNav.classList.toggle("hidden", !showAdmin);
   if (!showAdmin) {

@@ -61,6 +61,7 @@
             <a href="#overviewPanel">Overview</a>
             <a href="#kpiPanel">KPI Scorecard</a>
             <a href="#projectPanel">Project Incentive</a>
+            <a href="#monthlyStatusPanel" id="monthlyStatusNav">Disbursal Status</a>
             <a href="#adminPanel" id="adminNav">Admin</a>
             <a href="#accountPanel">Account</a>
           </nav>
@@ -248,6 +249,32 @@
             </div>
           </section>
 
+          <section id="monthlyStatusPanel" class="panel monthly-status-card hidden">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Month-wise Status Update</p>
+                <h3>Monthly Disbursal Status</h3>
+              </div>
+            </div>
+            <div class="monthly-status-controls">
+              <label>Month<select id="monthlyStatusMonth" class="field-control"></select></label>
+              <label>Status
+                <select id="monthlyStatusInput" class="field-control">
+                  <option value="Pending">Pending</option>
+                  <option value="In Process">In Process</option>
+                  <option value="Disbursed">Disbursed</option>
+                </select>
+              </label>
+              <button id="submitMonthlyStatusBtn" class="solid-btn" type="button">Submit Status</button>
+            </div>
+            <div id="monthlyStatusBar" class="monthly-status-bar" aria-label="Disbursal progress">
+              <span data-status="Pending">Pending</span>
+              <span data-status="In Process">In Process</span>
+              <span data-status="Disbursed">Disbursed</span>
+            </div>
+            <div id="monthlyStatusNotice" class="notice">Select a month and status, then submit.</div>
+          </section>
+
           <section id="adminPanel" class="panel hidden">
             <div class="panel-head">
               <div>
@@ -263,30 +290,6 @@
               <article class="metric-card"><span>Data Updated</span><strong id="annualPayoutValue">-</strong><p id="dataUpdatedMeta">-</p></article>
               <article class="metric-card"><span>Disbursal Status</span><strong id="disbursalStatusSummary">-</strong></article>
             </div>
-
-            <section class="panel inset monthly-status-card">
-              <div>
-                <p class="eyebrow">Month-wise Status Update</p>
-                <h3>Monthly Disbursal Status</h3>
-              </div>
-              <div class="monthly-status-controls">
-                <label>Month<select id="monthlyStatusMonth" class="field-control"></select></label>
-                <label>Status
-                  <select id="monthlyStatusInput" class="field-control">
-                    <option value="Pending">Pending</option>
-                    <option value="In Process">In Process</option>
-                    <option value="Disbursed">Disbursed</option>
-                  </select>
-                </label>
-                <button id="submitMonthlyStatusBtn" class="solid-btn" type="button">Submit Status</button>
-              </div>
-              <div id="monthlyStatusBar" class="monthly-status-bar" aria-label="Disbursal progress">
-                <span data-status="Pending">Pending</span>
-                <span data-status="In Process">In Process</span>
-                <span data-status="Disbursed">Disbursed</span>
-              </div>
-              <div id="monthlyStatusNotice" class="notice">Select a month and status, then submit.</div>
-            </section>
 
             <div class="grid-two">
               <section class="panel inset">
