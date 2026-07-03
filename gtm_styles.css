@@ -114,8 +114,7 @@ tbody tr:hover {
 .trend-item,
 .project-pill,
 .upload-card,
-.upload-item,
-.status-bar {
+.upload-item {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
@@ -157,7 +156,6 @@ tbody tr:hover {
 .metric-card p,
 .upload-item p,
 .upload-item small,
-.status-bar__label,
 .mono {
   color: var(--muted);
 }
@@ -397,7 +395,6 @@ select:focus {
 
 .hero-panel,
 .hero-copy,
-.status-bar,
 .project-head-actions,
 .month-filter {
   display: grid;
@@ -673,23 +670,6 @@ select:focus {
   color: var(--accent-dark);
 }
 
-.status-bar {
-  padding: 18px 20px;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-}
-
-.status-bar__actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.status-bar__actions .field-control {
-  min-width: 170px;
-  min-height: 46px;
-}
-
 .table-wrap {
   overflow: auto;
   border-radius: var(--radius-lg);
@@ -898,10 +878,6 @@ select:focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .status-bar {
-    grid-template-columns: 1fr;
-  }
-
   .upload-item {
     flex-direction: column;
     align-items: flex-start;
@@ -919,8 +895,7 @@ select:focus {
   .panel,
   .metric-card,
   .upload-card,
-  .upload-item,
-  .status-bar {
+  .upload-item {
     padding: 18px;
     border-radius: var(--radius-xl);
   }

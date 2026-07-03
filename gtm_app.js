@@ -40,9 +40,6 @@ const els = {
   npsDisbursalLabel: document.getElementById("npsDisbursalLabel"),
   accruedValue: document.getElementById("accruedValue"),
   accruedLabel: document.getElementById("accruedLabel"),
-  disbursalStatusValue: document.getElementById("disbursalStatusValue"),
-  disbursalStatusInput: document.getElementById("disbursalStatusInput"),
-  saveStatusBtn: document.getElementById("saveStatusBtn"),
   hierarchyGrid: document.getElementById("hierarchyGrid"),
   quarterTabs: document.getElementById("quarterTabs"),
   trendList: document.getElementById("trendList"),
@@ -446,10 +443,6 @@ function renderSummary() {
   els.accruedValue.textContent = money(summary?.accruedRs || 0);
   els.accruedLabel.textContent = summary ? `Final disbursal ${money(summary.finalDisbursal || 0)}` : "Final value after project formula";
 
-  els.disbursalStatusValue.textContent = summary?.disbursalStatus || "Pending";
-  els.disbursalStatusInput.value = summary?.disbursalStatus || "Pending";
-  els.disbursalStatusInput.classList.toggle("hidden", !isAdmin());
-  els.saveStatusBtn.classList.toggle("hidden", !isAdmin());
 }
 
 function renderHierarchy() {
@@ -1169,25 +1162,6 @@ async function saveProject(event) {
   }
 }
 
-async function saveDisbursalStatus() {
-  const employee = currentEmployee();
-  if (!employee) return;
-  try {
-    await api("/api/admin/status/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        employeeId: employee.employeeId,
-        periodLabel: state.selectedPeriod,
-        status: els.disbursalStatusInput.value,
-      }),
-    });
-    await refreshDashboard();
-  } catch (error) {
-    els.disbursalStatusValue.textContent = error.message;
-  }
-}
-
 async function saveMonthlyDisbursalStatus() {
   const periodLabel = els.monthlyStatusMonth.value;
   const status = els.monthlyStatusInput.value;
@@ -1450,7 +1424,6 @@ function bindEvents() {
     if (button) button.textContent = "Save";
   });
 
-  els.saveStatusBtn.addEventListener("click", saveDisbursalStatus);
   els.monthlyStatusMonth.addEventListener("change", () => {
     state.selectedPeriod = els.monthlyStatusMonth.value;
     state.selectedQuarter = quarterForPeriod(state.selectedPeriod);
