@@ -53,7 +53,6 @@ const els = {
   projectValueTotal: document.getElementById("projectValueTotal"),
   projectDepartmentPercent: document.getElementById("projectDepartmentPercent"),
   projectTeamSharePercent: document.getElementById("projectTeamSharePercent"),
-  projectMyShareValue: document.getElementById("projectMyShareValue"),
   projectDisbursalPercent: document.getElementById("projectDisbursalPercent"),
   projectFinalDisbursal: document.getElementById("projectFinalDisbursal"),
   projectTableBody: document.getElementById("projectTableBody"),
@@ -83,18 +82,8 @@ const els = {
   employeeManagerDesignationInput: document.getElementById("employeeManagerDesignationInput"),
   employeeHierarchyRoleInput: document.getElementById("employeeHierarchyRoleInput"),
   employeeDisbursalInput: document.getElementById("employeeDisbursalInput"),
-  employeeProjectIncentiveInput: document.getElementById("employeeProjectIncentiveInput"),
   employeeTempPasswordInput: document.getElementById("employeeTempPasswordInput"),
   employeeAdminAccessInput: document.getElementById("employeeAdminAccessInput"),
-  employeeDepartmentPercentInput: document.getElementById("employeeDepartmentPercentInput"),
-  employeeTeamSharePercentInput: document.getElementById("employeeTeamSharePercentInput"),
-  employeeNpsInput: document.getElementById("employeeNpsInput"),
-  formulaProjectValue: document.getElementById("formulaProjectValue"),
-  formulaDepartmentPercent: document.getElementById("formulaDepartmentPercent"),
-  formulaTeamSharePercent: document.getElementById("formulaTeamSharePercent"),
-  formulaMySharePercent: document.getElementById("formulaMySharePercent"),
-  formulaNpsPercent: document.getElementById("formulaNpsPercent"),
-  formulaFinalValue: document.getElementById("formulaFinalValue"),
   saveEmployeeBtn: document.getElementById("saveEmployeeBtn"),
   deleteEmployeeBtn: document.getElementById("deleteEmployeeBtn"),
   undoEmployeeBtn: document.getElementById("undoEmployeeBtn"),
@@ -555,12 +544,9 @@ function renderProjects() {
   const employee = currentEmployee();
   const summary = currentSummary();
   const rows = summary?.projects || [];
-  const currentMyShare = Number(employee?.mySharePercent ?? employee?.projectIncentivePercent ?? 0);
-
   els.projectValueTotal.textContent = money(summary?.projectValue || 0);
-  els.projectDepartmentPercent.textContent = percent(employee?.departmentPercent || 0);
-  els.projectTeamSharePercent.textContent = percent(employee?.teamSharePercent || 0);
-  els.projectMyShareValue.textContent = percent(currentMyShare || 0);
+  els.projectDepartmentPercent.textContent = percent(rows[0]?.departmentPercent || 0);
+  els.projectTeamSharePercent.textContent = percent(rows[0]?.teamSharePercent || 0);
   els.projectDisbursalPercent.textContent = Number(summary?.npsScore || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
   els.projectFinalDisbursal.textContent = money(summary?.finalDisbursal || 0);
 
@@ -572,20 +558,22 @@ function renderProjects() {
               <td><input class="small-input project-share-input" type="number" min="0" step="0.01" value="${escapeHtml(row.sharePercent)}" /></td>
               <td><input class="small-input project-department-input" type="number" min="0" step="0.01" value="${escapeHtml(row.departmentPercent)}" /></td>
               <td><input class="small-input project-team-input" type="number" min="0" step="0.01" value="${escapeHtml(row.teamSharePercent)}" /></td>
-              <td>${percent(row.mySharePercent)}</td>
-              <td>${money(row.accruedValue)}</td>
+              <td><input class="small-input project-team-count-input" type="number" min="1" step="1" value="${escapeHtml(row.teamCount || 1)}" /></td>
+              <td class="project-accrued-value">${money(row.accruedValue)}</td>
               <td>${percent(row.npsDisbursalPercent)}</td>
-              <td>${money(row.finalDisbursalValue)}</td>
+              <td class="project-final-value">${money(row.finalDisbursalValue)}</td>
+              <td class="project-per-employee-value">${money(row.perEmployeeIncentive)}</td>
               <td><button class="ghost-btn small-btn save-project-btn" type="button">Save</button></td>
             `
             : `
               <td>${percent(row.sharePercent)}</td>
               <td>${percent(row.departmentPercent)}</td>
               <td>${percent(row.teamSharePercent)}</td>
-              <td>${percent(row.mySharePercent)}</td>
+              <td>${escapeHtml(row.teamCount || 1)}</td>
               <td>${money(row.accruedValue)}</td>
               <td>${percent(row.npsDisbursalPercent)}</td>
               <td>${money(row.finalDisbursalValue)}</td>
+              <td>${money(row.perEmployeeIncentive)}</td>
               <td><span class="status-badge">View Only</span></td>
             `;
           return `
@@ -599,7 +587,7 @@ function renderProjects() {
           `;
         })
         .join("")
-    : `<tr><td colspan="12">No mapped projects are available for this employee in the selected month.</td></tr>`;
+    : `<tr><td colspan="13">No mapped projects are available for this employee in the selected month.</td></tr>`;
 }
 
 function renderAdmin() {
@@ -697,37 +685,8 @@ function fillEmployeeForm(employee) {
   els.employeeManagerDesignationInput.value = employee.hierarchy?.designation || "";
   els.employeeHierarchyRoleInput.value = source.hierarchyRole || "manager";
   els.employeeDisbursalInput.value = employee.disbursalType || source.disbursalType || "quarterly";
-  els.employeeProjectIncentiveInput.value = employee.mySharePercent ?? source.mySharePercent ?? employee.projectIncentivePercent ?? source.projectIncentivePercent ?? "";
   els.employeeTempPasswordInput.value = "";
   els.employeeAdminAccessInput.value = employee.adminAccess || source.adminAccess ? "true" : "false";
-  els.employeeDepartmentPercentInput.value = employee.departmentPercent ?? source.departmentPercent ?? "";
-  els.employeeTeamSharePercentInput.value = employee.teamSharePercent ?? source.teamSharePercent ?? "";
-  els.employeeNpsInput.value = currentSummary()?.npsScore ?? employee.npsScore ?? source.npsScore ?? "";
-}
-
-function renderFormulaPreview() {
-  const summary = currentSummary();
-  const projectValue = Number(summary?.projectValue || 0);
-  const departmentPercent = rawPercent(els.employeeDepartmentPercentInput.value || currentEmployee()?.departmentPercent || 0);
-  const teamSharePercent = rawPercent(els.employeeTeamSharePercentInput.value || currentEmployee()?.teamSharePercent || 0);
-  const mySharePercent = rawPercent(els.employeeProjectIncentiveInput.value || currentEmployee()?.mySharePercent || currentEmployee()?.projectIncentivePercent || 0);
-  const npsPercent = rawPercent(currentSummary()?.disbursalPercent || 0);
-  const hiddenSharePercent = rawPercent(currentEmployee()?.sharePercent || 100);
-  const finalValue =
-    projectValue *
-    (hiddenSharePercent / 100) *
-    (departmentPercent / 100) *
-    (teamSharePercent / 100) *
-    (mySharePercent / 100) *
-    (npsPercent / 100);
-
-  els.formulaProjectValue.textContent = money(projectValue);
-  els.formulaDepartmentPercent.textContent = percent(departmentPercent);
-  els.formulaTeamSharePercent.textContent = percent(teamSharePercent);
-  els.formulaMySharePercent.textContent = percent(mySharePercent);
-  els.formulaNpsPercent.textContent = Number(summary?.npsScore || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
-  els.formulaFinalValue.textContent = money(finalValue);
-  els.projectMyShareValue.textContent = percent(mySharePercent || 0);
 }
 
 function renderAll() {
@@ -740,7 +699,6 @@ function renderAll() {
   renderProjects();
   renderAdmin();
   fillEmployeeForm(currentEmployee());
-  renderFormulaPreview();
   updateDownloadLinks();
 }
 
@@ -891,14 +849,8 @@ async function saveEmployee() {
         managerDesignation: els.employeeManagerDesignationInput.value.trim(),
         hierarchyRole: els.employeeHierarchyRoleInput.value,
         disbursalType: els.employeeDisbursalInput.value,
-        sharePercent: currentEmployee()?.sharePercent ?? 100,
-        projectIncentivePercent: els.employeeProjectIncentiveInput.value,
-        mySharePercent: els.employeeProjectIncentiveInput.value,
         tempPassword: els.employeeTempPasswordInput.value.trim(),
         adminAccess: els.employeeAdminAccessInput.value === "true",
-        departmentPercent: els.employeeDepartmentPercentInput.value,
-        teamSharePercent: els.employeeTeamSharePercentInput.value,
-        npsScore: els.employeeNpsInput.value,
       }),
     });
     els.employeeNotice.textContent = "Employee record saved successfully.";
@@ -970,6 +922,7 @@ async function saveProject(event) {
         sharePercent: row.querySelector(".project-share-input")?.value,
         departmentPercent: row.querySelector(".project-department-input")?.value,
         teamSharePercent: row.querySelector(".project-team-input")?.value,
+        teamCount: row.querySelector(".project-team-count-input")?.value,
       }),
     });
     await refreshDashboard();
@@ -1179,14 +1132,6 @@ function bindEvents() {
     }
   });
   els.downloadEmployeePickerInput.addEventListener("input", updateDownloadLinks);
-  [
-    els.employeeProjectIncentiveInput,
-    els.employeeDepartmentPercentInput,
-    els.employeeTeamSharePercentInput,
-    els.employeeNpsInput,
-  ].forEach((input) => {
-    input.addEventListener("input", renderFormulaPreview);
-  });
   els.applyFiltersBtn.addEventListener("click", applyFilters);
   els.resetFiltersBtn.addEventListener("click", resetFilters);
   els.periodSelect.addEventListener("change", () => {
@@ -1220,6 +1165,21 @@ function bindEvents() {
     if (event.target.classList.contains("save-project-btn")) {
       saveProject(event);
     }
+  });
+  els.projectTableBody.addEventListener("input", (event) => {
+    if (!event.target.matches(".project-share-input, .project-department-input, .project-team-input, .project-team-count-input")) return;
+    const row = event.target.closest("tr");
+    const project = currentSummary()?.projects?.find((item) => (item.projectId || item.projectName) === row?.dataset.projectId);
+    if (!row || !project) return;
+    const share = rawPercent(row.querySelector(".project-share-input")?.value);
+    const department = rawPercent(row.querySelector(".project-department-input")?.value);
+    const teamShare = rawPercent(row.querySelector(".project-team-input")?.value);
+    const teamCount = Math.max(1, Math.floor(Number(row.querySelector(".project-team-count-input")?.value) || 1));
+    const accrued = Number(project.incentiveBaseValue || 0) * share / 100 * department / 100 * teamShare / 100 * rawPercent(project.mySharePercent) / 100;
+    const finalDisbursal = accrued * rawPercent(project.npsDisbursalPercent) / 100;
+    row.querySelector(".project-accrued-value").textContent = money(accrued);
+    row.querySelector(".project-final-value").textContent = money(finalDisbursal);
+    row.querySelector(".project-per-employee-value").textContent = money(finalDisbursal / teamCount);
   });
 
   els.saveStatusBtn.addEventListener("click", saveDisbursalStatus);

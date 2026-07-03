@@ -214,10 +214,6 @@
               <article class="project-pill"><span>Project Value</span><strong id="projectValueTotal">Rs 0</strong></article>
               <article class="project-pill"><span>Department %</span><strong id="projectDepartmentPercent">0%</strong></article>
               <article class="project-pill"><span>Team Share %</span><strong id="projectTeamSharePercent">0%</strong></article>
-              <article class="project-pill">
-                <span>My Share</span>
-                <strong id="projectMyShareValue">0%</strong>
-              </article>
               <article class="project-pill"><span>NPS Score</span><strong id="projectDisbursalPercent">0%</strong></article>
               <article class="project-pill"><span>Final Value</span><strong id="projectFinalDisbursal">Rs 0</strong></article>
             </div>
@@ -233,10 +229,11 @@
                     <th>Share %</th>
                     <th>Department %</th>
                     <th>Team Share %</th>
-                    <th>My Share %</th>
+                    <th>Team Count</th>
                     <th>Accrued Value</th>
                     <th>NPS Disbursal %</th>
-                    <th>Final Disbursal Value</th>
+                    <th>Final Disbursal</th>
+                    <th>Per Employee Incentive</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -279,39 +276,9 @@
                   <label>Manager Designation<input id="employeeManagerDesignationInput" class="field-control" type="text" /></label>
                   <label>Hierarchy Role<select id="employeeHierarchyRoleInput" class="field-control"><option value="india_head">India Head</option><option value="national_vertical_head">National Vertical Head</option><option value="regional_head">Regional Head</option><option value="manager">Manager</option></select></label>
                   <label>Disbursal Type<select id="employeeDisbursalInput" class="field-control"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annually">Annually</option></select></label>
-                  <label>My Share %<input id="employeeProjectIncentiveInput" class="field-control" type="number" min="0" step="0.01" /></label>
                   <label>Temp Password<input id="employeeTempPasswordInput" class="field-control" type="text" placeholder="Defaults to GTM + Employee ID" /></label>
                   <label>Admin Access<select id="employeeAdminAccessInput" class="field-control"><option value="false">Employee only</option><option value="true">Allow Admin Login</option></select></label>
-                  <label>Department %<input id="employeeDepartmentPercentInput" class="field-control" type="number" min="0" step="0.01" /></label>
-                  <label>Team Share %<input id="employeeTeamSharePercentInput" class="field-control" type="number" min="0" step="0.01" /></label>
-                  <label>NPS Score<input id="employeeNpsInput" class="field-control" type="number" min="0" max="5" step="0.1" /></label>
                 </form>
-                <div class="formula-strip">
-                  <div class="formula-box">
-                    <span>Project Value</span>
-                    <strong id="formulaProjectValue">Rs 0</strong>
-                  </div>
-                  <div class="formula-box">
-                    <span>Department %</span>
-                    <strong id="formulaDepartmentPercent">0%</strong>
-                  </div>
-                  <div class="formula-box">
-                    <span>Team Share %</span>
-                    <strong id="formulaTeamSharePercent">0%</strong>
-                  </div>
-                  <div class="formula-box">
-                    <span>My Share %</span>
-                    <strong id="formulaMySharePercent">0%</strong>
-                  </div>
-                  <div class="formula-box">
-                    <span>NPS Score</span>
-                    <strong id="formulaNpsPercent">0%</strong>
-                  </div>
-                  <div class="formula-box formula-box--result">
-                    <span>Final Value</span>
-                    <strong id="formulaFinalValue">Rs 0</strong>
-                  </div>
-                </div>
                 <div class="inline-actions">
                   <button id="saveEmployeeBtn" class="solid-btn" type="button">Save Employee</button>
                   <button id="deleteEmployeeBtn" class="ghost-btn" type="button">Delete Employee</button>

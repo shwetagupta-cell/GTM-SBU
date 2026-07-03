@@ -761,22 +761,6 @@ class GTMDataService:
                 "businessUnit": clean_string(payload.get("businessUnit")) or override.get("businessUnit", "GTM"),
                 "logicKey": clean_string(payload.get("logicKey")) or override.get("logicKey", clean_string(payload.get("department"))),
                 "disbursalType": _normalize_disbursal_type(payload.get("disbursalType") or override.get("disbursalType")),
-                "sharePercent": parse_number(payload.get("sharePercent"))
-                if payload.get("sharePercent") not in (None, "")
-                else parse_number(override.get("sharePercent")) or 100.0,
-                "projectIncentivePercent": parse_number(payload.get("projectIncentivePercent"))
-                if payload.get("projectIncentivePercent") not in (None, "")
-                else parse_number(override.get("projectIncentivePercent")) or 1.5,
-                "mySharePercent": parse_number(payload.get("mySharePercent"))
-                if payload.get("mySharePercent") not in (None, "")
-                else parse_number(override.get("mySharePercent")) or parse_number(override.get("projectIncentivePercent")) or 1.5,
-                "departmentPercent": parse_number(payload.get("departmentPercent"))
-                if payload.get("departmentPercent") not in (None, "")
-                else parse_number(override.get("departmentPercent")) or 100.0,
-                "teamSharePercent": parse_number(payload.get("teamSharePercent"))
-                if payload.get("teamSharePercent") not in (None, "")
-                else parse_number(override.get("teamSharePercent")) or 100.0,
-                "npsScore": parse_number(payload.get("npsScore")) or parse_number(override.get("npsScore")) or 4.5,
                 "status": clean_string(payload.get("status")).lower() or override.get("status", "active"),
             }
         )
@@ -927,6 +911,7 @@ class GTMDataService:
             team_share_percent = parse_number(override.get("teamSharePercent")) if override.get("teamSharePercent") not in (None, "") else (
                 100.0 / max(len(resolved_employee_ids) or len(normalized), 1)
             )
+            team_count = max(1, int(parse_number(override.get("teamCount")) or 1))
             my_share_percent = parse_number(employee.get("mySharePercent")) or parse_number(employee.get("projectIncentivePercent"))
             project_value = parse_number(project.get("projectValue"))
             cashflow_value = parse_number(project.get("cashflowValue"))
@@ -944,6 +929,7 @@ class GTMDataService:
                 * (my_share_percent / 100.0)
             )
             final_disbursal = accrued_value * (disbursal_percent / 100.0)
+            per_employee_incentive = final_disbursal / team_count
             items.append(
                 {
                     "projectId": clean_string(project.get("projectId")),
@@ -957,10 +943,12 @@ class GTMDataService:
                     "sharePercent": round(share_percent, 2),
                     "departmentPercent": round(department_percent, 2),
                     "teamSharePercent": round(team_share_percent, 2),
+                    "teamCount": team_count,
                     "mySharePercent": round(my_share_percent, 2),
                     "accruedValue": round(accrued_value, 2),
                     "npsDisbursalPercent": round(disbursal_percent, 2),
                     "finalDisbursalValue": round(final_disbursal, 2),
+                    "perEmployeeIncentive": round(per_employee_incentive, 2),
                 }
             )
         return sorted(items, key=lambda item: item.get("projectName", ""))
@@ -1144,6 +1132,7 @@ class GTMDataService:
         override["sharePercent"] = parse_number(payload.get("sharePercent"))
         override["departmentPercent"] = parse_number(payload.get("departmentPercent"))
         override["teamSharePercent"] = parse_number(payload.get("teamSharePercent"))
+        override["teamCount"] = max(1, int(parse_number(payload.get("teamCount")) or 1))
         self.state["projectOverrides"][key] = override
         self.persist()
         return override
@@ -1241,8 +1230,10 @@ class GTMDataService:
                 "Department %",
                 "Team Share %",
                 "My Share %",
+                "Team Count",
                 "Accrued Rs",
                 "Final Disbursal",
+                "Per Employee Incentive",
                 "Disbursal Status",
             ]
         )
@@ -1293,8 +1284,10 @@ class GTMDataService:
                             project.get("departmentPercent", dashboard.get("departmentPercent", "")),
                             project.get("teamSharePercent", dashboard.get("teamSharePercent", "")),
                             project.get("mySharePercent", dashboard.get("mySharePercent", dashboard.get("projectIncentivePercent", ""))),
+                            project.get("teamCount", 1),
                             summary["accruedRs"],
-                            summary["finalDisbursal"],
+                            project.get("finalDisbursalValue", summary["finalDisbursal"]),
+                            project.get("perEmployeeIncentive", summary["finalDisbursal"]),
                             summary["disbursalStatus"],
                         ]
                     )
