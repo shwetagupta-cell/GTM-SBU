@@ -46,9 +46,9 @@
     const style = document.createElement("style");
     style.id = "disbursalStatusPatchStyles";
     style.textContent = `
-      .status-badge--pending { background: #fff3df; color: #9a5a00; }
-      .status-badge--in-process { background: #e8f0ff; color: #2459b6; }
-      .status-badge--disbursed { background: #e6f6ed; color: #137047; }
+      .status-badge--pending { background: #fdeaea; color: #a43b3b; }
+      .status-badge--in-process { background: #fff6d8; color: #8a6100; }
+      .status-badge--disbursed { background: #e7f6ee; color: #24724d; }
       .project-disbursal-status-cell { text-align: left !important; white-space: nowrap; }
       #projectDisbursalStatus { font-size: clamp(17px, 1.4vw, 22px); }
     `;
