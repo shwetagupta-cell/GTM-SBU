@@ -24,7 +24,10 @@ from gtm_tool.project_employee_mapping import install  # noqa: E402
 
 install()
 
+from gtm_tool.disbursal_dashboard_patch import install as install_disbursal_dashboard  # noqa: E402
 from gtm_tool.http_handler import GTMAppHandler  # noqa: E402
+
+install_disbursal_dashboard(GTMAppHandler)
 
 
 class ReusableThreadingHTTPServer(ThreadingHTTPServer):
