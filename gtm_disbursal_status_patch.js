@@ -38,9 +38,7 @@
     const employeeId = selectedEmployeeId();
     const period = selectedPeriod();
     const cacheKey = `${employeeId}|${period}`;
-    if (statusCache.key === cacheKey && Date.now() - statusCache.updatedAt < 30000) {
-      return statusCache.value;
-    }
+    if (statusCache.key === cacheKey && Date.now() - statusCache.updatedAt < 30000) return statusCache.value;
     const query = new URLSearchParams();
     if (employeeId) query.set("employeeId", employeeId);
     if (period) query.set("period", period);
@@ -174,7 +172,8 @@
         pdfLink.textContent = csvLink.textContent.toLowerCase().includes("complete") ? "Download Complete PDF" : "Download PDF Report";
         csvLink.insertAdjacentElement("afterend", pdfLink);
       }
-      pdfLink.href = reportPdfHref(csvLink.getAttribute("href") || "/api/report.csv");
+      const nextHref = reportPdfHref(csvLink.getAttribute("href") || "/api/report.csv");
+      if (pdfLink.getAttribute("href") !== nextHref) pdfLink.setAttribute("href", nextHref);
     });
   }
 
@@ -245,9 +244,7 @@
     document.body.addEventListener("click", (event) => {
       const target = event.target.closest("a, button");
       if (!target) return;
-      if (REPORT_LINK_IDS.includes(target.id) || target.classList.contains("pdf-report-link")) {
-        markTemporaryLoading(target, "Preparing...");
-      }
+      if (REPORT_LINK_IDS.includes(target.id) || target.classList.contains("pdf-report-link")) markTemporaryLoading(target, "Preparing...");
       if (target.classList.contains("upload-trigger")) markTemporaryLoading(target, "Uploading...");
       if (target.classList.contains("delete-upload-btn")) markTemporaryLoading(target, "Deleting...");
       if (target.id === "submitMonthlyStatusBtn") {
@@ -265,6 +262,6 @@
     const kpiBody = document.getElementById("kpiTableBody");
     if (kpiBody) new MutationObserver(() => patchKpiScorecard()).observe(kpiBody, { childList: true });
     const reportPanel = document.querySelector("#adminPanel") || document.body;
-    new MutationObserver(() => ensurePdfReportLinks()).observe(reportPanel, { childList: true, subtree: true, attributes: true, attributeFilter: ["href"] });
+    new MutationObserver(() => ensurePdfReportLinks()).observe(reportPanel, { childList: true, subtree: true });
   });
 })();
