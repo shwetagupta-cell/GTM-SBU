@@ -1,6 +1,7 @@
 (() => {
   const STATUS_VALUES = new Set(["Pending", "In Process", "Disbursed"]);
   let refreshTimer = null;
+  let statusCache = { key: "", value: "Pending", updatedAt: 0 };
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -32,17 +33,23 @@
   }
 
   async function loadStatus() {
-    const query = new URLSearchParams();
     const employeeId = selectedEmployeeId();
     const period = selectedPeriod();
+    const cacheKey = `${employeeId}|${period}`;
+    if (statusCache.key === cacheKey && Date.now() - statusCache.updatedAt < 8000) {
+      return statusCache.value;
+    }
+    const query = new URLSearchParams();
     if (employeeId) query.set("employeeId", employeeId);
     if (period) query.set("period", period);
     const response = await fetch(`/api/me?${query.toString()}`, { credentials: "same-origin" });
-    if (!response.ok) return "Pending";
+    if (!response.ok) return statusCache.value || "Pending";
     const payload = await response.json();
     const employee = payload.viewedEmployee || {};
     const summary = (period && employee.periods && employee.periods[period]) || employee.latestSummary || {};
-    return summary.disbursalStatus || payload.admin?.monthlyDisbursalStatus || "Pending";
+    const status = summary.disbursalStatus || payload.admin?.monthlyDisbursalStatus || "Pending";
+    statusCache = { key: cacheKey, value: status, updatedAt: Date.now() };
+    return status;
   }
 
   function ensureStyles() {
@@ -50,6 +57,17 @@
     const style = document.createElement("style");
     style.id = "disbursalStatusPatchStyles";
     style.textContent = `
+      #kpiPanel .kpi-live-stats article:nth-child(2),
+      #kpiPanel th:nth-child(9),
+      #kpiPanel td:nth-child(9) {
+        display: none !important;
+      }
+      #kpiPanel .table-wrap table {
+        min-width: 1120px;
+      }
+      #kpiPanel .kpi-live-stats {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
       .status-badge--pending,
       .project-pill--pending #projectDisbursalStatus {
         background: #fdeaea;
@@ -122,8 +140,21 @@
         border-color: rgba(36, 114, 77, 0.2);
       }
       .project-disbursal-status-cell { text-align: left !important; white-space: nowrap; }
+      .is-loading-action {
+        opacity: 0.72;
+        pointer-events: none;
+      }
     `;
     document.head.appendChild(style);
+  }
+
+  function patchKpiScorecard() {
+    const scoreCard = document.querySelector("#kpiPanel .kpi-live-stats article:first-child span");
+    if (scoreCard) scoreCard.textContent = "Final KPI Score";
+    document.querySelectorAll("#kpiPanel th").forEach((header) => {
+      if (header.textContent.trim().toLowerCase() === "score") header.textContent = "Score / Points";
+      if (header.textContent.trim().toLowerCase() === "weighted score") header.textContent = "Final KPI Score";
+    });
   }
 
   function colorMonthlySubmitButton(status) {
@@ -180,6 +211,7 @@
 
   async function refreshDisbursalStatus() {
     ensureStyles();
+    patchKpiScorecard();
     ensureStatusHeader();
     const status = await loadStatus().catch(() => "Pending");
     ensureStatusCard(status);
@@ -193,13 +225,59 @@
     refreshTimer = setTimeout(refreshDisbursalStatus, delay);
   }
 
+  function syncMonthSelects(sourceId) {
+    const source = document.getElementById(sourceId);
+    const targetId = sourceId === "periodSelect" ? "projectMonthSelect" : "periodSelect";
+    const target = document.getElementById(targetId);
+    if (source && target && target.value !== source.value) {
+      target.value = source.value;
+    }
+    statusCache.updatedAt = 0;
+  }
+
+  function markTemporaryLoading(element, text) {
+    if (!element) return;
+    const previousText = element.textContent;
+    element.classList.add("is-loading-action");
+    element.textContent = text;
+    setTimeout(() => {
+      element.classList.remove("is-loading-action");
+      if (element.textContent === text) element.textContent = previousText;
+    }, 8000);
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     scheduleRefresh(250);
-    document.getElementById("projectMonthSelect")?.addEventListener("change", () => scheduleRefresh(700));
-    document.getElementById("periodSelect")?.addEventListener("change", () => scheduleRefresh(700));
-    document.getElementById("employeePickerInput")?.addEventListener("change", () => scheduleRefresh(700));
-    document.getElementById("applyFiltersBtn")?.addEventListener("click", () => scheduleRefresh(900));
-    document.getElementById("submitMonthlyStatusBtn")?.addEventListener("click", () => scheduleRefresh(900));
+    document.getElementById("projectMonthSelect")?.addEventListener("change", () => {
+      syncMonthSelects("projectMonthSelect");
+      scheduleRefresh(700);
+    });
+    document.getElementById("periodSelect")?.addEventListener("change", () => {
+      syncMonthSelects("periodSelect");
+      scheduleRefresh(700);
+    });
+    document.getElementById("employeePickerInput")?.addEventListener("change", () => {
+      statusCache.updatedAt = 0;
+      scheduleRefresh(700);
+    });
+    document.getElementById("applyFiltersBtn")?.addEventListener("click", () => {
+      statusCache.updatedAt = 0;
+      scheduleRefresh(900);
+    });
+    document.getElementById("downloadReportLink")?.addEventListener("click", (event) => markTemporaryLoading(event.currentTarget, "Preparing..."));
+    document.getElementById("downloadCompleteReportLink")?.addEventListener("click", (event) => markTemporaryLoading(event.currentTarget, "Preparing..."));
+    document.getElementById("downloadEmployeeReportLink")?.addEventListener("click", (event) => markTemporaryLoading(event.currentTarget, "Preparing..."));
+    document.querySelectorAll(".upload-trigger").forEach((button) => {
+      button.addEventListener("click", () => markTemporaryLoading(button, "Uploading..."));
+    });
+    document.getElementById("uploadHistory")?.addEventListener("click", (event) => {
+      const button = event.target.closest(".delete-upload-btn");
+      if (button) markTemporaryLoading(button, "Deleting...");
+    });
+    document.getElementById("submitMonthlyStatusBtn")?.addEventListener("click", () => {
+      statusCache.updatedAt = 0;
+      scheduleRefresh(900);
+    });
     document.getElementById("monthlyStatusInput")?.addEventListener("change", (event) => {
       colorMonthlySubmitButton(event.target.value);
       scheduleRefresh(150);
@@ -208,6 +286,10 @@
     const tableBody = document.getElementById("projectTableBody");
     if (tableBody) {
       new MutationObserver(() => scheduleRefresh()).observe(tableBody, { childList: true });
+    }
+    const kpiBody = document.getElementById("kpiTableBody");
+    if (kpiBody) {
+      new MutationObserver(() => patchKpiScorecard()).observe(kpiBody, { childList: true });
     }
   });
 })();
