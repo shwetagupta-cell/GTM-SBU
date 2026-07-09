@@ -21,14 +21,18 @@ def ensure_bundled_runtime():
 ensure_bundled_runtime()
 
 from gtm_tool.project_employee_mapping import install  # noqa: E402
+from gtm_tool.report_cf_patch import install_excel_patch, install_runtime_patch  # noqa: E402
 
 install()
+install_excel_patch()
 
 from gtm_tool.http_handler import GTMAppHandler  # noqa: E402
 
-# Keep the live service responsive. The dashboard patch is intentionally not
-# loaded at startup because it reparses uploaded workbooks and can block Render
-# before the first page response is sent.
+install_runtime_patch()
+
+# Keep the live service responsive. The heavier dashboard patch is intentionally
+# not loaded at startup because it reparses uploaded workbooks and can block
+# Render before the first page response is sent.
 
 
 class ReusableThreadingHTTPServer(ThreadingHTTPServer):
