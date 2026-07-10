@@ -90,6 +90,7 @@ bootstrap();
             '  els.kpiTotalIncentive.textContent = money(summary?.finalDisbursal || 0);\n\n': "",
             '              <td class="kpi-incentive">${money(row.incentiveAmount)}</td>\n': "",
             '          rowElement.querySelector(".kpi-incentive").textContent = money(item.incentiveAmount);\n': "",
+            '    const incentiveAmount = totalWeightedScore ? totalIncentive * Number(item.finalWeightedScore || 0) / totalWeightedScore : 0;\n    item.incentiveAmount = roundMetric(incentiveAmount);\n    item.npsScore = npsScore;\n    rowElement.querySelector(".kpi-incentive").textContent = money(item.incentiveAmount);\n': '    item.npsScore = npsScore;\n',
             '    const incentiveAmount = totalWeightedScore ? totalIncentive * Number(item.finalWeightedScore || 0) / totalWeightedScore : 0;\n    item.incentiveAmount = roundMetric(incentiveAmount);\n    rowElement.querySelector(".kpi-incentive").textContent = money(item.incentiveAmount);\n': "",
             '      colspan="11"': '      colspan="10"',
         }
