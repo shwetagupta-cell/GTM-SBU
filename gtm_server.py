@@ -1,8 +1,10 @@
 import os
 import sys
+from http import HTTPStatus
 from http.server import ThreadingHTTPServer
+from urllib.parse import urlparse
 
-from gtm_tool.config import BUNDLED_PYTHON
+from gtm_tool.config import BUNDLED_PYTHON, ROOT
 
 
 def ensure_bundled_runtime():
@@ -33,6 +35,51 @@ install_runtime_patch()
 # Keep the live service responsive. The heavier dashboard patch is intentionally
 # not loaded at startup because it reparses uploaded workbooks and can block
 # Render before the first page response is sent.
+
+
+def install_login_startup_patch(handler_cls):
+    if getattr(handler_cls, "_login_startup_patch_installed", False):
+        return
+    original_do_get = handler_cls.do_GET
+    old_bootstrap = '''async function bootstrap() {
+  bindEvents();
+  try {
+    await refreshDashboard();
+    setLoggedIn(true);
+  } catch (error) {
+    setLoggedIn(false);
+    els.loginNotice.textContent = "Use your employee ID and password to continue.";
+  }
+}
+
+bootstrap();'''
+    new_bootstrap = '''async function bootstrap() {
+  bindEvents();
+  setLoggedIn(false);
+  els.loginNotice.textContent = "Use your employee ID and password to continue.";
+}
+
+bootstrap();'''
+
+    def do_get_with_login_startup_patch(self):
+        parsed = urlparse(self.path)
+        if parsed.path == "/gtm_app.js":
+            script = (ROOT / "gtm_app.js").read_text(encoding="utf-8")
+            script = script.replace(old_bootstrap, new_bootstrap)
+            body = script.encode("utf-8")
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", "text/javascript; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        return original_do_get(self)
+
+    handler_cls.do_GET = do_get_with_login_startup_patch
+    handler_cls._login_startup_patch_installed = True
+
+
+install_login_startup_patch(GTMAppHandler)
 
 
 class ReusableThreadingHTTPServer(ThreadingHTTPServer):
