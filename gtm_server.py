@@ -98,16 +98,17 @@ bootstrap();
             """  const accruedTotal = (currentSummary()?.projects || []).reduce((sum, project) => sum + Number(project.accruedValue || 0), 0);
   const totalIncentive = accruedTotal * disbursalPercent / 100;
 
-  els.kpiTotalScore.textContent = roundMetric(totalWeightedScore);
+  els.kpiTotalScore.textContent = roundMetric(totalScore).toLocaleString("en-IN", { maximumFractionDigits: 2 });
   els.kpiTotalIncentive.textContent = money(totalIncentive);
 """,
-            """  els.kpiTotalScore.textContent = roundMetric(totalWeightedScore);
+            """  els.kpiTotalScore.textContent = roundMetric(totalScore).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 """,
         )
         script = script.replace(
             """          const incentiveAmount = totalWeightedScore ? totalIncentive * Number(item.finalWeightedScore || 0) / totalWeightedScore : 0;
           item.incentiveAmount = roundMetric(incentiveAmount);
           item.npsScore = npsScore;
+          rowElement.querySelector(".kpi-incentive").textContent = money(item.incentiveAmount);
 """,
             """          item.npsScore = npsScore;
 """,
