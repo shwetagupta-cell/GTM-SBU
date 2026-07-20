@@ -23,14 +23,17 @@ def ensure_bundled_runtime():
 ensure_bundled_runtime()
 
 from gtm_tool.project_employee_mapping import install  # noqa: E402
+from gtm_tool.audit_patch import install_audit_patch  # noqa: E402
 from gtm_tool.report_cf_patch import install_excel_patch, install_runtime_patch  # noqa: E402
 
 install()
 install_excel_patch()
 
 from gtm_tool.http_handler import GTMAppHandler  # noqa: E402
+from gtm_tool.data_service import DATA_SERVICE  # noqa: E402
 
 install_runtime_patch()
+install_audit_patch(GTMAppHandler, DATA_SERVICE)
 
 # Keep the live service responsive. The heavier dashboard patch is intentionally
 # not loaded at startup because it reparses uploaded workbooks and can block
@@ -81,11 +84,36 @@ bootstrap();
         }
         for old, new in replacements.items():
             html = html.replace(old, new)
+        html = html.replace(
+            '              <section class="panel inset">\n'
+            '                <h3>Upload History</h3>\n'
+            '                <div id="uploadHistory" class="upload-list"></div>\n'
+            '              </section>\n'
+            '            </div>\n',
+            '              <section class="panel inset">\n'
+            '                <h3>Upload History</h3>\n'
+            '                <div id="uploadHistory" class="upload-list"></div>\n'
+            '              </section>\n'
+            '              <section class="panel inset">\n'
+            '                <h3>Change History</h3>\n'
+            '                <div id="auditLog" class="upload-list"></div>\n'
+            '              </section>\n'
+            '            </div>\n',
+        )
+        html = html.replace(
+            "</head>",
+            """<style>
+              .audit-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; color: var(--muted); font-size: 12px; }
+              .audit-meta span { display: inline-flex; min-height: 24px; align-items: center; padding: 0 9px; border-radius: 999px; background: rgba(24, 33, 47, 0.06); }
+            </style>
+  </head>""",
+        )
         return html
 
     def patch_app_js(script):
         script = script.replace(old_bootstrap, new_bootstrap)
         replacements = {
+            '  uploadHistory: document.getElementById("uploadHistory"),\n': '  uploadHistory: document.getElementById("uploadHistory"),\n  auditLog: document.getElementById("auditLog"),\n',
             '  kpiTotalIncentive: document.getElementById("kpiTotalIncentive"),\n': "",
             '  els.kpiTotalIncentive.textContent = money(summary?.finalDisbursal || 0);\n\n': "",
             '              <td class="kpi-incentive">${money(row.incentiveAmount)}</td>\n': "",
@@ -113,6 +141,45 @@ bootstrap();
           rowElement.querySelector(".kpi-incentive").textContent = money(item.incentiveAmount);
 """,
             """          item.npsScore = npsScore;
+""",
+        )
+        script = script.replace(
+            """  renderDepartmentOptions();
+}
+
+function fillEmployeeForm(employee) {
+""",
+            """  if (els.auditLog) {
+    const auditLog = admin.auditLog || [];
+    els.auditLog.innerHTML = auditLog.length
+      ? auditLog
+          .map((entry) => {
+            const changed = formatLoadedAt(entry.changedAt);
+            const target = [entry.employeeId, entry.periodLabel, entry.projectId, entry.fileName || entry.fileId]
+              .filter(Boolean)
+              .join(" | ");
+            return `
+              <article class="upload-item">
+                <div>
+                  <strong>${escapeHtml(entry.summary || entry.action || "Admin change")}</strong>
+                  <p>${escapeHtml(entry.changedByName || "Unknown Admin")} (${escapeHtml(entry.changedById || "-")})</p>
+                  <div class="audit-meta">
+                    <span>${escapeHtml(changed.primary)} ${escapeHtml(changed.secondary)}</span>
+                    <span>${escapeHtml(String(entry.action || "").replaceAll("_", " "))}</span>
+                    ${target ? `<span>${escapeHtml(target)}</span>` : ""}
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join("")
+      : `<article class="upload-item empty-state">Admin changes will appear here.</article>`;
+  }
+
+  renderDepartmentOptions();
+}
+
+function fillEmployeeForm(employee) {
 """,
         )
         return script
