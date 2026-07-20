@@ -3,7 +3,7 @@ import json
 import secrets
 import smtplib
 from email.message import EmailMessage
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from gtm_tool.config import ACCOUNTS_FILE, ensure_dirs, load_config
 
@@ -32,8 +32,11 @@ def save_accounts(accounts):
         json.dump(accounts, handle, indent=2)
 
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
 def _now():
-    return datetime.utcnow().isoformat(timespec="seconds")
+    return datetime.now(IST).isoformat(timespec="seconds")
 
 
 def _send_email(to_email, subject, body):

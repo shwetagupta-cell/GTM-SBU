@@ -1,13 +1,16 @@
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from gtm_tool.config import STATE_FILE
 from services.utils import clean_string
 
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
 def _now():
-    return datetime.utcnow().isoformat(timespec="seconds")
+    return datetime.now(IST).isoformat(timespec="seconds")
 
 
 def _actor_from_service(service, payload=None):

@@ -3,7 +3,7 @@ import csv
 import io
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
 
@@ -27,8 +27,11 @@ SEED_UPLOADS = {
 }
 
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
 def _now():
-    return datetime.utcnow().isoformat(timespec="seconds")
+    return datetime.now(IST).isoformat(timespec="seconds")
 
 
 def _normalize_disbursal_type(value):
