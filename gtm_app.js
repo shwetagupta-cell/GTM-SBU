@@ -603,20 +603,45 @@ function disbursalPercentForScore(score) {
   return Number(rules.find((rule) => Number(rule.min) <= score && score < Number(rule.max))?.disbursal || 0);
 }
 
+function syncProjectDisbursalFromSummary(summary, disbursalPercent) {
+  if (!summary) return 0;
+  summary.disbursalPercent = roundMetric(disbursalPercent);
+  const rows = summary.projects || [];
+  rows.forEach((project) => {
+    const teamCount = Math.max(1, Number(project.teamCount || 1));
+    const accruedValue = Number(project.accruedValue || 0);
+    const finalDisbursalValue = accruedValue * summary.disbursalPercent / 100;
+    project.npsDisbursalPercent = summary.disbursalPercent;
+    project.finalDisbursalValue = roundMetric(finalDisbursalValue);
+    project.perEmployeeIncentive = roundMetric(finalDisbursalValue / teamCount);
+  });
+  summary.finalDisbursal = roundMetric(rows.reduce((sum, project) => sum + Number(project.finalDisbursalValue || 0), 0));
+  return summary.finalDisbursal;
+}
+
 function updateKpiTotalsAndIncentives() {
   const metrics = [...state.kpiMetrics.values()];
+  const summary = currentSummary();
   const totalWeightage = metrics.reduce((sum, item) => sum + Number(item.weightage || 0), 0);
   const totalWeightedScore = metrics.reduce((sum, item) => sum + Number(item.finalWeightedScore || 0), 0);
   const totalScore = totalWeightage ? totalWeightedScore / totalWeightage : 0;
   const npsScore = metrics.length ? roundMetric(metrics.reduce((sum, item) => sum + Number(item.score || 0), 0) / metrics.length) : 0;
   const disbursalPercent = disbursalPercentForScore(npsScore);
-  const accruedTotal = (currentSummary()?.projects || []).reduce((sum, project) => sum + Number(project.accruedValue || 0), 0);
-  const totalIncentive = accruedTotal * disbursalPercent / 100;
+  if (summary) {
+    summary.finalScore = roundMetric(totalScore);
+    summary.npsScore = npsScore;
+    summary.accruedRs = (summary.projects || []).reduce((sum, project) => sum + Number(project.accruedValue || 0), 0);
+  }
+  const totalIncentive = syncProjectDisbursalFromSummary(summary, disbursalPercent);
 
   els.kpiTotalScore.textContent = roundMetric(totalScore).toLocaleString("en-IN", { maximumFractionDigits: 2 });
-  els.kpiTotalIncentive.textContent = money(totalIncentive);
+  if (els.kpiTotalIncentive) els.kpiTotalIncentive.textContent = money(totalIncentive);
   els.npsScoreValue.textContent = npsScore.toLocaleString("en-IN", { maximumFractionDigits: 2 });
   els.npsDisbursalValue.textContent = percent(disbursalPercent);
+  els.projectDisbursalPercent.textContent = npsScore.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  els.projectFinalDisbursal.textContent = money(totalIncentive);
+  els.accruedValue.textContent = money(summary?.accruedRs || 0);
+  els.accruedLabel.textContent = `Final disbursal ${money(totalIncentive)}`;
 
   for (const [recordId, item] of state.kpiMetrics) {
     const rowElement = els.kpiTableBody.querySelector(`tr[data-record-id="${CSS.escape(recordId)}"]`);
@@ -627,6 +652,13 @@ function updateKpiTotalsAndIncentives() {
     rowElement.querySelector(".kpi-incentive").textContent = money(item.incentiveAmount);
     rowElement.querySelector(".kpi-nps").textContent = npsScore.toLocaleString("en-IN", { maximumFractionDigits: 2 });
   }
+  els.projectTableBody.querySelectorAll("tr[data-project-id]").forEach((rowElement) => {
+    const project = summary?.projects?.find((item) => (item.projectId || item.projectName) === rowElement.dataset.projectId);
+    if (!project) return;
+    rowElement.querySelector(".project-nps-disbursal")?.replaceChildren(document.createTextNode(percent(project.npsDisbursalPercent)));
+    rowElement.querySelector(".project-final-value")?.replaceChildren(document.createTextNode(money(project.finalDisbursalValue)));
+    rowElement.querySelector(".project-per-employee-value")?.replaceChildren(document.createTextNode(money(project.perEmployeeIncentive)));
+  });
 }
 
 function updateKpiRow(rowElement) {
@@ -684,12 +716,15 @@ function renderKpis() {
         })
         .join("")
     : `<tr><td colspan="11">No KPI rows are available for this employee yet.</td></tr>`;
+  updateKpiTotalsAndIncentives();
 }
 
 function renderProjects() {
   const employee = currentEmployee();
   const summary = currentSummary();
   const rows = summary?.projects || [];
+  const syncedDisbursalPercent = Number(summary?.disbursalPercent || rows[0]?.npsDisbursalPercent || 0);
+  syncProjectDisbursalFromSummary(summary, syncedDisbursalPercent);
   els.projectValueTotal.textContent = money(summary?.projectValue || 0);
   els.projectDepartmentPercent.textContent = percent(rows[0]?.departmentPercent || 0);
   els.projectTeamSharePercent.textContent = percent(rows[0]?.teamSharePercent || 0);
@@ -707,7 +742,7 @@ function renderProjects() {
               <td><input class="small-input project-my-share-input" type="number" min="0" step="0.01" value="${escapeHtml(row.mySharePercent)}" /></td>
               <td><input class="small-input project-team-count-input" type="number" min="1" step="1" value="${escapeHtml(row.teamCount || 1)}" /></td>
               <td class="project-accrued-value">${money(row.accruedValue)}</td>
-              <td>${percent(row.npsDisbursalPercent)}</td>
+              <td class="project-nps-disbursal">${percent(syncedDisbursalPercent)}</td>
               <td class="project-final-value">${money(row.finalDisbursalValue)}</td>
               <td class="project-per-employee-value">${money(row.perEmployeeIncentive)}</td>
               <td><button class="ghost-btn small-btn save-project-btn" type="button">Save</button></td>
@@ -719,7 +754,7 @@ function renderProjects() {
               <td>${percent(row.mySharePercent)}</td>
               <td>${escapeHtml(row.teamCount || 1)}</td>
               <td>${money(row.accruedValue)}</td>
-              <td>${percent(row.npsDisbursalPercent)}</td>
+              <td class="project-nps-disbursal">${percent(syncedDisbursalPercent)}</td>
               <td>${money(row.finalDisbursalValue)}</td>
               <td>${money(row.perEmployeeIncentive)}</td>
               <td><span class="status-badge">View Only</span></td>
@@ -1107,7 +1142,8 @@ function updateProjectRow(row) {
   const mySharePercent = rawPercent(row.querySelector(".project-my-share-input")?.value);
   const teamCount = Math.max(1, Math.floor(Number(row.querySelector(".project-team-count-input")?.value) || 1));
   const accruedValue = Number(project.incentiveBaseValue || 0) * sharePercent / 100 * departmentPercent / 100 * teamSharePercent / 100 * mySharePercent / 100;
-  const finalDisbursalValue = accruedValue * rawPercent(project.npsDisbursalPercent) / 100;
+  const npsDisbursalPercent = rawPercent(summary.disbursalPercent || project.npsDisbursalPercent);
+  const finalDisbursalValue = accruedValue * npsDisbursalPercent / 100;
   const perEmployeeIncentive = finalDisbursalValue / teamCount;
 
   Object.assign(project, {
@@ -1117,15 +1153,17 @@ function updateProjectRow(row) {
     mySharePercent,
     teamCount,
     accruedValue,
+    npsDisbursalPercent,
     finalDisbursalValue,
     perEmployeeIncentive,
   });
   summary.accruedRs = summary.projects.reduce((sum, item) => sum + Number(item.accruedValue || 0), 0);
-  summary.finalDisbursal = summary.projects.reduce((sum, item) => sum + Number(item.finalDisbursalValue || 0), 0);
+  syncProjectDisbursalFromSummary(summary, npsDisbursalPercent);
 
   row.querySelector(".project-accrued-value").textContent = money(accruedValue);
-  row.querySelector(".project-final-value").textContent = money(finalDisbursalValue);
-  row.querySelector(".project-per-employee-value").textContent = money(perEmployeeIncentive);
+  row.querySelector(".project-nps-disbursal").textContent = percent(npsDisbursalPercent);
+  row.querySelector(".project-final-value").textContent = money(project.finalDisbursalValue);
+  row.querySelector(".project-per-employee-value").textContent = money(project.perEmployeeIncentive);
   els.projectFinalDisbursal.textContent = money(summary.finalDisbursal);
   els.accruedValue.textContent = money(summary.accruedRs);
   els.accruedLabel.textContent = `Final disbursal ${money(summary.finalDisbursal)}`;
