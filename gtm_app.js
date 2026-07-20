@@ -333,14 +333,15 @@ function groupPeriodsByQuarter(periods) {
 
 function formatLoadedAt(value) {
   if (!value) return { primary: "-", secondary: "-" };
-  const normalized = String(value).replace(" ", "T");
+  const rawValue = String(value).trim().replace(" ", "T");
+  const normalized = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(rawValue) ? rawValue : `${rawValue}Z`;
   const date = new Date(normalized);
   if (Number.isNaN(date.getTime())) {
     return { primary: value, secondary: "" };
   }
   return {
-    primary: date.toLocaleDateString("en-GB"),
-    secondary: date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+    primary: date.toLocaleDateString("en-GB", { timeZone: "Asia/Kolkata" }),
+    secondary: date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }),
   };
 }
 
