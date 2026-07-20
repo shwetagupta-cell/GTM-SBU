@@ -680,7 +680,11 @@ function updateKpiRow(rowElement) {
 function renderKpis() {
   const employee = currentEmployee();
   const summary = currentSummary();
-  const rows = summary?.kpis || [];
+  const rows = (summary?.kpis || []).map((row) => ({
+    ...row,
+    ...calculateKpiRow(row, Number(row.target || 0), Number(row.achieved || 0)),
+  }));
+  if (summary) summary.kpis = rows;
 
   els.kpiNotice.textContent = summary
     ? `${rows.length} KPI rows loaded for ${summary.displayPeriod}. Target, score slabs, and weightage are mapped from the ${employee?.businessUnit || "GTM"} ${employee?.logicKey || employee?.department || ""} logic sheet.`
