@@ -99,7 +99,7 @@
               </div>
               <div class="filter-card filter-card--button small-button-card">
                 <span>Download Report</span>
-                <a id="downloadReportLink" class="ghost-btn full-btn" href="/api/report.csv">Employee Report</a>
+                <a id="downloadReportLink" class="ghost-btn full-btn" href="/api/report.pdf">Employee PDF</a>
               </div>
               <div class="filter-card filter-card--button small-button-card">
                 <span>Reset</span>
@@ -310,12 +310,32 @@
                 <div class="upload-grid">
                   <article class="upload-card">
                     <p class="upload-title">Download All Employees Data</p>
-                    <a id="downloadCompleteReportLink" class="solid-btn full-btn" href="/api/report.csv">Download Complete Report</a>
+                    <div class="form-grid compact-form-grid">
+                      <label>
+                        <span>From Date</span>
+                        <input id="downloadAllStartDateInput" class="field-control" type="date" />
+                      </label>
+                      <label>
+                        <span>Till Date</span>
+                        <input id="downloadAllEndDateInput" class="field-control" type="date" />
+                      </label>
+                    </div>
+                    <a id="downloadCompleteReportLink" class="solid-btn full-btn" href="/api/report.pdf">Download Complete PDF</a>
                   </article>
                   <article class="upload-card">
                     <p class="upload-title">Download Individual Employee Data</p>
                     <input id="downloadEmployeePickerInput" class="field-control" list="employeeOptions" type="text" placeholder="Select employee" />
-                    <a id="downloadEmployeeReportLink" class="ghost-btn full-btn" href="/api/report.csv">Download Employee Report</a>
+                    <div class="form-grid compact-form-grid">
+                      <label>
+                        <span>From Date</span>
+                        <input id="downloadEmployeeStartDateInput" class="field-control" type="date" />
+                      </label>
+                      <label>
+                        <span>Till Date</span>
+                        <input id="downloadEmployeeEndDateInput" class="field-control" type="date" />
+                      </label>
+                    </div>
+                    <a id="downloadEmployeeReportLink" class="ghost-btn full-btn" href="/api/report.pdf">Download Employee PDF</a>
                   </article>
                   <article class="upload-card">
                     <p class="upload-title">Team Sheet</p>

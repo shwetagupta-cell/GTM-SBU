@@ -31,7 +31,11 @@ const els = {
   applyFiltersBtn: document.getElementById("applyFiltersBtn"),
   downloadReportLink: document.getElementById("downloadReportLink"),
   downloadCompleteReportLink: document.getElementById("downloadCompleteReportLink"),
+  downloadAllStartDateInput: document.getElementById("downloadAllStartDateInput"),
+  downloadAllEndDateInput: document.getElementById("downloadAllEndDateInput"),
   downloadEmployeePickerInput: document.getElementById("downloadEmployeePickerInput"),
+  downloadEmployeeStartDateInput: document.getElementById("downloadEmployeeStartDateInput"),
+  downloadEmployeeEndDateInput: document.getElementById("downloadEmployeeEndDateInput"),
   downloadEmployeeReportLink: document.getElementById("downloadEmployeeReportLink"),
   resetFiltersBtn: document.getElementById("resetFiltersBtn"),
   npsScoreValue: document.getElementById("npsScoreValue"),
@@ -375,18 +379,19 @@ function updateDownloadLinks() {
   if (state.startDate) query.set("startDate", state.startDate);
   if (state.endDate) query.set("endDate", state.endDate);
   if (state.selectedPeriod) query.set("period", state.selectedPeriod);
-  els.downloadReportLink.href = `/api/report.csv?${query.toString()}`;
+  els.downloadReportLink.href = `/api/report.pdf?${query.toString()}`;
 
   const fullQuery = new URLSearchParams();
-  if (state.startDate) fullQuery.set("startDate", state.startDate);
-  if (state.endDate) fullQuery.set("endDate", state.endDate);
-  if (state.selectedPeriod) fullQuery.set("period", state.selectedPeriod);
-  els.downloadCompleteReportLink.href = `/api/report.csv?${fullQuery.toString()}`;
+  if (els.downloadAllStartDateInput?.value) fullQuery.set("startDate", els.downloadAllStartDateInput.value);
+  if (els.downloadAllEndDateInput?.value) fullQuery.set("endDate", els.downloadAllEndDateInput.value);
+  els.downloadCompleteReportLink.href = `/api/report.pdf?${fullQuery.toString()}`;
 
   const selectedEmployee = employeeChoiceFromDownloadPicker() || currentEmployee();
-  const employeeQuery = new URLSearchParams(fullQuery);
+  const employeeQuery = new URLSearchParams();
+  if (els.downloadEmployeeStartDateInput?.value) employeeQuery.set("startDate", els.downloadEmployeeStartDateInput.value);
+  if (els.downloadEmployeeEndDateInput?.value) employeeQuery.set("endDate", els.downloadEmployeeEndDateInput.value);
   if (selectedEmployee?.employeeId) employeeQuery.set("employeeId", selectedEmployee.employeeId);
-  els.downloadEmployeeReportLink.href = `/api/report.csv?${employeeQuery.toString()}`;
+  els.downloadEmployeeReportLink.href = `/api/report.pdf?${employeeQuery.toString()}`;
 }
 
 function renderDepartmentOptions() {
@@ -857,11 +862,8 @@ function renderAdmin() {
   els.uploadHistory.innerHTML = activeUploads.length
     ? `<article class="upload-item">
           <div>
-            <strong>Download uploaded sheets summary</strong>
-            <p>PDF with Flipspaces logo and upload details for all active sheets.</p>
-          </div>
-          <div class="inline-actions compact">
-            <a class="ghost-btn small-btn" href="/api/admin/upload.pdf">Download PDF</a>
+            <strong>Uploaded Excel sheets</strong>
+            <p>Download the original active uploaded workbooks below.</p>
           </div>
         </article>` +
       activeUploads
@@ -876,7 +878,7 @@ function renderAdmin() {
               </div>
               <div class="inline-actions compact">
                 <span class="mono">${escapeHtml(item.fileId)}</span>
-                <a class="ghost-btn small-btn" href="/api/admin/upload.pdf?fileId=${encodeURIComponent(item.fileId)}">PDF</a>
+                <a class="ghost-btn small-btn" href="/api/admin/upload.xlsx?fileId=${encodeURIComponent(item.fileId)}">Excel</a>
                 <button class="ghost-btn small-btn delete-upload-btn" data-file-id="${escapeHtml(item.fileId)}" type="button">Delete</button>
               </div>
             </article>
@@ -1426,6 +1428,9 @@ function bindEvents() {
     }
   });
   els.downloadEmployeePickerInput.addEventListener("input", updateDownloadLinks);
+  [els.downloadAllStartDateInput, els.downloadAllEndDateInput, els.downloadEmployeeStartDateInput, els.downloadEmployeeEndDateInput]
+    .filter(Boolean)
+    .forEach((input) => input.addEventListener("change", updateDownloadLinks));
   els.applyFiltersBtn.addEventListener("click", applyFilters);
   els.resetFiltersBtn.addEventListener("click", resetFilters);
   els.periodSelect.addEventListener("change", () => {

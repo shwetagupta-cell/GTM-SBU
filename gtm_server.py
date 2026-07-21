@@ -1,3 +1,5 @@
+import base64
+import csv
 import os
 import sys
 from http import HTTPStatus
@@ -84,69 +86,116 @@ bootstrap();
         self.end_headers()
         self.wfile.write(body)
 
+    def send_excel(self, body, filename):
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def safe_filename(value, fallback="upload"):
         cleaned = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "-" for ch in str(value or fallback))
         cleaned = "-".join(part for part in cleaned.split("-") if part)
         return cleaned[:80] or fallback
 
-    def build_upload_pdf(file_id=""):
+    def build_report_pdf(csv_text, title, subtitle=""):
         from io import BytesIO
 
         from reportlab.lib import colors
-        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.pagesizes import A4, landscape
         from reportlab.lib.styles import getSampleStyleSheet
         from reportlab.lib.units import inch
         from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=28, leftMargin=28, topMargin=26, bottomMargin=26)
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=24, leftMargin=24, topMargin=22, bottomMargin=22)
         styles = getSampleStyleSheet()
         story = []
         logo_path = ROOT / "assets" / "flipspaces-logo.png"
         if logo_path.exists():
             story.append(Image(str(logo_path), width=1.55 * inch, height=0.18 * inch, kind="proportional"))
             story.append(Spacer(1, 10))
-        uploads = [
-            item
-            for item in DATA_SERVICE.state.get("uploadedFiles", [])
-            if not item.get("deleted") and (not file_id or item.get("fileId") == file_id)
-        ]
-        title = "Uploaded Sheet PDF" if file_id else "Uploaded Sheets Summary PDF"
         story.append(Paragraph(f"<b>{title}</b>", styles["Title"]))
-        story.append(Paragraph("SME Performance Management 2026 - 27", styles["Normal"]))
+        story.append(Paragraph(subtitle or "SME Performance Management 2026 - 27", styles["Normal"]))
         story.append(Spacer(1, 12))
-        if not uploads:
-            story.append(Paragraph("No uploaded sheet was found for this request.", styles["Normal"]))
-        for upload in uploads:
-            story.append(Paragraph(f"<b>{upload.get('fileName') or 'Uploaded Sheet'}</b>", styles["Heading2"]))
-            rows = [
-                ["Field", "Value"],
-                ["Upload Type", str(upload.get("uploadType", "")).replace("_", " ").title()],
-                ["Records", str(upload.get("recordCount", 0))],
-                ["Uploaded At", str(upload.get("uploadedAt", ""))],
-                ["File ID", str(upload.get("fileId", ""))],
-                ["Stored Path", str(upload.get("storedPath", ""))],
-                ["Status", "Active"],
+
+        rows = [row for row in csv.reader(csv_text.splitlines())]
+        if not rows:
+            story.append(Paragraph("No report data was found for this date range.", styles["Normal"]))
+        section = []
+
+        def flush_section():
+            nonlocal section
+            if not section:
+                return
+            max_cols = max(len(row) for row in section)
+            normalized = [row + [""] * (max_cols - len(row)) for row in section]
+            if max_cols == 1:
+                story.append(Paragraph(f"<b>{normalized[0][0]}</b>", styles["Heading2"]))
+                story.append(Spacer(1, 6))
+                section = []
+                return
+            usable_width = 10.8 * inch
+            col_widths = [usable_width / max_cols] * max_cols
+            wrapped = [
+                [Paragraph(str(cell or ""), styles["BodyText"]) for cell in row]
+                for row in normalized
             ]
-            table = Table(rows, colWidths=[1.6 * inch, 5.6 * inch], hAlign="LEFT")
+            table = Table(wrapped, colWidths=col_widths, repeatRows=1, hAlign="LEFT")
             table.setStyle(
                 TableStyle(
                     [
                         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f6e9e4")),
                         ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#2f3848")),
                         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                        ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
-                        ("FONTSIZE", (0, 0), (-1, -1), 8),
+                        ("FONTSIZE", (0, 0), (-1, -1), 7),
                         ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#dfe3ea")),
                         ("VALIGN", (0, 0), (-1, -1), "TOP"),
                         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                        ("TOPPADDING", (0, 0), (-1, -1), 4),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
                     ]
                 )
             )
             story.append(table)
-            story.append(Spacer(1, 14))
+            story.append(Spacer(1, 10))
+            section = []
+
+        for row in rows:
+            if not any(str(cell).strip() for cell in row):
+                flush_section()
+                continue
+            section.append(row)
+            if len(section) >= 32:
+                flush_section()
+        flush_section()
         doc.build(story)
-        return buffer.getvalue(), safe_filename(uploads[0].get("fileName") if len(uploads) == 1 else "uploaded-sheets")
+        return buffer.getvalue()
+
+    def uploaded_excel(file_id):
+        upload = next(
+            (
+                item
+                for item in DATA_SERVICE.state.get("uploadedFiles", [])
+                if item.get("fileId") == file_id and not item.get("deleted")
+            ),
+            None,
+        )
+        if not upload:
+            return None, ""
+        raw_name = str(upload.get("fileName") or file_id or "uploaded-sheet")
+        file_stem = raw_name.rsplit(".", 1)[0]
+        filename = safe_filename(file_stem, "uploaded-sheet") + ".xlsx"
+        stored_path = ROOT / str(upload.get("storedPath", ""))
+        if stored_path.exists():
+            return stored_path.read_bytes(), filename
+        encoded = upload.get("fileData")
+        if encoded:
+            return base64.b64decode(encoded.encode("ascii")), filename
+        return None, ""
 
     def patch_index_html(html):
         replacements = {
@@ -322,13 +371,47 @@ function fillEmployeeForm(employee) {
         if parsed.path == "/gtm_app.js":
             script = (ROOT / "gtm_app.js").read_text(encoding="utf-8")
             return send_text(self, patch_app_js(script), "text/javascript; charset=utf-8")
-        if parsed.path == "/api/admin/upload.pdf":
+        if parsed.path in {"/api/admin/report.pdf", "/api/report.pdf"}:
+            session = self.require_session()
+            if not session:
+                return
+            query = parse_qs(parsed.query)
+            employee_id = (query.get("employeeId", [""])[0] or "").strip()
+            start_date = (query.get("startDate", [""])[0] or "").strip()
+            end_date = (query.get("endDate", [""])[0] or "").strip()
+            period_label = (query.get("period", [""])[0] or "").strip()
+            if not session.get("adminMode") and not employee_id:
+                employee_id = session["employeeId"]
+            csv_text = DATA_SERVICE.export_csv(
+                viewer_id=session["employeeId"],
+                admin_mode=bool(session.get("adminMode")),
+                employee_id=employee_id,
+                start_date=start_date,
+                end_date=end_date,
+                period_label=period_label,
+            )
+            title = "Individual Employee Report" if employee_id else "All Employees Report"
+            filters = " | ".join(
+                item
+                for item in [
+                    f"Employee ID: {employee_id}" if employee_id else "All active employees",
+                    f"From: {start_date}" if start_date else "",
+                    f"Till: {end_date}" if end_date else "",
+                    f"Month: {period_label}" if period_label else "",
+                ]
+                if item
+            )
+            pdf = build_report_pdf(csv_text, title, filters or "SME Performance Management 2026 - 27")
+            return send_pdf(self, pdf, f"{safe_filename(title)}.pdf")
+        if parsed.path == "/api/admin/upload.xlsx":
             session = self.require_admin()
             if not session:
                 return
             query = parse_qs(parsed.query)
-            pdf, filename = build_upload_pdf((query.get("fileId", [""])[0] or "").strip())
-            return send_pdf(self, pdf, f"{filename}.pdf")
+            file_bytes, filename = uploaded_excel((query.get("fileId", [""])[0] or "").strip())
+            if not file_bytes:
+                return self.send_json({"error": "Uploaded Excel file was not found"}, status=HTTPStatus.NOT_FOUND)
+            return send_excel(self, file_bytes, filename)
         return original_do_get(self)
 
     handler_cls.do_GET = do_get_with_live_ui_patch
