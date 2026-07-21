@@ -434,6 +434,8 @@ function fillEmployeeForm(employee) {
             start_date = (query.get("startDate", [""])[0] or "").strip()
             end_date = (query.get("endDate", [""])[0] or "").strip()
             period_label = (query.get("period", [""])[0] or "").strip()
+            if start_date or end_date:
+                period_label = ""
             if not session.get("adminMode") and not employee_id:
                 employee_id = session["employeeId"]
             csv_text = DATA_SERVICE.export_csv(

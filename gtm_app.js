@@ -378,7 +378,7 @@ function updateDownloadLinks() {
   if (state.selectedEmployeeId) query.set("employeeId", state.selectedEmployeeId);
   if (state.startDate) query.set("startDate", state.startDate);
   if (state.endDate) query.set("endDate", state.endDate);
-  if (state.selectedPeriod) query.set("period", state.selectedPeriod);
+  if (state.selectedPeriod && !state.startDate && !state.endDate) query.set("period", state.selectedPeriod);
   els.downloadReportLink.href = `/api/report.pdf?${query.toString()}`;
 
   const fullQuery = new URLSearchParams();
