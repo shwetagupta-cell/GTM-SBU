@@ -103,14 +103,31 @@ bootstrap();
         from io import BytesIO
 
         from reportlab.lib import colors
-        from reportlab.lib.pagesizes import A4, landscape
+        from reportlab.lib.enums import TA_CENTER
+        from reportlab.lib.pagesizes import A3, landscape
         from reportlab.lib.styles import getSampleStyleSheet
         from reportlab.lib.units import inch
         from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=24, leftMargin=24, topMargin=22, bottomMargin=22)
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(A3), rightMargin=22, leftMargin=22, topMargin=20, bottomMargin=20)
         styles = getSampleStyleSheet()
+        styles["Title"].fontSize = 18
+        styles["Title"].leading = 21
+        styles["Normal"].fontSize = 8
+        styles["Normal"].leading = 10
+        styles["BodyText"].fontSize = 5.4
+        styles["BodyText"].leading = 6.4
+        styles["BodyText"].wordWrap = "CJK"
+        heading_cell_style = styles["BodyText"].clone("ReportSectionHeading")
+        heading_cell_style.fontSize = 7
+        heading_cell_style.leading = 8
+        heading_cell_style.alignment = TA_CENTER
+        heading_cell_style.textColor = colors.HexColor("#a64f34")
+        header_cell_style = styles["BodyText"].clone("ReportHeaderCell")
+        header_cell_style.fontSize = 5.6
+        header_cell_style.leading = 6.4
+        header_cell_style.alignment = TA_CENTER
         story = []
         logo_path = ROOT / "assets" / "flipspaces-logo.png"
         if logo_path.exists():
@@ -136,29 +153,64 @@ bootstrap();
                 story.append(Spacer(1, 6))
                 section = []
                 return
-            usable_width = 10.8 * inch
-            col_widths = [usable_width / max_cols] * max_cols
-            wrapped = [
-                [Paragraph(str(cell or ""), styles["BodyText"]) for cell in row]
-                for row in normalized
+            usable_width = doc.width
+            first_heading = str(normalized[0][0]).strip().upper().startswith("TABLE ")
+            header_row = normalized[1] if first_heading and len(normalized) > 1 else normalized[0]
+
+            if "Project Name" in header_row and "Cashflow / CF" in header_row:
+                weights = [1.45, 1.15, 0.72, 0.92, 0.92, 0.92, 0.55, 0.68, 0.72, 0.62, 0.58, 0.9, 0.62, 0.62, 0.92, 0.92, 0.8, 0.9]
+            elif "KRA" in header_row and "KPI" in header_row:
+                weights = [1.2, 1.5, 0.65, 0.72, 0.75, 0.62, 0.62, 0.75, 0.58, 0.85]
+            elif max_cols == 2:
+                weights = [0.9, 2.2]
+            else:
+                weights = [1] * max_cols
+            weights = (weights + [1] * max_cols)[:max_cols]
+            total_weight = sum(weights) or max_cols
+            col_widths = [usable_width * weight / total_weight for weight in weights]
+
+            wrapped = []
+            for row_index, row in enumerate(normalized):
+                row_cells = []
+                is_heading_row = str(row[0]).strip().upper().startswith("TABLE ") and not any(str(cell).strip() for cell in row[1:])
+                for cell_index, cell in enumerate(row):
+                    cell_style = heading_cell_style if is_heading_row else header_cell_style if row_index == (1 if first_heading else 0) else styles["BodyText"]
+                    row_cells.append(Paragraph(str(cell or ""), cell_style))
+                wrapped.append(row_cells)
+
+            repeat_rows = 2 if first_heading and max_cols > 1 else 1
+            table = Table(wrapped, colWidths=col_widths, repeatRows=repeat_rows, hAlign="LEFT")
+            style_commands = [
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#2f3848")),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#dfe3ea")),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
+                ("LEFTPADDING", (0, 0), (-1, -1), 2.4),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 2.4),
+                ("TOPPADDING", (0, 0), (-1, -1), 2.8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2.8),
             ]
-            table = Table(wrapped, colWidths=col_widths, repeatRows=1, hAlign="LEFT")
-            table.setStyle(
-                TableStyle(
+            if first_heading and max_cols > 1:
+                style_commands.extend(
+                    [
+                        ("SPAN", (0, 0), (-1, 0)),
+                        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#fff1ec")),
+                        ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+                        ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#f7f8fa")),
+                        ("TEXTCOLOR", (0, 1), (-1, 1), colors.HexColor("#667085")),
+                        ("FONTNAME", (0, 1), (-1, 1), "Helvetica-Bold"),
+                    ]
+                )
+            else:
+                style_commands.extend(
                     [
                         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f6e9e4")),
                         ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#2f3848")),
-                        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                        ("FONTSIZE", (0, 0), (-1, -1), 7),
-                        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#dfe3ea")),
-                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fbfbfc")]),
-                        ("LEFTPADDING", (0, 0), (-1, -1), 4),
-                        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
-                        ("TOPPADDING", (0, 0), (-1, -1), 4),
-                        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
                     ]
                 )
+            table.setStyle(
+                TableStyle(style_commands)
             )
             story.append(table)
             story.append(Spacer(1, 10))
@@ -169,8 +221,6 @@ bootstrap();
                 flush_section()
                 continue
             section.append(row)
-            if len(section) >= 32:
-                flush_section()
         flush_section()
         doc.build(story)
         return buffer.getvalue()
