@@ -112,28 +112,29 @@ bootstrap();
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=landscape(A3), rightMargin=22, leftMargin=22, topMargin=20, bottomMargin=20)
         styles = getSampleStyleSheet()
-        styles["Title"].fontSize = 18
-        styles["Title"].leading = 21
-        styles["Normal"].fontSize = 8
-        styles["Normal"].leading = 10
-        styles["BodyText"].fontSize = 5.4
-        styles["BodyText"].leading = 6.4
+        styles["Title"].fontSize = 16
+        styles["Title"].leading = 19
+        styles["Normal"].fontSize = 9
+        styles["Normal"].leading = 11
+        styles["BodyText"].fontSize = 6.2
+        styles["BodyText"].leading = 7.2
         styles["BodyText"].wordWrap = "CJK"
         heading_cell_style = styles["BodyText"].clone("ReportSectionHeading")
-        heading_cell_style.fontSize = 7
-        heading_cell_style.leading = 8
+        heading_cell_style.fontSize = 8
+        heading_cell_style.leading = 9
         heading_cell_style.alignment = TA_CENTER
         heading_cell_style.textColor = colors.HexColor("#a64f34")
         header_cell_style = styles["BodyText"].clone("ReportHeaderCell")
-        header_cell_style.fontSize = 5.6
-        header_cell_style.leading = 6.4
+        header_cell_style.fontSize = 6.2
+        header_cell_style.leading = 7.1
         header_cell_style.alignment = TA_CENTER
         story = []
         logo_path = ROOT / "assets" / "flipspaces-logo.png"
         if logo_path.exists():
             story.append(Image(str(logo_path), width=1.55 * inch, height=0.18 * inch, kind="proportional"))
             story.append(Spacer(1, 10))
-        story.append(Paragraph(f"<b>{title}</b>", styles["Title"]))
+        if title and title not in {"Individual Employee Report", "All Employees Report"}:
+            story.append(Paragraph(f"<b>{title}</b>", styles["Title"]))
         story.append(Paragraph(subtitle or "SME Performance Management 2026 - 27", styles["Normal"]))
         story.append(Spacer(1, 12))
 
@@ -154,7 +155,8 @@ bootstrap();
                 section = []
                 return
             usable_width = doc.width
-            first_heading = str(normalized[0][0]).strip().upper().startswith("TABLE ")
+            raw_heading = str(normalized[0][0]).strip()
+            first_heading = raw_heading.upper().startswith("TABLE ")
             header_row = normalized[1] if first_heading and len(normalized) > 1 else normalized[0]
 
             if "Project Name" in header_row and "Cashflow / CF" in header_row:
@@ -174,6 +176,8 @@ bootstrap();
                 row_cells = []
                 is_heading_row = str(row[0]).strip().upper().startswith("TABLE ") and not any(str(cell).strip() for cell in row[1:])
                 for cell_index, cell in enumerate(row):
+                    if is_heading_row and cell_index == 0:
+                        cell = str(cell).split(":", 1)[1].strip() if ":" in str(cell) else str(cell).replace("TABLE 1", "").replace("TABLE 2", "").strip()
                     cell_style = heading_cell_style if is_heading_row else header_cell_style if row_index == (1 if first_heading else 0) else styles["BodyText"]
                     row_cells.append(Paragraph(str(cell or ""), cell_style))
                 wrapped.append(row_cells)
