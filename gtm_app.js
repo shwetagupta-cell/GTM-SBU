@@ -948,7 +948,7 @@ async function refreshDashboard(options = {}) {
   if (state.searchTerm) query.set("search", state.searchTerm);
   if (state.startDate) query.set("startDate", state.startDate);
   if (state.endDate) query.set("endDate", state.endDate);
-  if (state.selectedPeriod) query.set("period", state.selectedPeriod);
+  if (state.selectedPeriod && !state.startDate && !state.endDate) query.set("period", state.selectedPeriod);
   state.dashboard = await api(`/api/me?${query.toString()}`);
   state.selectedEmployeeId = state.dashboard?.viewedEmployee?.employeeId || state.selectedEmployeeId;
   state.selectedPeriod = state.dashboard?.viewedEmployee?.selectedPeriod || state.selectedPeriod || state.dashboard?.currentPeriod || "";
