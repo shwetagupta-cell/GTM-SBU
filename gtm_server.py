@@ -96,15 +96,22 @@ bootstrap();
             '              </section>\n'
             '              <section class="panel inset">\n'
             '                <h3>Change History</h3>\n'
-            '                <div id="auditLog" class="upload-list"></div>\n'
+            '                <div id="auditLog" class="audit-list"></div>\n'
             '              </section>\n'
             '            </div>\n',
         )
         html = html.replace(
             "</head>",
             """<style>
-              .audit-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; color: var(--muted); font-size: 12px; }
-              .audit-meta span { display: inline-flex; min-height: 24px; align-items: center; padding: 0 9px; border-radius: 999px; background: rgba(24, 33, 47, 0.06); }
+              .audit-list { display: grid; gap: 12px; max-height: 520px; overflow: auto; padding-right: 4px; }
+              .audit-card { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, 0.82); box-shadow: 0 10px 24px rgba(24, 33, 47, 0.06); }
+              .audit-avatar { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 8px; background: rgba(207, 95, 58, 0.12); color: var(--accent); font-weight: 800; letter-spacing: 0; }
+              .audit-card strong { display: block; color: var(--text); font-size: 14px; line-height: 1.35; }
+              .audit-card p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+              .audit-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; color: var(--muted); font-size: 11px; }
+              .audit-meta span { display: inline-flex; min-height: 24px; align-items: center; max-width: 100%; padding: 0 9px; border-radius: 999px; background: rgba(24, 33, 47, 0.06); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+              .audit-meta .audit-time { background: rgba(207, 95, 58, 0.12); color: var(--accent); font-weight: 700; }
+              @media (max-width: 700px) { .audit-card { grid-template-columns: 1fr; } .audit-avatar { width: 36px; height: 36px; } }
             </style>
   </head>""",
         )
@@ -155,25 +162,32 @@ function fillEmployeeForm(employee) {
       ? auditLog
           .map((entry) => {
             const changed = formatLoadedAt(entry.changedAt);
-            const target = [entry.employeeId, entry.periodLabel, entry.projectId, entry.fileName || entry.fileId]
-              .filter(Boolean)
-              .join(" | ");
+            const actorName = entry.changedByName || "Unknown Admin";
+            const actorInitial = String(actorName).trim().charAt(0).toUpperCase() || "A";
+            const actionLabel = String(entry.action || "admin change").replaceAll("_", " ");
+            const details = [
+              entry.employeeId ? `Employee ${entry.employeeId}` : "",
+              entry.periodLabel ? `Month ${entry.periodLabel}` : "",
+              entry.projectId ? `Project ${entry.projectId}` : "",
+              entry.fileName || entry.fileId || "",
+            ].filter(Boolean);
             return `
-              <article class="upload-item">
-                <div>
+              <article class="audit-card">
+                <span class="audit-avatar">${escapeHtml(actorInitial)}</span>
+                <div class="audit-body">
                   <strong>${escapeHtml(entry.summary || entry.action || "Admin change")}</strong>
-                  <p>${escapeHtml(entry.changedByName || "Unknown Admin")} (${escapeHtml(entry.changedById || "-")})</p>
+                  <p>${escapeHtml(actorName)}${entry.changedById ? ` • ID ${escapeHtml(entry.changedById)}` : ""}</p>
                   <div class="audit-meta">
-                    <span>${escapeHtml(changed.primary)} ${escapeHtml(changed.secondary)}</span>
-                    <span>${escapeHtml(String(entry.action || "").replaceAll("_", " "))}</span>
-                    ${target ? `<span>${escapeHtml(target)}</span>` : ""}
+                    <span class="audit-time">${escapeHtml(changed.primary)} ${escapeHtml(changed.secondary)}</span>
+                    <span>${escapeHtml(actionLabel)}</span>
+                    ${details.map((item) => `<span title="${escapeHtml(item)}">${escapeHtml(item)}</span>`).join("")}
                   </div>
                 </div>
               </article>
             `;
           })
           .join("")
-      : `<article class="upload-item empty-state">Admin changes will appear here.</article>`;
+      : `<article class="audit-card empty-state">Admin changes will appear here.</article>`;
   }
 
   renderDepartmentOptions();
