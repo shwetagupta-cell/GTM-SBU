@@ -855,7 +855,16 @@ function renderAdmin() {
     .join("");
 
   els.uploadHistory.innerHTML = activeUploads.length
-    ? activeUploads
+    ? `<article class="upload-item">
+          <div>
+            <strong>Download uploaded sheets summary</strong>
+            <p>PDF with Flipspaces logo and upload details for all active sheets.</p>
+          </div>
+          <div class="inline-actions compact">
+            <a class="ghost-btn small-btn" href="/api/admin/upload.pdf">Download PDF</a>
+          </div>
+        </article>` +
+      activeUploads
         .map((item) => {
           const uploaded = formatLoadedAt(item.uploadedAt);
           return `
@@ -867,6 +876,7 @@ function renderAdmin() {
               </div>
               <div class="inline-actions compact">
                 <span class="mono">${escapeHtml(item.fileId)}</span>
+                <a class="ghost-btn small-btn" href="/api/admin/upload.pdf?fileId=${encodeURIComponent(item.fileId)}">PDF</a>
                 <button class="ghost-btn small-btn delete-upload-btn" data-file-id="${escapeHtml(item.fileId)}" type="button">Delete</button>
               </div>
             </article>
