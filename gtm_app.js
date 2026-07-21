@@ -375,10 +375,13 @@ function employeeChoiceFromDownloadPicker() {
 
 function updateDownloadLinks() {
   const query = new URLSearchParams();
-  if (state.selectedEmployeeId) query.set("employeeId", state.selectedEmployeeId);
-  if (state.startDate) query.set("startDate", state.startDate);
-  if (state.endDate) query.set("endDate", state.endDate);
-  if (state.selectedPeriod && !state.startDate && !state.endDate) query.set("period", state.selectedPeriod);
+  const selectedReportEmployee = employeeChoiceFromPicker() || currentEmployee();
+  const reportStartDate = els.startDateInput?.value || state.startDate;
+  const reportEndDate = els.endDateInput?.value || state.endDate;
+  if (selectedReportEmployee?.employeeId) query.set("employeeId", selectedReportEmployee.employeeId);
+  if (reportStartDate) query.set("startDate", reportStartDate);
+  if (reportEndDate) query.set("endDate", reportEndDate);
+  if (state.selectedPeriod && !reportStartDate && !reportEndDate) query.set("period", state.selectedPeriod);
   els.downloadReportLink.href = `/api/report.pdf?${query.toString()}`;
 
   const fullQuery = new URLSearchParams();
@@ -1428,9 +1431,13 @@ function bindEvents() {
     }
   });
   els.downloadEmployeePickerInput.addEventListener("input", updateDownloadLinks);
-  [els.downloadAllStartDateInput, els.downloadAllEndDateInput, els.downloadEmployeeStartDateInput, els.downloadEmployeeEndDateInput]
+  [els.startDateInput, els.endDateInput, els.employeePickerInput, els.downloadAllStartDateInput, els.downloadAllEndDateInput, els.downloadEmployeeStartDateInput, els.downloadEmployeeEndDateInput]
     .filter(Boolean)
-    .forEach((input) => input.addEventListener("change", updateDownloadLinks));
+    .forEach((input) => {
+      input.addEventListener("input", updateDownloadLinks);
+      input.addEventListener("change", updateDownloadLinks);
+    });
+  els.downloadReportLink.addEventListener("click", updateDownloadLinks);
   els.applyFiltersBtn.addEventListener("click", applyFilters);
   els.resetFiltersBtn.addEventListener("click", resetFilters);
   els.periodSelect.addEventListener("change", () => {
