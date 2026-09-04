@@ -522,8 +522,11 @@ class GTMDataService:
                 for employee in parsed.get("employees", []):
                     current = employees.get(employee["employeeId"], {})
                     employees[employee["employeeId"]] = {**current, **employee}
-            elif upload["uploadType"] in {"gtm_logic", "sbu_logic"}:
-                parsed_upload_types.add(upload["uploadType"])
+            elif upload["uploadType"] in {"gtm_logic", "sbu_logic", "combined_logic"}:
+                if upload["uploadType"] == "combined_logic":
+                    parsed_upload_types.update({"gtm_logic", "sbu_logic"})
+                else:
+                    parsed_upload_types.add(upload["uploadType"])
                 frameworks.extend(parsed.get("frameworks", []))
                 incentive_rows.extend(parsed.get("incentiveRules", []))
             elif upload["uploadType"] == "project_cf":
@@ -1205,7 +1208,7 @@ class GTMDataService:
 
     def apply_workbook_upload(self, file_name, data_bytes, upload_type="", replace_file_id=""):
         upload_type = clean_string(upload_type).lower()
-        if upload_type not in {"team_master", "gtm_logic", "sbu_logic", "project_cf", "kpi_logic"}:
+        if upload_type not in {"team_master", "gtm_logic", "sbu_logic", "combined_logic", "project_cf", "kpi_logic"}:
             raise ValueError("Select a valid upload type")
         file_name = Path(clean_string(file_name)).name
         if not file_name or not file_name.lower().endswith(".xlsx"):
@@ -1219,8 +1222,13 @@ class GTMDataService:
         parsed_upload_type = parsed.get("uploadType", upload_type)
         if replace_file_id:
             self.delete_upload(replace_file_id, persist=False)
+        replaced_types = (
+            {"combined_logic", "gtm_logic", "sbu_logic"}
+            if parsed_upload_type == "combined_logic"
+            else {parsed_upload_type}
+        )
         for item in self.state.get("uploadedFiles", []):
-            if item.get("deleted") or item.get("uploadType") != parsed_upload_type:
+            if item.get("deleted") or item.get("uploadType") not in replaced_types:
                 continue
             item["deleted"] = True
             item.pop("fileData", None)

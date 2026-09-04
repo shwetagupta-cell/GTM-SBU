@@ -99,8 +99,7 @@ const els = {
   undoEmployeeBtn: document.getElementById("undoEmployeeBtn"),
   employeeNotice: document.getElementById("employeeNotice"),
   teamWorkbookInput: document.getElementById("teamWorkbookInput"),
-  logicWorkbookInput: document.getElementById("logicWorkbookInput"),
-  sbuWorkbookInput: document.getElementById("sbuWorkbookInput"),
+  combinedLogicWorkbookInput: document.getElementById("combinedLogicWorkbookInput"),
   projectWorkbookInput: document.getElementById("projectWorkbookInput"),
   passwordForm: document.getElementById("passwordForm"),
   currentPassword: document.getElementById("currentPassword"),
@@ -130,8 +129,7 @@ const EYE_ICON = `
 const QUARTER_SEQUENCE = ["Q1", "Q2", "Q3", "Q4"];
 const REQUIRED_UPLOAD_TYPES = [
   ["team_master", "Team Sheet"],
-  ["gtm_logic", "GTM Logic"],
-  ["sbu_logic", "SBU Logic"],
+  ["combined_logic", "GTM & SBU Logic"],
   ["project_cf", "Project Sheet"],
 ];
 const WORKBOOK_BACKUP_DB = "gtm-workbook-backups";
@@ -849,7 +847,10 @@ function renderAdmin() {
 
   const activeUploads = (admin.uploadHistory || []).filter((item) => !item.deleted);
   const activeUploadTypes = new Set(activeUploads.map((item) => item.uploadType).filter(Boolean));
-  const missingUploadCards = REQUIRED_UPLOAD_TYPES.filter(([uploadType]) => !activeUploadTypes.has(uploadType))
+  const hasRequiredUpload = (uploadType) =>
+    activeUploadTypes.has(uploadType) ||
+    (uploadType === "combined_logic" && activeUploadTypes.has("gtm_logic") && activeUploadTypes.has("sbu_logic"));
+  const missingUploadCards = REQUIRED_UPLOAD_TYPES.filter(([uploadType]) => !hasRequiredUpload(uploadType))
     .map(
       ([, label]) => `
         <article class="upload-item empty-state">
@@ -973,7 +974,9 @@ async function restoreMissingWorkbookBackups() {
     });
   const backups = (await getWorkbookBackups()).filter((item) => item?.uploadType && (item?.arrayBuffer || item?.blob));
   const missingBackups = backups.filter((item) => {
-    const active = activeByType.get(item.uploadType);
+    const active =
+      activeByType.get(item.uploadType) ||
+      (["gtm_logic", "sbu_logic"].includes(item.uploadType) ? activeByType.get("combined_logic") : null);
     return !active || Number(active.recordCount || 0) <= 0 || String(item.updatedAt || "") > String(active.uploadedAt || "");
   });
   if (!missingBackups.length) return false;
@@ -1262,6 +1265,9 @@ async function uploadWorkbook(uploadType, inputId) {
   try {
     const result = await api("/api/admin/upload-workbook", { method: "POST", body: formData });
     const backedUp = await backupWorkbook(uploadType, file, result.upload?.uploadedAt);
+    if (uploadType === "combined_logic") {
+      await Promise.all([removeWorkbookBackup("gtm_logic"), removeWorkbookBackup("sbu_logic")]);
+    }
     els.uploadNotice.textContent = backedUp
       ? `${file.name} uploaded successfully and replaced the active file for this upload type.`
       : `${file.name} uploaded successfully, but the browser backup could not be saved. Please keep this file available.`;

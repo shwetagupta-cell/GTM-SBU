@@ -316,7 +316,12 @@ def _project_incentive_percent_for_role(role):
 
 def _parse_grade_weights(header_row, data_row):
     grade_weights = {}
-    for column in GRADE_COLUMNS:
+    grade_columns = [
+        index
+        for index, value in enumerate(header_row)
+        if re.fullmatch(r"L[1-4]", clean_string(value).upper())
+    ] or GRADE_COLUMNS
+    for column in grade_columns:
         grade_key = clean_string(header_row[column] if len(header_row) > column else "").upper()
         if not grade_key:
             continue
@@ -328,8 +333,14 @@ def _parse_grade_weights(header_row, data_row):
 
 
 def _framework_row(section_name, match_key, source, header_row, data_row, display_order):
-    kra_name = clean_string(data_row[2] if len(data_row) > 2 else "")
-    kpi_name = clean_string(data_row[3] if len(data_row) > 3 else "")
+    headers = _normalize_headers(header_row)
+
+    def column_value(names, fallback=None):
+        column = next((headers.index(name) for name in names if name in headers), fallback)
+        return data_row[column] if column is not None and len(data_row) > column else ""
+
+    kra_name = clean_string(column_value(("kra",), 2))
+    kpi_name = clean_string(column_value(("kpi",), 3))
     if not kpi_name:
         return None
     return {
@@ -340,20 +351,120 @@ def _framework_row(section_name, match_key, source, header_row, data_row, displa
         "sectionName": section_name,
         "kraCategory": kra_name,
         "kpiName": kpi_name,
-        "target": parse_number(data_row[4] if len(data_row) > 4 else 0),
-        "achieved": parse_number(data_row[5] if len(data_row) > 5 else 0),
-        "definition": clean_string(data_row[8] if len(data_row) > 8 else ""),
-        "measurement": clean_string(data_row[9] if len(data_row) > 9 else ""),
-        "periodicity": clean_string(data_row[10] if len(data_row) > 10 else "") or "Monthly",
+        "target": parse_number(column_value(("target",))),
+        "achieved": parse_number(column_value(("achievement", "achieved", "achived"))),
+        "definition": clean_string(column_value(("definition",), 8)),
+        "measurement": clean_string(column_value(("how_to_measure", "measurement"), 9)),
+        "periodicity": clean_string(column_value(("periodicity_to_check", "periodicity"), 10)) or "Monthly",
         "scoreBands": {
-            "5": clean_string(data_row[11] if len(data_row) > 11 else ""),
-            "4": clean_string(data_row[12] if len(data_row) > 12 else ""),
-            "3": clean_string(data_row[13] if len(data_row) > 13 else ""),
-            "2": clean_string(data_row[14] if len(data_row) > 14 else ""),
-            "1": clean_string(data_row[15] if len(data_row) > 15 else ""),
+            "5": clean_string(column_value(("5",), 11)),
+            "4": clean_string(column_value(("4",), 12)),
+            "3": clean_string(column_value(("3",), 13)),
+            "2": clean_string(column_value(("2",), 14)),
+            "1": clean_string(column_value(("1",), 15)),
         },
         "gradeWeights": _parse_grade_weights(header_row, data_row),
     }
+
+
+def _parse_combined_kpi_frameworks(path, included_sources):
+    pd = _load_pandas()
+    workbook = pd.ExcelFile(path)
+    if "SBU KPIs (Updated)" not in workbook.sheet_names:
+        return []
+
+    raw = pd.read_excel(path, sheet_name="SBU KPIs (Updated)", header=None).fillna("")
+    section_meta = {
+        "sbu": {
+            "OPS": ("SBU Ops", "sbu_ops"),
+            "SALES": ("SBU Sales", "sbu_sales"),
+            "DESIGN (PRE-SALES)": ("SBU Design Pre-Sales", "sbu_design_pre"),
+            "DESIGN (POST-SALES)": ("SBU Design Post-Sales", "sbu_design_post"),
+        },
+        "gtm": {
+            "DM": ("Digital Marketing", "Digital Marketing"),
+            "VT": ("Viztown", "Viztown"),
+            "EVENTS": ("Events", "Events"),
+            "PARTNERSHIPS": ("Marketing", "Marketing"),
+            "FOUNDER'S OFFICE": ("Founder Connect", "Founder Connect"),
+        },
+    }
+    active_source = ""
+    active_section_name = ""
+    active_match_key = ""
+    header_row = []
+    frameworks = []
+
+    for row in raw.values.tolist():
+        marker = " ".join(clean_string(row[0] if len(row) > 0 else "").upper().split())
+        if marker in {"SBU", "GTM"}:
+            active_source = marker.lower()
+            active_section_name = ""
+            active_match_key = ""
+            header_row = []
+            continue
+        if marker == "SUPPORT":
+            active_source = ""
+            active_section_name = ""
+            active_match_key = ""
+            header_row = []
+            continue
+
+        source_sections = section_meta.get(active_source, {})
+        section_key = next((key for key in source_sections if marker.startswith(key)), "")
+        if section_key:
+            active_section_name, active_match_key = source_sections[section_key]
+            header_row = []
+            continue
+        if active_source not in included_sources or not active_match_key:
+            continue
+        if clean_string(row[2] if len(row) > 2 else "").upper() == "KRA":
+            header_row = row
+            continue
+        if not header_row:
+            continue
+
+        framework = _framework_row(
+            active_section_name,
+            active_match_key,
+            active_source,
+            header_row,
+            row,
+            len(frameworks),
+        )
+        if not framework:
+            continue
+        if active_source == "gtm":
+            framework["department"] = active_match_key
+        frameworks.append(framework)
+
+    return frameworks
+
+
+def _parse_sbu_incentive_rules(path, workbook):
+    pd = _load_pandas()
+    incentive_rules = []
+    sheet_schemes = {
+        "Incentive Calculation- Ops": "sbu_ops",
+        "Incentive Calculation- Sales": "sbu_sales",
+        "Incentive Calculation- Design": "sbu_design",
+    }
+    for sheet_name, sheet_key in sheet_schemes.items():
+        if sheet_name not in workbook.sheet_names:
+            continue
+        raw = pd.read_excel(path, sheet_name=sheet_name, header=None).fillna("")
+        incentive_rules.extend(
+            _parse_nps_rules(
+                raw.values.tolist(),
+                scheme_lookup={
+                    "Incentive Disbursal Scheme (Monthly)": "monthly",
+                    "Incentive Disbursal Scheme (Quarterly)": "quarterly",
+                    "Incentive Disbursal Scheme (Annually)": "annually",
+                },
+                sheet_key=sheet_key,
+            )
+        )
+    return incentive_rules
 
 
 def _parse_nps_rules(rows, scheme_lookup=None, sheet_key=""):
@@ -412,6 +523,8 @@ def parse_gtm_logic_workbook(path):
                 framework["department"] = current_department
                 frameworks.append(framework)
                 display_order += 1
+    elif "SBU KPIs (Updated)" in workbook.sheet_names:
+        frameworks = _parse_combined_kpi_frameworks(path, {"gtm"})
 
     if "Incentive Calculation - GTM" in workbook.sheet_names:
         raw = pd.read_excel(path, sheet_name="Incentive Calculation - GTM", header=None).fillna("")
@@ -435,76 +548,29 @@ def parse_gtm_logic_workbook(path):
 def parse_sbu_logic_workbook(path):
     pd = _load_pandas()
     workbook = pd.ExcelFile(path)
-    frameworks = []
-    incentive_rules = []
-
-    if "SBU KPIs (Updated)" in workbook.sheet_names:
-        raw = pd.read_excel(path, sheet_name="SBU KPIs (Updated)", header=None).fillna("")
-        rows = raw.values.tolist()
-        section_meta = {
-            "OPS": ("SBU Ops", "sbu_ops"),
-            "SALES": ("SBU Sales", "sbu_sales"),
-            "DESIGN (PRE-SALES)": ("SBU Design Pre-Sales", "sbu_design_pre"),
-            "DESIGN (POST-SALES)": ("SBU Design Post-Sales", "sbu_design_post"),
-        }
-        active_section_name = ""
-        active_match_key = ""
-        header_row = []
-        display_order = 0
-
-        for row in rows:
-            marker = clean_string(row[0] if len(row) > 0 else "")
-            marker_upper = marker.upper()
-            header_check = clean_string(row[2] if len(row) > 2 else "")
-            if marker_upper == "GTM":
-                active_section_name = ""
-                active_match_key = ""
-                header_row = []
-                continue
-            section_key = next((key for key in section_meta if marker_upper.startswith(key)), "")
-            if section_key:
-                active_section_name, active_match_key = section_meta[section_key]
-                header_row = []
-                continue
-            if not active_match_key:
-                continue
-            if header_check == "KRA":
-                header_row = row
-                continue
-            if not header_row:
-                continue
-            if not clean_string(row[2] if len(row) > 2 else "") or not clean_string(row[3] if len(row) > 3 else ""):
-                continue
-            framework = _framework_row(active_section_name, active_match_key, "sbu", header_row, row, display_order)
-            if framework:
-                frameworks.append(framework)
-                display_order += 1
-
-    sheet_schemes = {
-        "Incentive Calculation- Ops": "sbu_ops",
-        "Incentive Calculation- Sales": "sbu_sales",
-        "Incentive Calculation- Design": "sbu_design",
-    }
-    for sheet_name, sheet_key in sheet_schemes.items():
-        if sheet_name not in workbook.sheet_names:
-            continue
-        raw = pd.read_excel(path, sheet_name=sheet_name, header=None).fillna("")
-        incentive_rules.extend(
-            _parse_nps_rules(
-                raw.values.tolist(),
-                scheme_lookup={
-                    "Incentive Disbursal Scheme (Monthly)": "monthly",
-                    "Incentive Disbursal Scheme (Quarterly)": "quarterly",
-                    "Incentive Disbursal Scheme (Annually)": "annually",
-                },
-                sheet_key=sheet_key,
-            )
-        )
+    frameworks = _parse_combined_kpi_frameworks(path, {"sbu"})
+    incentive_rules = _parse_sbu_incentive_rules(path, workbook)
 
     return {
         "uploadType": "sbu_logic",
         "frameworks": frameworks,
         "incentiveRules": incentive_rules,
+        "recordCount": len(frameworks),
+    }
+
+
+def parse_combined_logic_workbook(path):
+    pd = _load_pandas()
+    workbook = pd.ExcelFile(path)
+    frameworks = _parse_combined_kpi_frameworks(path, {"gtm", "sbu"})
+    if not any(item.get("source") == "gtm" for item in frameworks):
+        raise ValueError("Combined logic workbook does not contain GTM KPI sections")
+    if not any(item.get("source") == "sbu" for item in frameworks):
+        raise ValueError("Combined logic workbook does not contain SBU KPI sections")
+    return {
+        "uploadType": "combined_logic",
+        "frameworks": frameworks,
+        "incentiveRules": _parse_sbu_incentive_rules(path, workbook),
         "recordCount": len(frameworks),
     }
 
@@ -682,6 +748,8 @@ def parse_project_workbook(path):
 
 def parse_workbook(path, upload_type=""):
     forced = clean_string(upload_type).lower()
+    if forced == "combined_logic":
+        return parse_combined_logic_workbook(path)
     if forced in {"kpi_logic", "gtm_logic"}:
         return parse_gtm_logic_workbook(path)
     if forced == "sbu_logic":
@@ -697,7 +765,7 @@ def parse_workbook(path, upload_type=""):
     if any(_month_from_text(name) for name in sheet_names):
         return parse_project_workbook(path)
     if "SBU KPIs (Updated)" in sheet_names:
-        return parse_sbu_logic_workbook(path)
+        return parse_combined_logic_workbook(path)
     if "KPI FRAMEWORK" in sheet_names:
         return parse_gtm_logic_workbook(path)
     if {"PV", "Mapping "} <= sheet_names:
