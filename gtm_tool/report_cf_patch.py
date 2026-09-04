@@ -126,7 +126,7 @@ def export_csv_two_tables(self, viewer_id="", admin_mode=False, employee_id="", 
     buffer = io.StringIO()
     writer = csv.writer(buffer)
     accessible = self._accessible_employee_ids(viewer_id or DEFAULT_ADMIN_ID, admin_mode=admin_mode)
-    selected_ids = [employee_id] if employee_id else accessible
+    selected_ids = [employee_id] if employee_id and employee_id in accessible else ([] if employee_id else accessible)
     for selected_id in selected_ids:
         if selected_id == DEFAULT_ADMIN_ID and not employee_id:
             continue

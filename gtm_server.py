@@ -436,6 +436,9 @@ function fillEmployeeForm(employee) {
             period_label = (query.get("period", [""])[0] or "").strip()
             if start_date or end_date:
                 period_label = ""
+            accessible_ids = set(DATA_SERVICE._accessible_employee_ids(session["employeeId"], bool(session.get("adminMode"))))
+            if employee_id and employee_id not in accessible_ids:
+                return self.send_json({"error": "You do not have access to this employee report"}, status=HTTPStatus.FORBIDDEN)
             if not session.get("adminMode") and not employee_id:
                 employee_id = session["employeeId"]
             csv_text = DATA_SERVICE.export_csv(

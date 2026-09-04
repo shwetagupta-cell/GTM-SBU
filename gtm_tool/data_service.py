@@ -1180,6 +1180,8 @@ class GTMDataService:
         employee_id = clean_string(payload.get("employeeId"))
         if not employee_id:
             raise ValueError("Employee is required")
+        if employee_id not in self.state["employees"]:
+            raise ValueError("Employee not found")
         self.state["monthlyStatuses"][f"{employee_id}|{period_label}"] = status
         self.persist(reload_state=False)
         return {"employeeId": employee_id, "periodLabel": period_label, "status": status}
@@ -1188,6 +1190,9 @@ class GTMDataService:
         upload_type = clean_string(upload_type).lower()
         if upload_type not in {"team_master", "gtm_logic", "sbu_logic", "project_cf", "kpi_logic"}:
             raise ValueError("Select a valid upload type")
+        file_name = Path(clean_string(file_name)).name
+        if not file_name or not file_name.lower().endswith(".xlsx"):
+            raise ValueError("Workbook must be an .xlsx file")
         file_id = uuid.uuid4().hex
         target_dir = UPLOADS_DIR / file_id
         target_dir.mkdir(parents=True, exist_ok=True)
@@ -1275,7 +1280,7 @@ class GTMDataService:
             ]
         )
         accessible = self._accessible_employee_ids(viewer_id or DEFAULT_ADMIN_ID, admin_mode=admin_mode)
-        selected_ids = [employee_id] if employee_id else accessible
+        selected_ids = [employee_id] if employee_id and employee_id in accessible else ([] if employee_id else accessible)
         for selected_id in selected_ids:
             if selected_id == DEFAULT_ADMIN_ID and not employee_id:
                 continue

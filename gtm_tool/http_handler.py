@@ -67,6 +67,13 @@ SESSION_COOKIE = "gtm_session"
 SESSIONS = {}
 RESET_OTP_STORE = {}
 OTP_TTL_SECONDS = 10 * 60
+PUBLIC_STATIC_PATHS = {
+    "/gtm_index.html",
+    "/gtm_app.js",
+    "/gtm_disbursal_status_patch.js",
+    "/gtm_styles.css",
+    "/assets/flipspaces-logo.png",
+}
 
 
 def _account_map():
@@ -81,6 +88,9 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "same-origin")
         super().end_headers()
 
     def send_json(self, payload, status=HTTPStatus.OK, set_cookie=None, clear_cookie=False):
@@ -146,7 +156,12 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
             return self.handle_me(parsed)
         if parsed.path in {"/api/admin/report.csv", "/api/report.csv"}:
             return self.handle_report()
-        return super().do_GET()
+        if parsed.path in PUBLIC_STATIC_PATHS:
+            self.path = parsed.path
+            return super().do_GET()
+        if parsed.path.startswith("/api/"):
+            return self.send_json({"error": "Unknown endpoint"}, status=HTTPStatus.NOT_FOUND)
+        return self.send_error(HTTPStatus.NOT_FOUND, "File not found")
 
     def do_POST(self):
         parsed = urlparse(self.path)
@@ -211,6 +226,9 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
         start_date = clean_string(query.get("startDate", [""])[0])
         end_date = clean_string(query.get("endDate", [""])[0])
         period_label = clean_string(query.get("period", [""])[0])
+        accessible_ids = set(DATA_SERVICE._accessible_employee_ids(session["employeeId"], bool(session.get("adminMode"))))
+        if employee_id and employee_id not in accessible_ids:
+            return self.send_json({"error": "You do not have access to this employee report"}, status=HTTPStatus.FORBIDDEN)
         if not session.get("adminMode") and not employee_id:
             employee_id = session["employeeId"]
         return self.send_csv(
