@@ -348,6 +348,7 @@ def _project_name_matches_employee(mapped_name, employee_name):
 class GTMDataService:
     def __init__(self):
         self.state = {}
+        self._parsed_upload_cache = {}
         self._clear_match_caches()
         self.reload()
 
@@ -467,6 +468,36 @@ class GTMDataService:
                 latest_by_type[upload_type] = upload
         return sorted(latest_by_type.values(), key=lambda item: clean_string(item.get("uploadedAt")))
 
+    def _parse_uploaded_workbook(self, stored_path, upload_type=""):
+        stat = stored_path.stat()
+        cache_key = (str(stored_path.resolve()), stat.st_mtime_ns, stat.st_size)
+        parsed = self._parsed_upload_cache.get(cache_key)
+        if parsed is None:
+            parsed = parse_workbook(stored_path, upload_type)
+            self._parsed_upload_cache[cache_key] = parsed
+        return parsed
+
+    def _persistent_state(self, state):
+        employees = state.get("employees", [])
+        payload = {
+            "schemaVersion": state.get("schemaVersion", 3),
+            "uploadedFiles": state.get("uploadedFiles", []),
+            "employeeOverrides": state.get("employeeOverrides", {}),
+            "kpiOverrides": state.get("kpiOverrides", {}),
+            "projectOverrides": state.get("projectOverrides", {}),
+            "monthlyStatuses": state.get("monthlyStatuses", {}),
+            "monthlyDisbursalStatuses": state.get("monthlyDisbursalStatuses", {}),
+            "deletedEmployeeStack": state.get("deletedEmployeeStack", []),
+            "employees": list(employees.values()) if isinstance(employees, dict) else employees,
+            "frameworks": state.get("frameworks", []),
+            "projects": state.get("projects", []),
+            "incentiveRules": state.get("incentiveRules", _default_nps_rules()),
+            "loadedAt": state.get("loadedAt", _now()),
+        }
+        if "auditLog" in state:
+            payload["auditLog"] = state["auditLog"]
+        return payload
+
     def _build_from_uploads(self, raw_state):
         self._ensure_seed_uploads(raw_state)
         employees = {DEFAULT_ADMIN_ID: _admin_employee()}
@@ -474,14 +505,16 @@ class GTMDataService:
         projects = []
         incentive_rows = []
         parsed_upload_types = set()
+        active_cache_paths = set()
         cached_incentive_rules = raw_state.get("incentiveRules", _default_nps_rules())
 
         for upload in self._latest_active_uploads(raw_state):
             stored_path = _restore_upload_file(upload)
             if not stored_path.exists():
                 continue
+            active_cache_paths.add(str(stored_path.resolve()))
             upload["storedPath"] = _portable_path(stored_path)
-            parsed = parse_workbook(stored_path, upload.get("uploadType", ""))
+            parsed = self._parse_uploaded_workbook(stored_path, upload.get("uploadType", ""))
             upload["recordCount"] = parsed.get("recordCount", 0)
             upload["uploadType"] = parsed.get("uploadType") or upload.get("uploadType")
             if upload["uploadType"] == "team_master":
@@ -496,6 +529,10 @@ class GTMDataService:
             elif upload["uploadType"] == "project_cf":
                 parsed_upload_types.add("project_cf")
                 projects = parsed.get("projects", [])
+
+        self._parsed_upload_cache = {
+            key: parsed for key, parsed in self._parsed_upload_cache.items() if key[0] in active_cache_paths
+        }
 
         if "team_master" not in parsed_upload_types:
             for employee in raw_state.get("employees", []):
@@ -618,6 +655,7 @@ class GTMDataService:
             "monthlyStatuses": raw_state.get("monthlyStatuses", {}),
             "monthlyDisbursalStatuses": raw_state.get("monthlyDisbursalStatuses", {}),
             "deletedEmployeeStack": raw_state.get("deletedEmployeeStack", []),
+            "auditLog": list(raw_state.get("auditLog", []))[:500],
             "employees": list(employees.values()),
             "frameworks": frameworks,
             "kpis": kpis,
@@ -630,14 +668,13 @@ class GTMDataService:
         ensure_dirs()
         if not STATE_FILE.exists():
             raw = self._build_from_uploads(self._default_state())
-            STATE_FILE.write_text(json.dumps(raw, indent=2), encoding="utf-8")
         else:
             raw = json.loads(STATE_FILE.read_text(encoding="utf-8"))
             if self._needs_bootstrap(raw):
                 raw = self._build_from_uploads(self._default_state())
             else:
                 raw = self._build_from_uploads(raw)
-            STATE_FILE.write_text(json.dumps(raw, indent=2), encoding="utf-8")
+        STATE_FILE.write_text(json.dumps(self._persistent_state(raw), indent=2), encoding="utf-8")
 
         employees = {item["employeeId"]: item for item in raw.get("employees", [])}
         sync_accounts(employees)
@@ -655,6 +692,7 @@ class GTMDataService:
             "monthlyStatuses": raw.get("monthlyStatuses", {}),
             "monthlyDisbursalStatuses": raw.get("monthlyDisbursalStatuses", {}),
             "deletedEmployeeStack": raw.get("deletedEmployeeStack", []),
+            "auditLog": list(raw.get("auditLog", []))[:500],
             "loadedAt": raw.get("loadedAt", _now()),
         }
         self._clear_match_caches()
@@ -662,28 +700,7 @@ class GTMDataService:
     def persist(self, reload_state=True):
         ensure_dirs()
         self.state["loadedAt"] = _now()
-        STATE_FILE.write_text(
-            json.dumps(
-                {
-                    "schemaVersion": self.state["schemaVersion"],
-                    "uploadedFiles": self.state["uploadedFiles"],
-                    "employeeOverrides": self.state["employeeOverrides"],
-                    "kpiOverrides": self.state["kpiOverrides"],
-                    "projectOverrides": self.state["projectOverrides"],
-                    "monthlyStatuses": self.state["monthlyStatuses"],
-                    "monthlyDisbursalStatuses": self.state["monthlyDisbursalStatuses"],
-                    "deletedEmployeeStack": self.state["deletedEmployeeStack"],
-                    "employees": list(self.state["employees"].values()),
-                    "kpis": self.state["kpis"],
-                    "frameworks": self.state["frameworks"],
-                    "projects": self.state["projects"],
-                    "incentiveRules": self.state["incentiveRules"],
-                    "loadedAt": self.state["loadedAt"],
-                },
-                indent=2,
-            ),
-            encoding="utf-8",
-        )
+        STATE_FILE.write_text(json.dumps(self._persistent_state(self.state), indent=2), encoding="utf-8")
         if reload_state:
             self.reload()
 
@@ -1198,7 +1215,7 @@ class GTMDataService:
         target_dir.mkdir(parents=True, exist_ok=True)
         stored_path = target_dir / file_name
         stored_path.write_bytes(data_bytes)
-        parsed = parse_workbook(stored_path, upload_type)
+        parsed = self._parse_uploaded_workbook(stored_path, upload_type)
         parsed_upload_type = parsed.get("uploadType", upload_type)
         if replace_file_id:
             self.delete_upload(replace_file_id, persist=False)
@@ -1221,9 +1238,8 @@ class GTMDataService:
             }
         )
         self.persist()
-        uploaded_public = _public_upload(self.state["uploadedFiles"][-1])
-        self.reload()
-        return uploaded_public
+        uploaded = next(item for item in self.state["uploadedFiles"] if item.get("fileId") == file_id)
+        return _public_upload(uploaded)
 
     def delete_upload(self, file_id, persist=True):
         deleted = False
@@ -1234,8 +1250,6 @@ class GTMDataService:
                 deleted = True
         if persist:
             self.persist()
-            if deleted:
-                self.reload()
         return deleted
 
     def export_csv(self, viewer_id="", admin_mode=False, employee_id="", start_date="", end_date="", period_label=""):

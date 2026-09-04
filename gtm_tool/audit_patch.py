@@ -76,14 +76,8 @@ def install_audit_patch(handler_cls, service):
         self.state["auditLog"] = audit_log[:500]
 
     def persist_with_audit(self, reload_state=True):
-        audit_log = list(self.state.get("auditLog", []))[:500]
+        self.state["auditLog"] = list(self.state.get("auditLog", []))[:500]
         original_persist(self, reload_state=False)
-        try:
-            raw = json.loads(STATE_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            raw = {}
-        raw["auditLog"] = audit_log
-        STATE_FILE.write_text(json.dumps(raw, indent=2), encoding="utf-8")
         if reload_state:
             self.reload()
 
@@ -206,7 +200,7 @@ def install_audit_patch(handler_cls, service):
             recordCount=uploaded.get("recordCount", 0),
             replacedFileId=replace_file_id,
         )
-        self.persist()
+        self.persist(reload_state=False)
         return uploaded
 
     def delete_upload_with_audit(self, file_id, persist=True, actor=None):
@@ -227,7 +221,7 @@ def install_audit_patch(handler_cls, service):
                 fileName=upload.get("fileName", ""),
             )
             if persist:
-                self.persist()
+                self.persist(reload_state=False)
         return deleted
 
     def actor_wrapper(original):
