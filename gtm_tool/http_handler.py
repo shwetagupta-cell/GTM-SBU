@@ -57,7 +57,7 @@ class _MultipartForm:
         return field.value if field is not None else default
 # ---------------------------------------------------------------------------
 
-from gtm_tool.auth_service import find_account, load_accounts, send_reset_otp_email, update_password, verify_password
+from gtm_tool.auth_service import find_account, load_accounts, send_reset_otp_email, update_password, verify_account_password
 from gtm_tool.config import DEFAULT_ADMIN_ID, ROOT, load_config, save_config
 from gtm_tool.data_service import DATA_SERVICE
 from services.utils import clean_string
@@ -248,7 +248,7 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
         password = clean_string(payload.get("password"))
         login_type = clean_string(payload.get("loginType") or "employee").lower()
         account = find_account(employee_id)
-        if not account or not verify_password(password, account["salt"], account["passwordHash"]):
+        if not account or not verify_account_password(password, account):
             return self.send_json({"error": "Invalid employee ID or password"}, status=HTTPStatus.UNAUTHORIZED)
         if clean_string(account.get("status", "active")).lower() != "active":
             return self.send_json({"error": "This user is inactive. Please contact Admin."}, status=HTTPStatus.UNAUTHORIZED)
@@ -280,7 +280,7 @@ class GTMAppHandler(SimpleHTTPRequestHandler):
             return
         payload = self.read_json()
         account = _account_map().get(session["employeeId"])
-        if not account or not verify_password(clean_string(payload.get("currentPassword")), account["salt"], account["passwordHash"]):
+        if not account or not verify_account_password(clean_string(payload.get("currentPassword")), account):
             return self.send_json({"error": "Current password is incorrect"}, status=HTTPStatus.BAD_REQUEST)
         new_password = clean_string(payload.get("newPassword"))
         confirm_password = clean_string(payload.get("confirmPassword"))

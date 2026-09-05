@@ -19,6 +19,15 @@ def verify_password(password, salt, password_hash):
     return secrets.compare_digest(candidate, password_hash)
 
 
+def verify_account_password(password, account):
+    if account.get("defaultPasswordPending"):
+        expected = f"GTM{account.get('employeeId', '')}"
+        return secrets.compare_digest(password, expected)
+    salt = account.get("salt", "")
+    password_hash = account.get("passwordHash", "")
+    return bool(salt and password_hash and verify_password(password, salt, password_hash))
+
+
 def load_accounts():
     if not ACCOUNTS_FILE.exists():
         return []
@@ -92,7 +101,6 @@ def sync_accounts(employees):
         account = account_map.get(employee["employeeId"])
         if not account:
             default_password = f"GTM{employee['employeeId']}"
-            password_data = hash_password(default_password)
             account = {
                 "employeeId": employee["employeeId"],
                 "loginId": employee.get("loginId") or employee["employeeId"],
@@ -101,8 +109,9 @@ def sync_accounts(employees):
                 "designation": employee.get("designation", ""),
                 "department": employee.get("department", ""),
                 "status": employee.get("status", "active"),
-                "salt": password_data["salt"],
-                "passwordHash": password_data["hash"],
+                "salt": "",
+                "passwordHash": "",
+                "defaultPasswordPending": True,
                 "mustChangePassword": True,
                 "createdAt": _now(),
                 "updatedAt": _now(),
@@ -185,6 +194,7 @@ def upsert_account(employee_id, name, designation="", department="", email="", l
         password_data = hash_password(temp_password)
         account["salt"] = password_data["salt"]
         account["passwordHash"] = password_data["hash"]
+        account.pop("defaultPasswordPending", None)
         account["mustChangePassword"] = True
     elif created and "mustChangePassword" not in account:
         account["mustChangePassword"] = True
@@ -201,6 +211,7 @@ def update_password(employee_id, new_password):
         password_data = hash_password(new_password)
         account["salt"] = password_data["salt"]
         account["passwordHash"] = password_data["hash"]
+        account.pop("defaultPasswordPending", None)
         account["mustChangePassword"] = False
         account["updatedAt"] = _now()
         save_accounts(accounts)
