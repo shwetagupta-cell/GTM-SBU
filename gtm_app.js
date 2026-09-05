@@ -174,29 +174,31 @@ async function withWorkbookBackupStore(mode, action) {
   const db = await openWorkbookBackupDb();
   if (!db) return null;
   return new Promise((resolve) => {
+    let settled = false;
     let transaction;
     let result;
+    let timeoutId;
+    const finish = (value = null) => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      db.close();
+      resolve(value);
+    };
     try {
       transaction = db.transaction(WORKBOOK_BACKUP_STORE, mode);
       const store = transaction.objectStore(WORKBOOK_BACKUP_STORE);
       result = action(store);
     } catch (error) {
-      db.close();
-      resolve(null);
+      finish(null);
       return;
     }
+    timeoutId = setTimeout(() => finish(null), 3000);
     transaction.oncomplete = () => {
-      db.close();
-      resolve(result?.result ?? result ?? null);
+      finish(result?.result ?? result ?? null);
     };
-    transaction.onerror = () => {
-      db.close();
-      resolve(null);
-    };
-    transaction.onabort = () => {
-      db.close();
-      resolve(null);
-    };
+    transaction.onerror = () => finish(null);
+    transaction.onabort = () => finish(null);
   });
 }
 
@@ -1255,15 +1257,24 @@ async function saveMonthlyDisbursalStatus() {
 async function uploadWorkbook(uploadType, inputId) {
   const input = document.getElementById(inputId);
   const file = input?.files?.[0];
+  const button = document.querySelector(`.upload-trigger[data-input-id="${inputId}"]`);
   if (!file) {
     els.uploadNotice.textContent = "Choose an .xlsx file before uploading.";
     return;
   }
+  if (button?.disabled) return;
   const formData = new FormData();
   formData.append("workbook", file);
   formData.append("uploadType", uploadType);
+  const originalButtonText = button?.textContent || "Upload";
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Uploading...";
+  }
+  els.uploadNotice.textContent = `Uploading ${file.name}...`;
   try {
-    const result = await api("/api/admin/upload-workbook", { method: "POST", body: formData });
+    const result = await api("/api/admin/upload-workbook", { method: "POST", body: formData, retries: 0 });
+    els.uploadNotice.textContent = `${file.name} uploaded. Refreshing dashboard...`;
     const backedUp = await backupWorkbook(uploadType, file, result.upload?.uploadedAt);
     if (uploadType === "combined_logic") {
       await Promise.all([removeWorkbookBackup("gtm_logic"), removeWorkbookBackup("sbu_logic")]);
@@ -1274,7 +1285,12 @@ async function uploadWorkbook(uploadType, inputId) {
     input.value = "";
     await refreshDashboard();
   } catch (error) {
-    els.uploadNotice.textContent = error.message;
+    els.uploadNotice.textContent = `Upload failed: ${error.message}`;
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalButtonText;
+    }
   }
 }
 
