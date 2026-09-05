@@ -204,11 +204,21 @@ async function withWorkbookBackupStore(mode, action) {
 
 async function backupWorkbook(uploadType, file, uploadedAt = "") {
   const arrayBuffer = await file.arrayBuffer();
+  return saveWorkbookBackup({
+    uploadType,
+    fileName: file.name,
+    mimeType: file.type,
+    uploadedAt,
+    arrayBuffer,
+  });
+}
+
+async function saveWorkbookBackup({ uploadType, fileName, mimeType = "", uploadedAt = "", arrayBuffer }) {
   const saved = await withWorkbookBackupStore("readwrite", (store) =>
     store.put({
       uploadType,
-      fileName: file.name,
-      mimeType: file.type || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      fileName,
+      mimeType: mimeType || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       updatedAt: uploadedAt || new Date().toISOString(),
       arrayBuffer,
     })
@@ -223,6 +233,33 @@ async function removeWorkbookBackup(uploadType) {
 
 async function getWorkbookBackups() {
   return (await withWorkbookBackupStore("readonly", (store) => store.getAll())) || [];
+}
+
+async function backupActiveServerWorkbooks() {
+  if (!state.dashboard?.viewer?.isAdmin) return;
+  const localBackups = new Map((await getWorkbookBackups()).map((item) => [item.uploadType, item]));
+  const activeUploads = (state.dashboard?.admin?.uploadHistory || []).filter(
+    (item) => !item.deleted && item.uploadType && item.fileId
+  );
+  for (const upload of activeUploads) {
+    const existing = localBackups.get(upload.uploadType);
+    if (existing && String(existing.updatedAt || "") >= String(upload.uploadedAt || "")) continue;
+    try {
+      const response = await fetch(`/api/admin/upload.xlsx?fileId=${encodeURIComponent(upload.fileId)}`, {
+        credentials: "same-origin",
+      });
+      if (!response.ok) continue;
+      await saveWorkbookBackup({
+        uploadType: upload.uploadType,
+        fileName: upload.fileName,
+        mimeType: response.headers.get("Content-Type") || "",
+        uploadedAt: upload.uploadedAt,
+        arrayBuffer: await response.arrayBuffer(),
+      });
+    } catch (error) {
+      console.error("Could not back up active workbook", error);
+    }
+  }
 }
 
 function isNetworkError(error) {
@@ -936,8 +973,9 @@ function renderAll() {
 function scheduleWorkbookRestore() {
   if (!state.dashboard?.viewer?.isAdmin || state.restoreInProgress) return;
   restoreMissingWorkbookBackups()
-    .then((restored) => {
+    .then(async (restored) => {
       if (restored) return refreshDashboard({ skipRestore: true });
+      await backupActiveServerWorkbooks();
       return null;
     })
     .catch((error) => {
