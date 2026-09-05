@@ -293,6 +293,91 @@ def _parse_incentive_rules(rows):
     return rules
 
 
+def _parse_incentive_rules_by_logic(rows):
+    grouped = {}
+    for row in rows:
+        source = clean_string(row.get("source"))
+        if source:
+            grouped.setdefault(source, []).append(row)
+    return {source: _parse_incentive_rules(source_rows) for source, source_rows in grouped.items()}
+
+
+def _policy_position_for_employee(employee):
+    logic_key = clean_string(employee.get("logicKey"))
+    designation = clean_string(employee.get("designation")).lower()
+
+    if logic_key == "sbu_ops":
+        if "vice president" in designation or designation.startswith("vp"):
+            return "SBU HEAD"
+        if "client delight" in designation or "customer delight" in designation:
+            return "CLIENT DELIGHT TEAM"
+        if any(token in designation for token in ("purchase", "procurement")):
+            return "PURCHASE MANAGER"
+        if any(token in designation for token in ("assistant general manager", "deputy general manager", "senior manager")):
+            return "BU HEAD"
+        if "general manager" in designation:
+            return "GM - OPS"
+        if any(token in designation for token in ("senior project manager", "project manager")):
+            return "SPM/PM"
+        return "APM/SS"
+
+    if logic_key == "sbu_sales":
+        if "vice president" in designation or designation.startswith("vp"):
+            return "SBU HEAD"
+        if any(token in designation for token in ("assistant general manager", "deputy general manager")):
+            return "AGM/DGM"
+        if "general manager" in designation:
+            return "GM - SALES"
+        if any(token in designation for token in ("mep", "procurement", "purchase", "supply", "quality", "fulfillment", "operations")):
+            return "SUPPORT ROLE (MEP, PROC/OPS)"
+        return "SALES SUPPORT MGR"
+
+    if logic_key in {"sbu_design_pre", "sbu_design_post"}:
+        if "3d" in designation:
+            return "3D TEAM"
+        if logic_key == "sbu_design_pre":
+            if "deputy general manager" in designation:
+                return "DGM"
+            if "assistant general manager" in designation or "manager" in designation or "lead" in designation:
+                return "DM/AGM"
+        else:
+            if "deputy general manager" in designation or "assistant general manager" in designation:
+                return "DGM/AGM DESIGN"
+            if "manager" in designation or "lead" in designation:
+                return "DM"
+        return "2D TEAM"
+
+    return ""
+
+
+def _policy_values_for_employee(employee, incentive_policy):
+    logic_key = clean_string(employee.get("logicKey"))
+    position = _policy_position_for_employee(employee)
+    rules = incentive_policy.get("positionRules", {}).get(logic_key, [])
+    rule_by_position = {normalize_name(item.get("position")): item for item in rules}
+    position_rule = rule_by_position.get(normalize_name(position), {})
+    if logic_key == "sbu_ops":
+        if position in {"SBU HEAD", "GM - OPS"}:
+            disbursal_type = "annually"
+        elif position == "BU HEAD":
+            disbursal_type = "quarterly"
+        else:
+            disbursal_type = "monthly"
+    elif logic_key == "sbu_sales":
+        disbursal_type = "quarterly"
+    elif logic_key.startswith("sbu_design_"):
+        disbursal_type = "monthly" if position in {"2D TEAM", "3D TEAM"} else "quarterly"
+    else:
+        disbursal_type = _normalize_disbursal_type(employee.get("disbursalType"))
+    return {
+        "baseIncentivePercent": parse_number(incentive_policy.get("baseIncentivePercent")),
+        "departmentPercent": parse_number(incentive_policy.get("departmentPercents", {}).get(logic_key)),
+        "position": clean_string(position_rule.get("position")) or position,
+        "positionPercent": parse_number(position_rule.get("percent")),
+        "disbursalType": disbursal_type,
+    }
+
+
 def _nps_disbursal_from_rules(rules, scheme, score):
     scheme = _normalize_disbursal_type(scheme)
     for row in rules.get(scheme, []):
@@ -372,6 +457,8 @@ class GTMDataService:
             "kpis": [],
             "projects": [],
             "incentiveRules": _default_nps_rules(),
+            "incentiveRulesByLogic": {},
+            "incentivePolicy": {},
             "loadedAt": _now(),
         }
 
@@ -492,6 +579,8 @@ class GTMDataService:
             "frameworks": state.get("frameworks", []),
             "projects": state.get("projects", []),
             "incentiveRules": state.get("incentiveRules", _default_nps_rules()),
+            "incentiveRulesByLogic": state.get("incentiveRulesByLogic", {}),
+            "incentivePolicy": state.get("incentivePolicy", {}),
             "loadedAt": state.get("loadedAt", _now()),
         }
         if "auditLog" in state:
@@ -507,6 +596,8 @@ class GTMDataService:
         parsed_upload_types = set()
         active_cache_paths = set()
         cached_incentive_rules = raw_state.get("incentiveRules", _default_nps_rules())
+        cached_rules_by_logic = raw_state.get("incentiveRulesByLogic", {})
+        incentive_policy = raw_state.get("incentivePolicy", {})
 
         for upload in self._latest_active_uploads(raw_state):
             stored_path = _restore_upload_file(upload)
@@ -529,6 +620,8 @@ class GTMDataService:
                     parsed_upload_types.add(upload["uploadType"])
                 frameworks.extend(parsed.get("frameworks", []))
                 incentive_rows.extend(parsed.get("incentiveRules", []))
+                if parsed.get("incentivePolicy"):
+                    incentive_policy = parsed["incentivePolicy"]
             elif upload["uploadType"] == "project_cf":
                 parsed_upload_types.add("project_cf")
                 projects = parsed.get("projects", [])
@@ -607,6 +700,19 @@ class GTMDataService:
             employee["teamSharePercent"] = parse_number(employee.get("teamSharePercent")) or 100.0
             employee["npsScore"] = parse_number(employee.get("npsScore")) or 4.5
             employee["status"] = clean_string(employee.get("status")).lower() or "active"
+            if employee["businessUnit"] == "SBU" and incentive_policy:
+                policy_values = _policy_values_for_employee(employee, incentive_policy)
+                if policy_values["baseIncentivePercent"] > 0:
+                    employee["projectIncentivePercent"] = policy_values["baseIncentivePercent"]
+                    employee["mySharePercent"] = policy_values["baseIncentivePercent"]
+                if policy_values["departmentPercent"] > 0:
+                    employee["departmentPercent"] = policy_values["departmentPercent"]
+                if policy_values["positionPercent"] > 0:
+                    employee["teamSharePercent"] = policy_values["positionPercent"]
+                    employee["policyTeamSharePercent"] = policy_values["positionPercent"]
+                employee["policyPosition"] = policy_values["position"]
+                employee["disbursalType"] = policy_values["disbursalType"]
+                employee["incentivePolicySource"] = incentive_policy.get("sourceSheet", "")
 
         periods = set(_fy_periods())
         for project in projects:
@@ -664,6 +770,8 @@ class GTMDataService:
             "kpis": kpis,
             "projects": projects,
             "incentiveRules": _parse_incentive_rules(incentive_rows) if incentive_rows else cached_incentive_rules,
+            "incentiveRulesByLogic": _parse_incentive_rules_by_logic(incentive_rows) if incentive_rows else cached_rules_by_logic,
+            "incentivePolicy": incentive_policy,
             "loadedAt": _now(),
         }
 
@@ -689,6 +797,8 @@ class GTMDataService:
             "frameworks": raw.get("frameworks", []),
             "projects": raw.get("projects", []),
             "incentiveRules": raw.get("incentiveRules", _default_nps_rules()),
+            "incentiveRulesByLogic": raw.get("incentiveRulesByLogic", {}),
+            "incentivePolicy": raw.get("incentivePolicy", {}),
             "employeeOverrides": raw.get("employeeOverrides", {}),
             "kpiOverrides": raw.get("kpiOverrides", {}),
             "projectOverrides": raw.get("projectOverrides", {}),
@@ -939,9 +1049,12 @@ class GTMDataService:
             override = self.state.get("projectOverrides", {}).get(override_key, {})
             share_percent = parse_number(override.get("sharePercent")) if override.get("sharePercent") not in (None, "") else parse_number(employee.get("sharePercent"))
             department_percent = parse_number(override.get("departmentPercent")) if override.get("departmentPercent") not in (None, "") else parse_number(employee.get("departmentPercent"))
-            team_share_percent = parse_number(override.get("teamSharePercent")) if override.get("teamSharePercent") not in (None, "") else (
-                100.0 / max(len(resolved_employee_ids) or len(normalized), 1)
-            )
+            if override.get("teamSharePercent") not in (None, ""):
+                team_share_percent = parse_number(override.get("teamSharePercent"))
+            elif parse_number(employee.get("policyTeamSharePercent")) > 0:
+                team_share_percent = parse_number(employee.get("policyTeamSharePercent"))
+            else:
+                team_share_percent = 100.0 / max(len(resolved_employee_ids) or len(normalized), 1)
             team_count = max(1, int(parse_number(override.get("teamCount")) or 1))
             my_share_percent = parse_number(override.get("mySharePercent")) if override.get("mySharePercent") not in (None, "") else (
                 parse_number(employee.get("mySharePercent")) or parse_number(employee.get("projectIncentivePercent"))
@@ -993,7 +1106,13 @@ class GTMDataService:
         final_score = total_weighted_score / total_weightage if total_weightage else 0
         nps_score = round(sum(parse_number(item.get("score")) for item in rows) / len(rows), 2) if rows else parse_number(employee.get("npsScore"))
         rows = [{**item, "npsScore": nps_score} for item in rows]
-        disbursal_percent = _nps_disbursal_from_rules(self.state.get("incentiveRules", _default_nps_rules()), employee.get("disbursalType"), nps_score)
+        logic_key = clean_string(employee.get("logicKey"))
+        rules_key = "sbu_design" if logic_key.startswith("sbu_design_") else logic_key
+        incentive_rules = self.state.get("incentiveRulesByLogic", {}).get(
+            rules_key,
+            self.state.get("incentiveRules", _default_nps_rules()),
+        )
+        disbursal_percent = _nps_disbursal_from_rules(incentive_rules, employee.get("disbursalType"), nps_score)
         projects = self._project_rows_for_employee(employee, period_label, disbursal_percent)
         accrued_total = sum(item["accruedValue"] for item in projects)
         disbursal_total = sum(item["finalDisbursalValue"] for item in projects)
@@ -1048,6 +1167,8 @@ class GTMDataService:
             "mySharePercent": employee.get("mySharePercent", employee.get("projectIncentivePercent", 1.5)),
             "departmentPercent": employee.get("departmentPercent", 100),
             "teamSharePercent": employee.get("teamSharePercent", 100),
+            "policyPosition": employee.get("policyPosition", ""),
+            "incentivePolicySource": employee.get("incentivePolicySource", ""),
             "npsScore": employee.get("npsScore", 4.5),
             "disbursalType": employee.get("disbursalType", "quarterly"),
             "isManagerView": any(item.get("reportingTo") == employee_id for item in self.state["employees"].values()),

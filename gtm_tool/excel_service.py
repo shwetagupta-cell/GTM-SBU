@@ -467,6 +467,56 @@ def _parse_sbu_incentive_rules(path, workbook):
     return incentive_rules
 
 
+def _percent_value(value):
+    number = parse_number(value)
+    return round(number * 100 if 0 < abs(number) <= 1 else number, 6)
+
+
+def _parse_sbu_incentive_policy(path, workbook):
+    if "SME-SBU-INCENTIVE-POLICY" not in workbook.sheet_names:
+        return {}
+
+    pd = _load_pandas()
+    raw = pd.read_excel(path, sheet_name="SME-SBU-INCENTIVE-POLICY", header=None).fillna("")
+    rows = raw.values.tolist()
+    base_incentive_percent = 0.0
+    for row in rows:
+        if clean_string(row[1] if len(row) > 1 else "").upper() == "TOTAL INCENTIVE AS % OF NPE":
+            base_incentive_percent = _percent_value(row[2] if len(row) > 2 else 0)
+            break
+
+    table_columns = {
+        "sbu_ops": (1, 2),
+        "sbu_sales": (5, 6),
+        "sbu_design_pre": (9, 10),
+        "sbu_design_post": (13, 14),
+    }
+    department_percents = {}
+    position_rules = {}
+    allocation_row = rows[15] if len(rows) > 15 else []
+    for logic_key, (label_column, percent_column) in table_columns.items():
+        department_percents[logic_key] = _percent_value(
+            allocation_row[percent_column] if len(allocation_row) > percent_column else 0
+        )
+        rules = []
+        for row in rows[17:25]:
+            label = clean_string(row[label_column] if len(row) > label_column else "")
+            if not label or label.upper() == "PER SBU":
+                continue
+            percent = _percent_value(row[percent_column] if len(row) > percent_column else 0)
+            if percent <= 0:
+                continue
+            rules.append({"position": label, "percent": percent})
+        position_rules[logic_key] = rules
+
+    return {
+        "baseIncentivePercent": base_incentive_percent,
+        "departmentPercents": department_percents,
+        "positionRules": position_rules,
+        "sourceSheet": "SME-SBU-INCENTIVE-POLICY",
+    }
+
+
 def _parse_nps_rules(rows, scheme_lookup=None, sheet_key=""):
     scheme_lookup = scheme_lookup or {}
     current_scheme = ""
@@ -555,6 +605,7 @@ def parse_sbu_logic_workbook(path):
         "uploadType": "sbu_logic",
         "frameworks": frameworks,
         "incentiveRules": incentive_rules,
+        "incentivePolicy": _parse_sbu_incentive_policy(path, workbook),
         "recordCount": len(frameworks),
     }
 
@@ -571,6 +622,7 @@ def parse_combined_logic_workbook(path):
         "uploadType": "combined_logic",
         "frameworks": frameworks,
         "incentiveRules": _parse_sbu_incentive_rules(path, workbook),
+        "incentivePolicy": _parse_sbu_incentive_policy(path, workbook),
         "recordCount": len(frameworks),
     }
 
