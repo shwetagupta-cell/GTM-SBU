@@ -216,7 +216,7 @@ def _frame_from_sheet(path, sheet_name, required_terms):
     return frame
 
 
-def _frame_from_matching_sheet(path, required_terms, preferred_sheet_name=""):
+def _frame_from_matching_sheet(path, required_terms, preferred_sheet_name="", prefer_latest_period=False):
     pd = _load_pandas()
     workbook = pd.ExcelFile(path)
     candidates = []
@@ -225,8 +225,11 @@ def _frame_from_matching_sheet(path, required_terms, preferred_sheet_name=""):
     candidates.extend(name for name in workbook.sheet_names if name not in candidates)
 
     fallback = None
-    for sheet_name in candidates:
+    matching_frames = []
+    for order, sheet_name in enumerate(candidates):
         raw = pd.read_excel(path, sheet_name=sheet_name, header=None)
+        if raw.empty:
+            continue
         if fallback is None:
             fallback = raw
         header_row = _best_header_row(raw, required_terms)
@@ -234,7 +237,14 @@ def _frame_from_matching_sheet(path, required_terms, preferred_sheet_name=""):
         if all(any(term in cell for cell in headers) for term in required_terms):
             frame = raw.iloc[header_row + 1 :].copy().fillna("").infer_objects(copy=False)
             frame.columns = headers
-            return frame
+            matching_frames.append((_period_from_value("", sheet_name), order, frame))
+
+    if matching_frames:
+        if prefer_latest_period:
+            dated_frames = [item for item in matching_frames if item[0]]
+            if dated_frames:
+                return max(dated_frames, key=lambda item: (item[0], -item[1]))[2]
+        return matching_frames[0][2]
 
     if fallback is None:
         raise ValueError("Workbook does not contain any worksheets.")
@@ -243,6 +253,67 @@ def _frame_from_matching_sheet(path, required_terms, preferred_sheet_name=""):
     frame = fallback.iloc[header_row + 1 :].copy().fillna("").infer_objects(copy=False)
     frame.columns = _normalize_headers(headers)
     return frame
+
+
+def _employee_identity_history(path):
+    pd = _load_pandas()
+    workbook = pd.ExcelFile(path)
+    history = {}
+    for sheet_name in workbook.sheet_names:
+        raw = pd.read_excel(path, sheet_name=sheet_name, header=None)
+        if raw.empty:
+            continue
+        header_row = _best_header_row(raw, ["emp_code", "employee_name"])
+        headers = _normalize_headers(raw.iloc[header_row].tolist())
+        if not all(any(term in cell for cell in headers) for term in ("emp_code", "employee_name")):
+            continue
+        frame = raw.iloc[header_row + 1 :].copy().fillna("").infer_objects(copy=False)
+        frame.columns = headers
+        for _, row in frame.iterrows():
+            employee_id = normalize_emp_code(row.get("emp_code"))
+            name = normalize_name(row.get("employee_name"))
+            email = clean_string(row.get("email_id")).lower()
+            identity_key = f"email:{email}" if email else f"name:{name}"
+            if not employee_id or not name:
+                continue
+            counts = history.setdefault(identity_key, {})
+            counts[employee_id] = counts.get(employee_id, 0) + 1
+    return history
+
+
+def _resolve_duplicate_employee_ids(path, employees):
+    groups = {}
+    for employee in employees:
+        groups.setdefault(employee["employeeId"], []).append(employee)
+    duplicate_groups = {employee_id: rows for employee_id, rows in groups.items() if len(rows) > 1}
+    if not duplicate_groups:
+        return
+
+    history = _employee_identity_history(path)
+    used_ids = {employee_id for employee_id, rows in groups.items() if len(rows) == 1}
+    for duplicate_id, rows in duplicate_groups.items():
+        def identity_counts(employee):
+            email = clean_string(employee.get("email")).lower()
+            name = normalize_name(employee.get("name"))
+            return history.get(f"email:{email}" if email else f"name:{name}", {})
+
+        rows.sort(key=lambda employee: identity_counts(employee).get(duplicate_id, 0), reverse=True)
+        for employee in rows:
+            counts = identity_counts(employee)
+            candidates = sorted(counts, key=lambda item: (-counts[item], item))
+            resolved_id = next((item for item in candidates if item not in used_ids), "")
+            if not resolved_id:
+                suffix = slugify(employee.get("name")) or "duplicate"
+                resolved_id = f"{duplicate_id}-{suffix}"
+                counter = 2
+                while resolved_id in used_ids:
+                    resolved_id = f"{duplicate_id}-{suffix}-{counter}"
+                    counter += 1
+            used_ids.add(resolved_id)
+            if resolved_id != duplicate_id:
+                employee["sourceEmployeeId"] = duplicate_id
+                employee["employeeId"] = resolved_id
+                employee["identityWarning"] = f"Duplicate employee ID {duplicate_id} was resolved using employee history."
 
 
 def _normalize_department(value, fallback=""):
@@ -628,7 +699,12 @@ def parse_combined_logic_workbook(path):
 
 
 def parse_team_workbook(path):
-    frame = _frame_from_matching_sheet(path, ["emp_code", "employee_name"], preferred_sheet_name="Sheet1")
+    frame = _frame_from_matching_sheet(
+        path,
+        ["emp_code", "employee_name"],
+        preferred_sheet_name="Sheet1",
+        prefer_latest_period=True,
+    )
     employees = []
     for _, row in frame.iterrows():
         employee_id = normalize_emp_code(row.get("emp_code"))
@@ -691,6 +767,7 @@ def parse_team_workbook(path):
             }
         )
 
+    _resolve_duplicate_employee_ids(path, employees)
     name_map = {normalize_name(item["name"]): item["employeeId"] for item in employees}
     designation_map = {normalize_name(item["name"]): item["designation"] for item in employees}
     for item in employees:
