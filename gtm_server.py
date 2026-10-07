@@ -7,6 +7,7 @@ from http.server import ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 from gtm_tool.config import BUNDLED_PYTHON, ROOT
+from gtm_tool.page_assets import prepare_login_assets
 
 
 def ensure_bundled_runtime():
@@ -297,7 +298,7 @@ bootstrap();
             </style>
   </head>""",
         )
-        return html
+        return prepare_login_assets(html, ROOT)
 
     def patch_app_js(script):
         script = script.replace(old_bootstrap, new_bootstrap)
